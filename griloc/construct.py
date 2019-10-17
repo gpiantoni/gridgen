@@ -1,10 +1,10 @@
 from pathlib import Path
 from numpy import ones, NaN
-from nibabel.freesurfer import read_geometry
 
 from .geometry import compute_neighbor
 from .search import find_new_pos_1d
 from .generators import index_up_down, index_spiral
+from .io import read_surf
 
 
 CWD = Path(__file__).parent
@@ -14,7 +14,7 @@ DATA_PATH = CWD.parent / 'tests' / 'data'
 def construct_grid(surf_file, start_vert, n_rows, n_cols, rotation=0,
                    index='up_down'):
 
-    surf = read_geometry(surf_file)
+    surf = read_surf(surf_file)
 
     neighbors = compute_neighbor(n_rows, n_cols)
 
