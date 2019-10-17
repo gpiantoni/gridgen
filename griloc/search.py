@@ -6,7 +6,8 @@ from .algebra import calc_plane_to_axis
 
 interelec_distance = 3
 
-def _find_new_pos_1d(x, y, grid, neighbors, surf):
+
+def find_new_pos_1d(x, y, grid, neighbors, surf):
 
     x_neighbor, y_neighbor = neighbors[x, y, 0, :]
     pos_neighbor = grid[x_neighbor, y_neighbor, 0, :]  # this cannot be nan

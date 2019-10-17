@@ -3,7 +3,7 @@ from numpy import ones
 from .generators import index_up_down, index_spiral
 
 
-def _compute_neighbor(n_rows, n_cols, index='up_down'):
+def compute_neighbor(n_rows, n_cols, index='up_down'):
     """make sure that any indexing does not have more than 2 neighbors
     """
 
