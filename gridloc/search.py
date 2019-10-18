@@ -1,5 +1,5 @@
 from logging import getLogger
-from numpy import array, arange, argmin, cross, pi
+from numpy import array, arange, argmin, cross, pi, sqrt
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
 
@@ -43,6 +43,52 @@ def find_new_pos_1d(x, y, grid, neighbors, surf):
     new_pos = pos_potential[idx_min_angle]
     new_plane = plane_potential[idx_min_angle]
     new_normal = cross(new_plane[0, :], new_plane[1, :])
+    lg.debug(f'New point in grid row: {x}, column: {y}')
+    lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
+    lg.info(f'Minimum angle {min_angle}, distance to surface {min(distance)}')
+
+    return new_pos, new_normal
+
+
+def find_new_pos_2d(x, y, grid, neighbors, surf):
+    """Make line from first neighbor to second neighbor, and the new point
+    should be on the right of that line
+    """
+    x1, y1 = neighbors[x, y, 0, :]
+    x2, y2 = neighbors[x, y, 1, :]
+
+    pos1 = grid[x1, y1, 0, :]
+    pos2 = grid[x2, y2, 0, :]
+    normal1 = grid[x1, y1, 1, :]
+    normal2 = grid[x2, y2, 1, :]
+
+    rotation_axis = pos1 - pos2
+    rotation_axis /= norm(rotation_axis)
+
+    center = (pos1 + pos2) / 2
+    normal_center = (normal1 + normal2) / 2
+    normal_center /= norm(normal_center)  # avoid rounding errors
+
+    search_direction = cross(normal_center, rotation_axis)
+
+    # this will fail when the distance between two opposite electrodes is more than twice the interelectrode distance
+    search_distance = sqrt((interelec_distance ** 2 - norm(center - pos1) ** 2))
+
+    pos_potential = []
+    distance = []
+    possible_degrees = arange(-30, 30)
+    for degrees in possible_degrees:
+
+        r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
+        new_pos = (search_distance * search_direction) @ r.as_dcm() + center
+        pos_potential.append(new_pos)
+        distance.append(norm(surf['pos'] - new_pos, axis=1).min())
+
+    idx_min_angle = argmin(distance)
+    min_angle = possible_degrees[idx_min_angle]
+    new_pos = pos_potential[idx_min_angle]
+    new_normal = normal_center @ r.as_dcm()
+
     lg.debug(f'New point in grid row: {x}, column: {y}')
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
     lg.info(f'Minimum angle {min_angle}, distance to surface {min(distance)}')
