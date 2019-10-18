@@ -11,7 +11,7 @@ def calc_plane_to_axis(v):
     perpendicular_v = array([0, 0, 1])
     v1 = cross(perpendicular_v, v)
     v1 /= norm(v1)  # rows
-    v2 = cross(v, v1)  # columns
+    v2 = cross(v1, v)  # columns
     v2 /= norm(v2)  # rows
 
     return array([v2, v1])
