@@ -6,6 +6,8 @@ from scipy.spatial.transform import Rotation
 from .algebra import calc_plane_to_axis
 
 interelec_distance = 3
+MAX_ANGLE = 10
+POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE)
 
 lg = getLogger(__name__)
 
@@ -27,8 +29,7 @@ def find_new_pos_1d(x, y, grid, neighbors, surf):
     pos_potential = []
     plane_potential = []
     distance = []
-    possible_degrees = arange(-30, 30)
-    for degrees in possible_degrees:
+    for degrees in POSSIBLE_DEGREES:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
         trans_2d_to_3d = plane @ r.as_dcm()
@@ -38,14 +39,14 @@ def find_new_pos_1d(x, y, grid, neighbors, surf):
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
 
     idx_min_angle = argmin(distance)
-    min_angle = possible_degrees[idx_min_angle]
+    min_angle = POSSIBLE_DEGREES[idx_min_angle]
 
     new_pos = pos_potential[idx_min_angle]
     new_plane = plane_potential[idx_min_angle]
     new_normal = cross(new_plane[0, :], new_plane[1, :])
     lg.debug(f'New point in grid row: {x}, column: {y}')
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
-    lg.info(f'Minimum angle {min_angle}, distance to surface {min(distance)}')
+    lg.info(f'Minimum angle {min_angle}°, distance to surface {min(distance):.3f}')
 
     return new_pos, new_normal
 
@@ -76,8 +77,7 @@ def find_new_pos_2d(x, y, grid, neighbors, surf):
 
     pos_potential = []
     distance = []
-    possible_degrees = arange(-30, 30)
-    for degrees in possible_degrees:
+    for degrees in POSSIBLE_DEGREES:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
         new_pos = (search_distance * search_direction) @ r.as_dcm() + center
@@ -85,12 +85,13 @@ def find_new_pos_2d(x, y, grid, neighbors, surf):
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
 
     idx_min_angle = argmin(distance)
-    min_angle = possible_degrees[idx_min_angle]
+    min_angle = POSSIBLE_DEGREES[idx_min_angle]
     new_pos = pos_potential[idx_min_angle]
+    r = Rotation.from_rotvec(rotation_axis * min_angle / 180 * pi)
     new_normal = normal_center @ r.as_dcm()
 
     lg.debug(f'New point in grid row: {x}, column: {y}')
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
-    lg.info(f'Minimum angle {min_angle}, distance to surface {min(distance)}')
+    lg.info(f'Minimum angle {min_angle}°, distance to surface {min(distance):.3f}')
 
     return new_pos, new_normal

@@ -3,7 +3,7 @@ from numpy import ones, NaN
 from logging import getLogger
 
 from .geometry import compute_neighbor
-from .search import find_new_pos_1d
+from .search import find_new_pos_1d, find_new_pos_2d
 from .generators import index_up_down, index_spiral
 from .io import read_surf
 
@@ -39,7 +39,7 @@ def construct_grid(surf_file, start_vert, n_rows, n_cols, rotation=0,
         elif n_neighbors == 1:
             grid[x, y, :, :] = find_new_pos_1d(x, y, grid, neighbors, surf)
         else:
-            break
+            grid[x, y, :, :] = find_new_pos_2d(x, y, grid, neighbors, surf)
 
     return grid
 
@@ -48,6 +48,6 @@ if __name__ == '__main__':
 
     construct_grid(
         str(DATA_PATH / 'rh.smooth'),
-        29012,
+        2288,
         16,
         8)
