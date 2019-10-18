@@ -1,3 +1,4 @@
+from logging import getLogger
 from numpy import array, arange, argmin, cross, pi
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
@@ -5,6 +6,8 @@ from scipy.spatial.transform import Rotation
 from .algebra import calc_plane_to_axis
 
 interelec_distance = 3
+
+lg = getLogger(__name__)
 
 
 def find_new_pos_1d(x, y, grid, neighbors, surf):
