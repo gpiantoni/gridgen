@@ -1,6 +1,5 @@
 ### Create smooth surface
 
-
 #### Bash
 ```bash
 mris_fill -c -r 1 bert/rh.pial rh_filled.mgz
