@@ -1,0 +1,22 @@
+language: python
+
+python:
+ - "3.7"
+
+cache: 
+ - directories:
+   - $HOME/.cache/pip
+
+install: 
+  - pip install numpy scipy nibabel
+  - pip install -U pytest pytest-cov codecov
+  - pip install -e .
+
+script:
+  - pytest --cov=ishares tests/ -vv
+
+after_success:
+  - codecov
+
+notifications:
+  email: false
