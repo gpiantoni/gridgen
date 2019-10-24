@@ -5,7 +5,7 @@ from functools import partial
 
 from nibabel.freesurfer import read_geometry
 
-def read_surf(surf_file, norm_to_one=False):
+def read_surf(surf_file, norm_to_one=True):
 
     pos, tri = read_geometry(surf_file)
     surf = {
