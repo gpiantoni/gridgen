@@ -8,7 +8,8 @@ from numpy import array
 TEST_PATH = Path(__file__).resolve().parent
 DATA_PATH = TEST_PATH / 'data'
 
-def test_constrct():
+
+def test_construct():
     surf_file = DATA_PATH / 'rh.smooth'
     grid = construct_grid(surf_file, 2288, 16, 8)
     assert_array_almost_equal(
