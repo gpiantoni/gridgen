@@ -10,7 +10,7 @@ DATA_PATH = TEST_PATH / 'data'
 
 
 def test_construct():
-    surf_file = DATA_PATH / 'rh.smooth'
+    surf_file = DATA_PATH / 'rh_smooth.pial'
     grid = construct_grid(surf_file, 2288, 16, 8)
     assert_array_almost_equal(
         grid[0, 0, 0, :],
