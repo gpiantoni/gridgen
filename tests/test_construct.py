@@ -14,5 +14,5 @@ def test_construct():
     grid = construct_grid(surf_file, 2288, 16, 8)
     assert_array_almost_equal(
         grid[0, 0, 0, :],
-        array([5.481, -78.183, 46.655]),
+        array([5.488, -78.169, 46.664]),
         decimal=3)
