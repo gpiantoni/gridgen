@@ -12,7 +12,7 @@ POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE)
 lg = getLogger(__name__)
 
 
-def find_new_pos_1d(x, y, grid, neighbors, surf):
+def find_new_pos_1d(x, y, grid, neighbors, surf, radians=0):
 
     x_neighbor, y_neighbor = neighbors[x, y, 0, :]
     pos_neighbor = grid[x_neighbor, y_neighbor, 0, :]  # this cannot be nan
@@ -20,7 +20,7 @@ def find_new_pos_1d(x, y, grid, neighbors, surf):
 
     coords_2d = array([x - x_neighbor, y - y_neighbor]) * interelec_distance
 
-    plane = calc_plane_to_axis(normal_neighbor)
+    plane = calc_plane_to_axis(normal_neighbor, radians=radians)
     if coords_2d[0] == 0:
         rotation_axis = plane[0, :]
     else:

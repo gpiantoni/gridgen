@@ -4,7 +4,7 @@ from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
 
 
-def calc_plane_to_axis(v, degrees=0):
+def calc_plane_to_axis(v, radians=0):
     """Compute the plane perpendicular to the input vector. Because there are
     infinite number of vectors belonging to one plane, we fix the first vector
     to point towards the superior part of the brain.
@@ -14,7 +14,7 @@ def calc_plane_to_axis(v, degrees=0):
     v : array of 3 values
         input vector. The dot product of this vector and each of the two output
         vectors is 0
-    degrees : float
+    radians : float
         rotation to apply about the input v vector, clockwise.
 
     Returns
@@ -39,5 +39,5 @@ def calc_plane_to_axis(v, degrees=0):
     plane = array([v2, v1])
 
     # apply rotation about normal (normal points to you, then it's clockwise)
-    r = Rotation.from_rotvec(v * degrees)
+    r = Rotation.from_rotvec(v * radians)
     return plane @ r.as_dcm()
