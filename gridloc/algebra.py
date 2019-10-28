@@ -5,7 +5,26 @@ from scipy.spatial.transform import Rotation
 
 
 def calc_plane_to_axis(v, degrees=0):
-    """Order of cross-product is very important.
+    """Compute the plane perpendicular to the input vector. Because there are
+    infinite number of vectors belonging to one plane, we fix the first vector
+    to point towards the superior part of the brain.
+
+    Parameters
+    ----------
+    v : array of 3 values
+        input vector. The dot product of this vector and each of the two output
+        vectors is 0
+    degrees : float
+        rotation to apply about the input v vector, clockwise.
+
+    Returns
+    -------
+    2x3 array
+        2 vectors defining the plane perpendicular to input vector
+
+    Notes
+    -----
+    Order of cross-product is very important.
     The normal of the vector is pointing towards the viewer, the first axis of
     the plane points up, so by the right-hand rule, the second axis needs to
     point right (so that it's comparable to the orientation of an array.)
