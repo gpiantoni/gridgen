@@ -12,7 +12,7 @@ DATA_PATH = TEST_PATH / 'data'
 
 def test_construct():
     surf_file = DATA_PATH / 'rh_smooth.pial'
-    grid_file = DATA_PATH / 'grid_020.fscv'
+    grid_file = DATA_PATH / 'grid_020.fcsv'
 
     surf = read_surf(surf_file)
 
