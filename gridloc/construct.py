@@ -16,7 +16,7 @@ def construct_grid(surf, start_vert, n_rows, n_cols, rotation=0,
                    index='up_down'):
 
     radians = rotation / 180 * pi
-    neighbors = compute_neighbor(n_rows, n_cols)
+    neighbors = compute_neighbor(n_rows, n_cols, index)
 
     grid = ones((n_rows, n_cols, 2, 3))
     grid.fill(NaN)
@@ -33,11 +33,13 @@ def construct_grid(surf, start_vert, n_rows, n_cols, rotation=0,
     for x, y in g:
         n_neighbors = (neighbors[x, y, :, 0] > -1).sum()
         if n_neighbors == 0:
-            raise ValueError('It cannot have zero neighbors')
+            raise ValueError(f'Electrode {x:d}-{y:d} cannot have zero neighbors')
         elif n_neighbors == 1:
             grid[x, y, :, :] = find_new_pos_1d(x, y, grid, neighbors, surf, radians=radians)
-        else:
+        elif n_neighbors == 2:
             grid[x, y, :, :] = find_new_pos_2d(x, y, grid, neighbors, surf)
+        else:
+            raise ValueError(f'Electrode {x:d}-{y:d} has {n_neighbors:d} but it can only have one or two neighbors')
 
     return grid
 

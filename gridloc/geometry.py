@@ -1,6 +1,6 @@
 from numpy import ones, array
 
-from .generators import index_up_down, index_spiral
+from .generators import index_up_down
 
 
 def compute_neighbor(n_rows, n_cols, index='up_down'):
@@ -14,8 +14,8 @@ def compute_neighbor(n_rows, n_cols, index='up_down'):
 
     if index == 'up_down':
         g = index_up_down(n_rows, n_cols)
-    elif index == 'spiral':
-        g = index_spiral(n_rows, n_cols)
+    else:
+        raise NotImplementedError(f'index {index} not implemented')
 
     [x_start, y_start] = next(g)
     neigh[x_start + 1, y_start + 1, 0, :] = [x_start, y_start]
