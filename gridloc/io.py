@@ -5,6 +5,12 @@ from functools import partial
 
 from nibabel.freesurfer import read_geometry
 
+SLICER_HEADER = """# Markups fiducial file version = 4.10
+# CoordinateSystem = 0
+# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
+"""
+
+
 def read_surf(surf_file, norm_to_one=True):
 
     pos, tri = read_geometry(surf_file)
@@ -33,3 +39,19 @@ def read_surf(surf_file, norm_to_one=True):
 
 def _average_normal_per_vertex(i, tri_norm, tri):
     return tri_norm[(tri == i).any(axis=1)].mean(axis=0)
+
+
+def export_grid_to_3dslicer(grid, grid_file):
+    """
+    TODO
+    ----
+    There is something wrong with normals (I guess it depends on how Slicer
+    imports them
+    """
+    positions = grid[:, :, 0, :].reshape(-1, 3)
+    normals = grid[:, :, 1, :].reshape(-1, 3)
+
+    with open(grid_file, 'w') as f:
+        f.write(SLICER_HEADER)
+        for i in range(positions.shape[0]):
+            f.write(f'vtkMRMLMarkupsFiducialNode_{i:03d},{positions[i, 0]:.3f},{positions[i, 1]:.3f},{positions[i, 2]:.3f},{normals[i, 0]:.3f},{normals[i, 1]:.3f},{normals[i, 2]:.3f},1.000,1,1,1,ELEC{i + 1:03d},,\n')
