@@ -2,21 +2,24 @@
 
 #### Bash
 ```bash
-mris_fill -c -r 1 bert/rh.pial rh_filled.mgz
+mris_fill -c -r 1 lh.pial lh_filled.mgz
+mri_convert lh_filled.mgz lh_filled.nii.gz
+fslmaths lh_filled -kernel 3D -dilF lh_dilated
 ```
 
 #### Matlab
 ```matlab
+addpath('/path/to/freesurfer/matlab/')
 make_outer_surface(...
-    'rh_filled.mgz', ...
+    'lh_dilated.nii.gz', ...
     15, ...
-    'rh.outer', ...
+    'lh.outer', ...
     1)
 ```
 
 #### Bash
 ```bash
-mris_smooth -nw -n 60 rh.outer rh.smooth
+mris_smooth -nw -n 60 lh.outer smooth.pial
 ```
 
 
