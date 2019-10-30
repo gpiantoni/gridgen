@@ -18,7 +18,7 @@ def test_construct():
     grid = construct_grid(surf, 33154, 16, 8, rotation=20)
     assert_array_almost_equal(
         grid[0, 0, 0, :],
-        array([-49.076, -11.536, 46.869]),
+        array([-10.036, -11.673, 63.269]),
         decimal=3)
 
     export_grid(grid, grid_file, 'slicer')
