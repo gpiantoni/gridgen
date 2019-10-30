@@ -4,7 +4,7 @@ from logging import getLogger
 
 from .geometry import compute_neighbor
 from .search import find_new_pos_1d, find_new_pos_2d
-from .generators import index_up_down
+from .generators import index_up_down, index_corner
 
 lg = getLogger(__name__)
 
@@ -23,8 +23,8 @@ def construct_grid(surf, start_vert, n_rows, n_cols, rotation=0,
 
     if index == 'up_down':
         g = index_up_down(n_rows, n_cols)
-    elif index == 'spiral':
-        g = index_spiral(n_rows, n_cols)
+    elif index == 'corner':
+        g = index_corner(n_rows, n_cols)
 
     [x_start, y_start] = next(g)
     grid[x_start, y_start, 0, :] = surf['pos'][start_vert, :]

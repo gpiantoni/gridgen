@@ -1,5 +1,6 @@
-from nibabel import apply_affine
-from numpy import array, ndindex, mean, norm, unravel_index, where, zeros, nansum
+from nibabel.affines import apply_affine
+from numpy import array, ndindex, mean, unravel_index, where, zeros, nansum
+from numpy.linalg import norm
 
 
 def vascular_model(grid, mri, offset):
