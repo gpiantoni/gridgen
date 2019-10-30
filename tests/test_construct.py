@@ -11,15 +11,14 @@ DATA_PATH = TEST_PATH / 'data'
 
 
 def test_construct():
-    surf_file = DATA_PATH / 'rh_smooth.pial'
+    surf_file = DATA_PATH / 'lh_smooth.pial'
     grid_file = DATA_PATH / 'grid_020.fcsv'
 
     surf = read_surf(surf_file)
-
-    grid = construct_grid(surf, 2288, 16, 8, rotation=20)
+    grid = construct_grid(surf, 33154, 16, 8, rotation=20)
     assert_array_almost_equal(
         grid[0, 0, 0, :],
-        array([12.742, -78.207, 49.987]),
+        array([-49.076, -11.536,  46.869]),
         decimal=3)
 
     export_grid_to_3dslicer(grid, grid_file)

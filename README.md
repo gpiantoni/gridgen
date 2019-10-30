@@ -20,6 +20,7 @@ make_outer_surface(...
 #### Bash
 ```bash
 mris_smooth -nw -n 60 lh.outer smooth.pial
+mv lh.smooth.pial lh_smooth.pial
 ```
 
 
