@@ -1,7 +1,7 @@
 
 from pathlib import Path
 from gridloc.construct import construct_grid
-from gridloc.io import read_surf, export_grid_to_3dslicer
+from gridloc.io import read_surf, export_grid
 
 from numpy.testing import assert_array_almost_equal
 from numpy import array
@@ -18,7 +18,8 @@ def test_construct():
     grid = construct_grid(surf, 33154, 16, 8, rotation=20)
     assert_array_almost_equal(
         grid[0, 0, 0, :],
-        array([-49.076, -11.536,  46.869]),
+        array([-49.076, -11.536, 46.869]),
         decimal=3)
 
-    export_grid_to_3dslicer(grid, grid_file)
+    export_grid(grid, grid_file, 'slicer')
+    export_grid(grid, grid_file, 'freeview')
