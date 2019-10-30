@@ -1,17 +1,12 @@
-Index
-=====
-
-Contents:
+Table of Content
+================
 
 .. toctree::
    :maxdepth: 1
 
    installation
-   API<api/modules>
+   preparation
+   API<api/gridloc>
+   todo
 
-
-Indices and tables
-==================
-
-* :ref:`modindex`
-* :ref:`genindex`
+* :ref:`List of functions and modules<genindex>`

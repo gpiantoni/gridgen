@@ -24,7 +24,7 @@ script:
 
 after_success:
   - codecov
-  - sphinx-apidoc -f -M -o $API_PATH gridloc
+  - sphinx-apidoc -f -M -E -o $API_PATH gridloc
   - sed -zi "s/Submodules\n----------\n//g" $API_PATH/*.rst
   - sphinx-build -d $DOCTREES_PATH docs/source/ $HTML_PATH
 
