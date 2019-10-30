@@ -2,6 +2,7 @@ from numpy import cross, array
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
+from pathlib import Path
 
 from nibabel.freesurfer import read_geometry
 
@@ -47,17 +48,41 @@ def _average_normal_per_vertex(i, tri_norm, tri):
     return tri_norm[(tri == i).any(axis=1)].mean(axis=0)
 
 
-def export_grid_to_3dslicer(grid, grid_file):
+def export_grid(grid, grid_file, format='slicer'):
     """
+    Parameters
+    ----------
+    grid : NxNx2x3 array
+        grid with positions and normals
+    grid_file : str
+        file name to export to (extension is based on format)
+    format : str
+        'slicer' or 'freeview'
+
     TODO
     ----
     There is something wrong with normals (I guess it depends on how Slicer
-    imports them
+    imports them)
     """
     positions = grid[:, :, 0, :].reshape(-1, 3)
     normals = grid[:, :, 1, :].reshape(-1, 3)
 
-    with open(grid_file, 'w') as f:
-        f.write(SLICER_HEADER)
-        for i in range(positions.shape[0]):
-            f.write(f'vtkMRMLMarkupsFiducialNode_{i:03d},{positions[i, 0]:.3f},{positions[i, 1]:.3f},{positions[i, 2]:.3f},{normals[i, 0]:.3f},{normals[i, 1]:.3f},{normals[i, 2]:.3f},1.000,1,1,1,ELEC{i + 1:03d},,\n')
+    grid_file = Path(grid_file)
+
+    if format == 'slicer':
+        grid_file = grid_file.with_suffix('.fcsv')
+
+        with grid_file.open('w') as f:
+            f.write(SLICER_HEADER)
+            for i in range(positions.shape[0]):
+                f.write(f'vtkMRMLMarkupsFiducialNode_{i:03d},{positions[i, 0]:.3f},{positions[i, 1]:.3f},{positions[i, 2]:.3f},{normals[i, 0]:.3f},{normals[i, 1]:.3f},{normals[i, 2]:.3f},1.000,1,1,1,ELEC{i + 1:03d},,\n')
+
+    elif format == 'freeview':
+        grid_file = grid_file.with_suffix('.label')
+
+        with grid_file.open('w') as f:
+            f.write('#!ascii label  , from subject  vox2ras=TkReg\n')
+            f.write(f'{positions.shape[0]:d}\n')
+            for i in range(positions.shape[0]):
+                f.write(f'{-1:d}  {positions[i, 0]:.3f}  {positions[i, 1]:.3f}  { positions[i, 2]:.3f} 1.000\n')
+        print('make sure that you select the brain.mgz associated with the pial surface in freeview')
