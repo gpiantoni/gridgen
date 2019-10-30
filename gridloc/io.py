@@ -11,15 +11,21 @@ SLICER_HEADER = """# Markups fiducial file version = 4.10
 """
 
 
-def read_surf(surf_file, norm_to_one=True):
+def read_surf(surf_file, normals=True, norm_to_one=True):
 
     pos, tri = read_geometry(surf_file)
     surf = {
         'tri': tri,
         'pos': pos,
+        'tri_norm': None,
+        'pos_norm': None,
         }
 
     tris = surf['pos'][surf['tri']]
+
+    if not normals:
+        return surf
+
     surf['tri_norm'] = cross(tris[:, 1, :] - tris[:, 0, :], tris[:, 2, :] - tris[:, 0, :])
 
     if norm_to_one:
