@@ -3,8 +3,10 @@ from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 from pathlib import Path
+from textwrap import dedent
 
 from nibabel.freesurfer import read_geometry
+from nibabel import load as nload
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
@@ -86,3 +88,52 @@ def export_grid(grid, grid_file, format='slicer'):
             for i in range(positions.shape[0]):
                 f.write(f'{-1:d}  {positions[i, 0]:.3f}  {positions[i, 1]:.3f}  { positions[i, 2]:.3f} 1.000\n')
         print('make sure that you select the brain.mgz associated with the pial surface in freeview')
+
+
+def read_surface_ras_shift(T1_path):
+    """Freesurfer uses two coordinate systems: one for volumes ("RAS") and
+    one for surfaces ("tkReg", "tkRAS", and "Surface RAS").
+    To get from surface to volume coordinates, add these numbers.
+    To get from volume to surface coordinates, substract these numbers.
+
+    Parameters
+    ----------
+    T1_path : str
+        file path to any .mgz file in the freesurfer folder (e.g. brain.mgz)
+
+    Returns
+    -------
+    3 array
+        offset between volume and surface (tkRAS)
+    """
+    T1 = nload(str(T1_path))
+
+    return T1.header['Pxyz_c']
+
+
+def export_transform(offset, transform_file, format='slicer'):
+    """Export tkRAS transformation to a transform file.
+
+    Parameters
+    ----------
+    offset : 3 array
+        offset between surface and volume
+    transform_file : str
+        file name to export to (extension is based on format)
+    format : str
+        'slicer' or 'freeview'
+    """
+    assert format == 'slicer'
+
+    transform_file = Path(transform_file)
+
+    transform_file = transform_file.with_suffix('.tfm')
+    tfm = """\
+        #Insight Transform File V1.0
+        #Transform 0
+        Transform: AffineTransform_double_3_3
+        Parameters: 1 0 0 0 1 0 0 0 1 {:.3f} {:.3f} {:.3f}
+        FixedParameters: 0 0 0""".format(*offset)
+
+    with transform_file.open('w') as f:
+        f.write(dedent(tfm))
