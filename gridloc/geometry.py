@@ -14,8 +14,8 @@ def compute_neighbor(n_rows, n_cols, index='up_down'):
 
     if index == 'up_down':
         g = index_up_down(n_rows, n_cols)
-    elif index == 'corner':
-        g = index_corner(n_rows, n_cols)
+    elif index.startswith('corner'):
+        g = index_corner(n_rows, n_cols, start=index[7:])
     else:
         raise NotImplementedError(f'index {index} not implemented')
 

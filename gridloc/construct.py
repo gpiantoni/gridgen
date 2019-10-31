@@ -23,8 +23,8 @@ def construct_grid(surf, start_vert, n_rows, n_cols, rotation=0,
 
     if index == 'up_down':
         g = index_up_down(n_rows, n_cols)
-    elif index == 'corner':
-        g = index_corner(n_rows, n_cols)
+    elif index.startswith('corner'):
+        g = index_corner(n_rows, n_cols, start=index[7:])
 
     [x_start, y_start] = next(g)
     grid[x_start, y_start, 0, :] = surf['pos'][start_vert, :]
