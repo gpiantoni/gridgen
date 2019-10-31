@@ -6,6 +6,7 @@ Table of Content
 
    installation
    preparation
+   indexing
    API<api/gridloc>
    todo
 

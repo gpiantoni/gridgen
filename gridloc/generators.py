@@ -17,15 +17,17 @@ def index_up_down(n_x, n_y):
             yield (x, y)
 
 
-def index_corner(n_x, n_y):
-    flipped = False
-    if n_y > n_x:
-        flipped = True
-        n_x, n_y = n_y, n_x  # do the longest run first
+def index_corner(n_x, n_y, start='NW'):
+
+    start = start.upper()
 
     for i_x in range(n_x):
         for i_y in range(n_y):
-            if flipped:
-                yield i_y, i_x
-            else:
+            if start == 'NW':
                 yield i_x, i_y
+            elif start == 'NE':
+                yield i_x, n_y - i_y - 1
+            elif start == 'SW':
+                yield n_x - i_x - 1, i_y
+            elif start == 'SE':
+                yield n_x - i_x - 1, n_y - i_y - 1

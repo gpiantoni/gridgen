@@ -1,13 +1,11 @@
 
-from pathlib import Path
 from gridloc.construct import construct_grid
 from gridloc.io import read_surf, export_grid
 
 from numpy.testing import assert_array_almost_equal
 from numpy import array
 
-TEST_PATH = Path(__file__).resolve().parent
-DATA_PATH = TEST_PATH / 'data'
+from .paths import DATA_PATH
 
 
 def test_construct():
