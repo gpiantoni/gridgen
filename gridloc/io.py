@@ -66,8 +66,9 @@ def export_grid(grid, grid_file, format='slicer'):
     There is something wrong with normals (I guess it depends on how Slicer
     imports them)
     """
-    positions = grid[:, :, 0, :].reshape(-1, 3)
-    normals = grid[:, :, 1, :].reshape(-1, 3)
+    labels = grid['label'].reshape(-1)
+    positions = grid['pos'].reshape(-1, 3)
+    normals = grid['norm'].reshape(-1, 3)
 
     grid_file = Path(grid_file)
 
@@ -77,7 +78,7 @@ def export_grid(grid, grid_file, format='slicer'):
         with grid_file.open('w') as f:
             f.write(SLICER_HEADER)
             for i in range(positions.shape[0]):
-                f.write(f'vtkMRMLMarkupsFiducialNode_{i:03d},{positions[i, 0]:.3f},{positions[i, 1]:.3f},{positions[i, 2]:.3f},{normals[i, 0]:.3f},{normals[i, 1]:.3f},{normals[i, 2]:.3f},1.000,1,1,1,ELEC{i + 1:03d},,\n')
+                f.write(f'vtkMRMLMarkupsFiducialNode_{i:03d},{positions[i, 0]:.3f},{positions[i, 1]:.3f},{positions[i, 2]:.3f},{normals[i, 0]:.3f},{normals[i, 1]:.3f},{normals[i, 2]:.3f},1.000,1,0,1,{labels[i]},,\n')
 
     elif format == 'freeview':
         grid_file = grid_file.with_suffix('.label')

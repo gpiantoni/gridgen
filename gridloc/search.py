@@ -53,6 +53,46 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
     grid['done'][x, y] = True
 
 
+def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
+    x1, y1 = neighbors[0, :]
+    x2, y2 = opposite
+
+    pos1 = grid['pos'][x1, y1]
+    pos2 = grid['pos'][x2, y2]
+    normal1 = grid['norm'][x1, y1]
+
+    direction = (pos1 - pos2)
+    direction /= norm(direction)
+    rotation_axis = cross(direction, normal1)
+
+    pos_potential = []
+    plane_potential = []
+    distance = []
+    for degrees in POSSIBLE_DEGREES:
+
+        r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
+        new_pos = direction @ r.as_dcm() * interelec_distance + pos1
+        new_normal = cross(rotation_axis, direction @ r.as_dcm())
+        pos_potential.append(new_pos)
+        plane_potential.append(new_normal)
+        distance.append(norm(surf['pos'] - new_pos, axis=1).min())
+
+    idx_min_angle = argmin(distance)
+    min_angle = POSSIBLE_DEGREES[idx_min_angle]
+
+    new_pos = pos_potential[idx_min_angle]
+    r = Rotation.from_rotvec(rotation_axis * min_angle / 180 * pi)
+    new_normal = cross(rotation_axis, direction @ r.as_dcm())
+
+    lg.debug(f'New point in grid row: {x}, column: {y}')
+    lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
+    lg.info(f'Minimum angle {min_angle}°, distance to surface {min(distance):.3f}')
+
+    grid['pos'][x, y] = new_pos
+    grid['norm'][x, y] = new_normal
+    grid['done'][x, y] = True
+
+
 def find_new_pos_2d(grid, neighbors, surf, x, y):
     """Make line from first neighbor to second neighbor, and the new point
     should be on the right of that line

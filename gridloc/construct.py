@@ -1,9 +1,9 @@
 from pathlib import Path
-from numpy import ones, NaN, pi, dtype, zeros, array
+from numpy import NaN, pi, dtype, zeros, array
 from logging import getLogger
 
 from .geometry import count_neighbors
-from .search import find_new_pos_0d, find_new_pos_2d
+from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
 from .generators import index_order
 
 lg = getLogger(__name__)
@@ -34,13 +34,13 @@ def construct_grid(surf, start_vert, n_rows, n_cols, rotation=0):
             opposite_x, opposite_y = 2 * neighbors[0] - (x, y)
 
             if (0 <= opposite_x < n_rows) and (0 <= opposite_y < n_cols) and grid['done'][opposite_x, opposite_y]:
-                grid = find_new_pos_1d(grid, x, y)  # to do
+                find_new_pos_1d(grid, neighbors, surf, x, y, (opposite_x, opposite_y))
 
             else:
-                grid = find_new_pos_0d(grid, neighbors, surf, x, y, radians=radians)
+                find_new_pos_0d(grid, neighbors, surf, x, y, radians=radians)
 
         elif n_neighbors == 2:
-            grid = find_new_pos_2d(x, y, grid, neighbors, surf)
+            find_new_pos_2d(grid, neighbors, surf, x, y)
 
         else:
             raise ValueError(f'Electrode {x:d}-{y:d} has {n_neighbors:d} but it can only have one or two neighbors')
