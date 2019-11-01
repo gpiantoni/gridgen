@@ -12,7 +12,7 @@ POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE)
 lg = getLogger(__name__)
 
 
-def find_new_pos_1d(x, y, grid, neighbors, surf, radians=0):
+def find_new_pos_0d(x, y, grid, neighbors, surf, radians=0):
 
     x_neighbor, y_neighbor = neighbors[x, y, 0, :]
     pos_neighbor = grid[x_neighbor, y_neighbor, 0, :]  # this cannot be nan
