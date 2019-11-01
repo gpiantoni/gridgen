@@ -62,3 +62,65 @@ def index_corner(n_x, n_y, start='NW'):
                 yield n_x - i_x - 1, i_y
             elif start == 'SE':
                 yield n_x - i_x - 1, n_y - i_y - 1
+
+
+from numpy import arange, where
+
+def _mirror(n_x, start_x):
+    for i_x in range(n_x):
+        i_x += start_x
+        if i_x >= n_x:
+            i_x =  n_x + (start_x - i_x)  - 1
+        yield i_x
+
+def test_():
+
+    n_x = 6
+    n_y = 3
+
+    d = arange(n_x * n_y, dtype=int) + 1
+    d = d.reshape(n_x, n_y, order='F')
+    d
+
+    start_elec = 1
+    order = 'shorter'
+
+    start_x, start_y = where(d == start_elec)
+    start_x = start_x.item()
+    start_y = start_y.item()
+
+def index_order():
+    swap = False
+    if order == 'longer':
+        if (n_x >= n_y):
+            swap = False
+            n_long, n_short = n_x, n_y
+            start_long, start_short = start_x, start_y
+        else:
+            swap = True
+            n_long, n_short = n_y, n_x
+            start_long, start_short = start_y, start_x
+
+        for i_short in _mirror(n_short, start_short):
+            for i_long in _mirror(n_long, start_long):
+                if not swap:
+                    print(d[i_long, i_short])
+                else:
+                    print(d[i_short, i_long])
+
+    elif order == 'shorter':
+        if (n_x >= n_y):
+            swap = True
+            n_long, n_short = n_x, n_y
+            start_long, start_short = start_x, start_y
+        else:
+            swap = False
+            n_long, n_short = n_y, n_x
+            start_long, start_short = start_y, start_x
+
+        for i_long in _mirror(n_long, start_long):
+            for i_short in _mirror(n_short, start_short):
+                if swap:
+                    print(d[i_long, i_short])
+                else:
+                    print(d[i_short, i_long])
