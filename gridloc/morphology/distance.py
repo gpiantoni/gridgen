@@ -22,7 +22,7 @@ def _distance_minimum(grid, pial):
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance[i_x, i_y] = norm(pial['pos'] - grid[i_x, i_y, 0, :], axis=1).min()
+            distance[i_x, i_y] = norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1).min()
 
     return distance
 
@@ -35,8 +35,8 @@ def _distance_view(grid, pial):
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
 
-            pos = grid[i_x, i_y, 0, :]
-            norm0 = grid[i_x, i_y, 1, :]
+            pos = grid['pos'][i_x, i_y]
+            norm0 = grid['norm'][i_x, i_y]
 
             points = pial['pos'][norm(pial['pos'] - pos, axis=1) < max_dist, :]
             directions = (points - pos) / norm(points - pos, axis=1)[:, None]
@@ -53,6 +53,6 @@ def _distance_pdf(grid, pial):
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance[i_x, i_y] = normal_dist.pdf(norm(pial['pos'] - grid[i_x, i_y, 0, :], axis=1), scale=2).sum()
+            distance[i_x, i_y] = normal_dist.pdf(norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1), scale=2).sum()
 
     return distance

@@ -4,12 +4,12 @@ from numpy.linalg import norm
 
 
 def vascular_model(grid, mri, offset):
-    n_rows, n_cols = grid.shape[:2]
+    n_rows, n_cols = grid.shape
 
     nd = array(list(ndindex(mri.shape)))
     ndi = apply_affine(mri.affine, nd)
 
-    positions = grid[:, :, 0, :].reshape(-1, 3)
+    positions = grid['pos'].reshape(-1, 3)
     chan_xyz = positions + offset
 
     center_grid = mean(chan_xyz, axis=0)
@@ -19,7 +19,6 @@ def vascular_model(grid, mri, offset):
     good_ndi = ndi[i_closeby]
     val = []
     for pos in chan_xyz:
-        print('.', end='')
         dist_chan = norm(good_ndi - pos, axis=1)
         idx = unravel_index(where(i_closeby)[0][dist_chan < 5], mri.shape)
         m = zeros(mri.shape, dtype=int)
