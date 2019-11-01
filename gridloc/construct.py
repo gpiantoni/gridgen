@@ -4,7 +4,7 @@ from logging import getLogger
 
 from .geometry import compute_neighbor
 from .search import find_new_pos_1d, find_new_pos_2d
-from .generators import index_up_down, index_corner
+from .generators import index_order
 
 lg = getLogger(__name__)
 

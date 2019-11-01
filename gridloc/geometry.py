@@ -1,10 +1,38 @@
-from numpy import ones, array
+from numpy import ones, array, zeros
 
-from .generators import index_up_down, index_corner
+NEIGHBORS = array([
+    [-1, 0],
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    ])
+
+
+def count_neighbors(grid, x, y):
+    n_rows, n_cols = grid.shape
+
+    idx = zeros(4, bool)
+
+    i = 0
+    for n_x, n_y in NEIGHBORS:
+        if (0 <= (x + n_x) < n_rows) and (0 <= (y + n_y) < n_cols) and grid['done'][x + n_x, y + n_y]:
+            idx[i] = True
+        i += 1
+
+    n = idx.sum()
+
+    if (idx == array([True, False, False, True])).all():
+        coords = NEIGHBORS[(3, 0), :] + (x, y)
+    else:
+        coords = NEIGHBORS[idx] + (x, y)
+    return n, coords
 
 
 def compute_neighbor(n_rows, n_cols, index='up_down'):
-    """make sure that any indexing does not have more than 2 neighbors
+    """
+    Deprecated
+
+    make sure that any indexing does not have more than 2 neighbors
     Also, when you have two neighbors, the order is important. If you draw a
     line from the first neighbor to the second neighbor looking from above,
     the target position should be on the right
