@@ -37,7 +37,7 @@ def construct_grid(surf, start_vert, n_rows, n_cols, rotation=0):
                 grid = find_new_pos_1d(grid, x, y)  # to do
 
             else:
-                grid = find_new_pos_0d(x, y, grid, neighbors, surf, radians=radians)
+                grid = find_new_pos_0d(grid, neighbors, surf, x, y, radians=radians)
 
         elif n_neighbors == 2:
             grid = find_new_pos_2d(x, y, grid, neighbors, surf)

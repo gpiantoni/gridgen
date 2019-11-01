@@ -12,11 +12,11 @@ POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE)
 lg = getLogger(__name__)
 
 
-def find_new_pos_0d(x, y, grid, neighbors, surf, radians=0):
+def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
 
-    x_neighbor, y_neighbor = neighbors[x, y, 0, :]
-    pos_neighbor = grid[x_neighbor, y_neighbor, 0, :]  # this cannot be nan
-    normal_neighbor = grid[x_neighbor, y_neighbor, 1, :]  # this cannot be nan
+    x_neighbor, y_neighbor = neighbors[0, :]
+    pos_neighbor = grid['pos'][x_neighbor, y_neighbor]  # this cannot be nan
+    normal_neighbor = grid['norm'][x_neighbor, y_neighbor]  # this cannot be nan
 
     coords_2d = array([x - x_neighbor, y - y_neighbor]) * interelec_distance
 
@@ -48,20 +48,23 @@ def find_new_pos_0d(x, y, grid, neighbors, surf, radians=0):
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
     lg.info(f'Minimum angle {min_angle}°, distance to surface {min(distance):.3f}')
 
-    return new_pos, new_normal
+    grid['pos'][x, y] = new_pos
+    grid['norm'][x, y] = new_normal
+    grid['done'][x, y] = True
 
 
-def find_new_pos_2d(x, y, grid, neighbors, surf):
+def find_new_pos_2d(grid, neighbors, surf, x, y):
     """Make line from first neighbor to second neighbor, and the new point
     should be on the right of that line
     """
-    x1, y1 = neighbors[x, y, 0, :]
-    x2, y2 = neighbors[x, y, 1, :]
 
-    pos1 = grid[x1, y1, 0, :]
-    pos2 = grid[x2, y2, 0, :]
-    normal1 = grid[x1, y1, 1, :]
-    normal2 = grid[x2, y2, 1, :]
+    x1, y1 = neighbors[0, :]
+    x2, y2 = neighbors[1, :]
+
+    pos1 = grid['pos'][x1, y1]
+    pos2 = grid['pos'][x2, y2]
+    normal1 = grid['norm'][x1, y1]
+    normal2 = grid['norm'][x2, y2]
 
     rotation_axis = pos1 - pos2
     rotation_axis /= norm(rotation_axis)
@@ -94,4 +97,6 @@ def find_new_pos_2d(x, y, grid, neighbors, surf):
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
     lg.info(f'Minimum angle {min_angle}°, distance to surface {min(distance):.3f}')
 
-    return new_pos, new_normal
+    grid['pos'][x, y] = new_pos
+    grid['norm'][x, y] = new_normal
+    grid['done'][x, y] = True
