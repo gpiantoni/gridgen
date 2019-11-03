@@ -1,5 +1,5 @@
 from numpy import zeros, savetxt
-from gridloc.generators import index_corner, index_up_down
+# from gridloc.generators import index_corner, index_up_down
 
 from .paths import GENERATORS_PATH
 

@@ -38,7 +38,7 @@ def fitting_hop(surf, ref_vert, start_label, n_rows, n_cols, gamma, pial):
         _compute_grid,
         array([1, 1, 3]),
         niter=100,
-        T=1.0,
+        T=0.0,
         stepsize=1,
         callback=print_results,
         minimizer_kwargs=dict(
