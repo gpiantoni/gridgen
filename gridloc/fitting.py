@@ -37,7 +37,7 @@ def fitting_hop(surf, ref_vert, start_label, n_rows, n_cols, gamma, pial):
     res = basinhopping(
         _compute_grid,
         array([1, 1, 3]),
-        niter=10,
+        niter=5,
         T=0.5,
         stepsize=1,
         callback=print_results,

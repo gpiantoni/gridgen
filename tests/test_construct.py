@@ -14,8 +14,8 @@ def test_construct():
     surf = read_surf(SMOOTH_FILE)
     grid = construct_grid(surf, 33154, 'elec016', 16, 8, rotation=20)
     assert_array_almost_equal(
-        grid[0, 0, 0, :],
-        array([-10.036, -11.673, 63.269]),
+        grid['pos'][0, 0],
+        array([-28.26, -1.373, 54.757]),
         decimal=3)
 
     export_grid(grid, grid_file, 'slicer')
