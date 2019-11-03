@@ -29,6 +29,21 @@ def test_fitting_brute():
         array([0, 0, 0]),
         decimal=3)
 
+
+def test_fitting_hop():
+
+    surf = read_surf(SMOOTH_FILE)
+    pial = read_surf(PIAL_FILE, normals=False)
+
+    n_rows = 8
+    n_cols = 4
+    rotation = 0
+    start_label = 'elec008'
+    start_vert = 31859
+
+    grid = construct_grid(surf, start_vert, start_label, n_rows, n_cols, rotation=rotation)
+    gamma = compute_distance(grid, pial)
+
     res = fitting_hop(surf, start_vert, start_label, n_rows, n_cols, gamma, pial)
     assert_array_almost_equal(
         res[0],

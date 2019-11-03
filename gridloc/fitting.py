@@ -37,8 +37,8 @@ def fitting_hop(surf, ref_vert, start_label, n_rows, n_cols, gamma, pial):
     res = basinhopping(
         _compute_grid,
         array([1, 1, 3]),
-        niter=100,
-        T=0.0,
+        niter=10,
+        T=0.5,
         stepsize=1,
         callback=print_results,
         minimizer_kwargs=dict(
@@ -63,7 +63,7 @@ def fitting_brute(surf, ref_vert, start_label, n_rows, n_cols, gamma, pial):
         pial,
         )
 
-    ranges = (slice(-4, 4, 2), slice(-4, 4, 2), slice(-4, 8, 4))
+    ranges = (slice(-4, 4, 4), slice(-4, 4, 4), slice(-4, 8, 4))
 
     res = brute(
         _compute_grid,
