@@ -14,8 +14,29 @@ SLICER_HEADER = """# Markups fiducial file version = 4.10
 """
 
 
-def read_surf(surf_file, normals=True, norm_to_one=True):
+def read_surf(surf_file, normals=True):
+    """Read surface file from freesurfer and compute normals.
 
+    Parameters
+    ----------
+    surf_file : path
+        path to Freesurfer pial file (like lh.pial or rh_smooth.pial)
+    normals : bool
+        whether to compute normals (it takes one minute roughly)
+
+    Returns
+    -------
+    dict with fields
+        pos : position of each vertex
+        tri : triangles (faces) connection between vertices
+        pos_norm : normal for each vertex
+        tri_norm : normal for each triangle (face)
+
+    Notes
+    -----
+    All the normals are set to 1, by definition. This is necessay when computing
+    the cross-product in later stages.
+    """
     pos, tri = read_geometry(surf_file)
     surf = {
         'tri': tri,
@@ -30,18 +51,14 @@ def read_surf(surf_file, normals=True, norm_to_one=True):
         return surf
 
     surf['tri_norm'] = cross(tris[:, 1, :] - tris[:, 0, :], tris[:, 2, :] - tris[:, 0, :])
-
-    if norm_to_one:
-        surf['tri_norm'] /= norm(surf['tri_norm'], axis=1)[:, None]
+    surf['tri_norm'] /= norm(surf['tri_norm'], axis=1)[:, None]
 
     with Pool() as p:
         f_compute = partial(_average_normal_per_vertex, tri_norm=surf['tri_norm'], tri=surf['tri'])
         vert_norm = p.map(f_compute, range(surf['pos'].shape[0]))
 
     surf['pos_norm'] = array(vert_norm)
-
-    if norm_to_one:
-        surf['pos_norm'] /= norm(surf['pos_norm'], axis=1)[:, None]
+    surf['pos_norm'] /= norm(surf['pos_norm'], axis=1)[:, None]
 
     return surf
 
