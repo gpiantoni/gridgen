@@ -4,7 +4,7 @@ from gridloc.generators import index_corner, index_up_down
 from .paths import GENERATORS_PATH
 
 
-def test_generators_corner():
+def notest_generators_corner():
 
     n_rows = 2
     n_cols = 4
@@ -22,7 +22,7 @@ def test_generators_corner():
             fmt='%d')
 
 
-def test_generators_updown():
+def notest_generators_updown():
 
     n_rows = 5
     n_cols = 4

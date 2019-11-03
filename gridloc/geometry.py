@@ -1,4 +1,6 @@
-from numpy import ones, array, zeros
+from numpy import ones, array, zeros, argmin
+from numpy.linalg import norm
+from gridloc.algebra import calc_plane_to_axis
 
 NEIGHBORS = array([
     [-1, 0],
@@ -26,6 +28,18 @@ def count_neighbors(grid, x, y):
     else:
         coords = NEIGHBORS[idx] + (x, y)
     return n, coords
+
+
+def search_grid(surf, ref_vert, x, y):
+    pos = surf['pos'][ref_vert, :]
+    normal = surf['pos_norm'][ref_vert, :]
+
+    coords_2d = array([x, y])
+    plane = calc_plane_to_axis(normal)
+    target = coords_2d @ plane + pos
+    new_vector = argmin(norm(surf['pos'] - target, axis=1))
+
+    return new_vector
 
 
 def compute_neighbor(n_rows, n_cols, index='up_down'):

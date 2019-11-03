@@ -5,14 +5,13 @@ from gridloc.io import read_surf, export_grid
 from numpy.testing import assert_array_almost_equal
 from numpy import array
 
-from .paths import DATA_PATH
+from .paths import DATA_PATH, SMOOTH_FILE
 
 
 def test_construct():
-    surf_file = DATA_PATH / 'lh_smooth.pial'
     grid_file = DATA_PATH / 'grid_020.fcsv'
 
-    surf = read_surf(surf_file)
+    surf = read_surf(SMOOTH_FILE)
     grid = construct_grid(surf, 33154, 16, 8, rotation=20)
     assert_array_almost_equal(
         grid[0, 0, 0, :],
