@@ -5,11 +5,16 @@ For this analysis, you will need a structural MRI and an angiogram.
 
 1. Angiogram
 ------------
-Realign the angiogram to the structural MRI.
+Realign the angiogram to the structural MRI and rename it to `angiogram.nii.gz`.
 
 2. Freesurfer
 -------------
-Run `recon-all` on the structural MRI
+Run `recon-all` on the structural MRI.
+
+After running Freesurfer, you will have the files:
+
+* `mri/brain.mgz`
+* `surf/*h.surf`
 
 3. Create a convex hull of the pial surface
 -------------------------------------------

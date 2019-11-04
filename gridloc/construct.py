@@ -12,11 +12,15 @@ CWD = Path(__file__).parent
 DATA_PATH = CWD.parent / 'tests' / 'data'
 
 
-def construct_grid(surf, start_vert, start_label, n_rows, n_cols, rotation=0):
+def construct_grid(surf, start_vert, start_label, grid, rotation=0):
 
     radians = rotation / 180 * pi
+    n_rows, n_cols = grid.shape
 
-    grid = make_grid(n_rows, n_cols)
+    # make sure that grid is empty
+    grid['pos'].fill(0)
+    grid['norm'].fill(0)
+    grid['done'] = False
 
     if start_label not in grid['label']:
         raise ValueError(f'"{start_label}" is not one of the labels of the grid')
