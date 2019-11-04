@@ -2,7 +2,10 @@ from scipy.optimize import basinhopping, brute
 
 from numpy.ma import masked_invalid, corrcoef
 from numpy import arange, ptp, array, sum
-import mkl
+try:
+    import mkl
+except ImportError:
+    mkl = None
 
 from .geometry import search_grid
 from .morphology.distance import compute_distance
@@ -101,7 +104,8 @@ def fitting_brute(surf, ref_vert, start_label, grid2d, gamma, pial):
         (-10, 10),
         (-30, 30),
         )
-    mkl.set_num_threads(2)
+    if mkl is not None:
+        mkl.set_num_threads(2)
     res = brute(
         _compute_grid,
         ranges,
