@@ -1,7 +1,7 @@
 from scipy.optimize import basinhopping, brute
 
 from numpy.ma import masked_invalid, corrcoef
-from numpy import arange, ptp, array, sum
+from numpy import arange, array, sum, nanmax, nanmin
 try:
     import mkl
 except ImportError:
@@ -34,7 +34,7 @@ def corrcoef_nan(A, B):
 
 
 def normalize(x):
-    return (x - x.min()) / ptp(x)
+    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
 
 
 def print_results(x0, res, accept):
@@ -52,13 +52,13 @@ def sum_of_squares(A, B):
 
 def _compute_grid(x0, surf, ref_vert, start_label, grid2d, gamma,
                   pial=None):
-
     print('.', end='')
     x, y, rotation = x0
     start_vert = search_grid(surf, ref_vert, x, y)
     grid = construct_grid(surf, start_vert, start_label, grid2d, rotation=rotation)
     model = compute_distance(grid, pial)
-    return sum_of_squares(gamma, model)
+    SS = sum_of_squares(gamma, model)
+    return SS
 
 
 def fitting_hop(surf, ref_vert, start_label, grid2d, gamma, pial):
