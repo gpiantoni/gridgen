@@ -7,6 +7,14 @@ For this analysis, you will need a structural MRI and an angiogram.
 ------------
 Realign the angiogram to the structural MRI and rename it to `angiogram.nii.gz`.
 
+If the angiogram has a resolution higher than 1mm isotropic, you can also resize to 1mm.
+This will speed up the calculation without impacting the results.
+
+.. code-block:: bash
+
+    flirt -in angiogram.nii.gz -ref angiogram.nii.gz -applyisoxfm 1 -o angio_1mm
+    mv angio_1mm.nii.gz angiogram.gz
+
 2. Freesurfer
 -------------
 Run `recon-all` on the structural MRI.
