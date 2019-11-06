@@ -38,7 +38,7 @@ def normalize(x):
 
 
 def print_results(x0, res, accept):
-    print(x0, res)
+    print(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}')
 
 
 def sum_of_squares(A, B):
@@ -53,7 +53,7 @@ def sum_of_squares(A, B):
 def _compute_grid(x0, surf, ref_vert, start_label, grid2d, gamma,
                   pial=None):
 
-    # print('.', end='')
+    print('.', end='')
     x, y, rotation = x0
     start_vert = search_grid(surf, ref_vert, x, y)
     grid = construct_grid(surf, start_vert, start_label, grid2d, rotation=rotation)
@@ -73,16 +73,17 @@ def fitting_hop(surf, ref_vert, start_label, grid2d, gamma, pial):
     res = basinhopping(
         _compute_grid,
         array([0, 0, 0]),
-        niter=5,
+        niter=100,
         T=0.5,
-        stepsize=1,
+        stepsize=5,
+        interval=10,
         callback=print_results,
         minimizer_kwargs=dict(
             method='Nelder-Mead',
             args=args,
             options=dict(
-                maxiter=10,
-                maxfev=10,
+                maxiter=50,
+                maxfev=50,
                 ),
         )
     )
