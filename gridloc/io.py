@@ -146,12 +146,17 @@ def export_transform(offset, transform_file, format='slicer'):
     transform_file = Path(transform_file)
 
     transform_file = transform_file.with_suffix('.tfm')
+
+    # use ITK convertion ("ITK's convention is to use LPS coordinate system as opposed to RAS coordinate system in Slicer")
+    offset = offset * [-1, -1, 1]
+
     tfm = """\
         #Insight Transform File V1.0
         #Transform 0
         Transform: AffineTransform_double_3_3
         Parameters: 1 0 0 0 1 0 0 0 1 {:.3f} {:.3f} {:.3f}
-        FixedParameters: 0 0 0""".format(*offset)
+        FixedParameters: 0 0 0
+        """.format(*offset)
 
     with transform_file.open('w') as f:
         f.write(dedent(tfm))

@@ -38,7 +38,7 @@ def normalize(x):
 
 
 def print_results(x0, res, accept):
-    print(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}')
+    print(f'Done: {x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}')
 
 
 def sum_of_squares(A, B):
@@ -52,12 +52,15 @@ def sum_of_squares(A, B):
 
 def _compute_grid(x0, surf, ref_vert, start_label, grid2d, gamma,
                   pial=None):
-    print('.', end='')
+    #print('.', end='')
+    print(f'{x0[0]: 5.3f}mm {x0[1]: 5.3f}mm {x0[2]: 5.3f}° ', end='')
     x, y, rotation = x0
     start_vert = search_grid(surf, ref_vert, x, y)
+    print(f'(vert{start_vert: 8d}) = ', end='')
     grid = construct_grid(surf, start_vert, start_label, grid2d, rotation=rotation)
     model = compute_distance(grid, pial)
-    SS = sum_of_squares(gamma, model)
+    SS = corrcoef_nan(gamma, model)
+    print(f'{SS: 8.3f}')
     return SS
 
 
@@ -82,8 +85,8 @@ def fitting_hop(surf, ref_vert, start_label, grid2d, gamma, pial):
             method='Nelder-Mead',
             args=args,
             options=dict(
-                maxiter=50,
-                maxfev=50,
+                maxiter=10,
+                maxfev=10,
                 ),
         )
     )

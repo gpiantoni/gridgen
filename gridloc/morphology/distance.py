@@ -1,4 +1,4 @@
-from numpy import dot, arccos, pi, ones, zeros
+from numpy import dot, arccos, pi, ones, zeros, cross
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
@@ -9,10 +9,13 @@ def compute_distance(grid, pial, method='minimum'):
         distance = _distance_minimum(grid, pial)
 
     elif method == 'view':
-        _distance_view(grid, pial)
+        distance = _distance_view(grid, pial)
+
+    elif method == 'cylinder':
+        distance = _distance_cylinder(grid, pial)
 
     elif method == 'pdf':
-        _distance_view(grid, pial)
+        distance = _distance_pdf(grid, pial)
 
     return distance
 
@@ -44,6 +47,25 @@ def _distance_view(grid, pial):
             if x.min() >= max_angle:
                 continue
             distance[i_x, i_y] = norm(points[x <= max_angle, :] - pos, axis=1).min()
+
+    return distance
+
+
+def _distance_cylinder(grid, pial):
+    max_dist_to_elec = 100
+    max_dist_to_line = 5
+    distance = ones((grid.shape[0], grid.shape[1])) * max_dist_to_elec
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+
+            pos = grid['pos'][i_x, i_y]
+            norm0 = grid['norm'][i_x, i_y]
+
+            d = norm(pial['pos'] - pos, axis=1)
+            points = pial['pos'][d < max_dist_to_elec, :]
+            dist_to_line = norm(cross(norm0, pos - pial['pos']), axis=1)
+            distance[i_x, i_y] = d[dist_to_line < max_dist_to_line].min()
 
     return distance
 

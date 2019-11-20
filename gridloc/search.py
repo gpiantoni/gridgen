@@ -6,8 +6,8 @@ from scipy.spatial.transform import Rotation
 from .algebra import calc_plane_to_axis
 
 interelec_distance = 3
-MAX_ANGLE = 10
-POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE)
+MAX_ANGLE = 5
+POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
 
 lg = getLogger(__name__)
 
