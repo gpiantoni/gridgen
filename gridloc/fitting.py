@@ -53,10 +53,10 @@ def sum_of_squares(A, B):
 def _compute_grid(x0, surf, ref_vert, start_label, grid2d, gamma,
                   pial=None):
     #print('.', end='')
-    print(f'{x0[0]: 5.3f}mm {x0[1]: 5.3f}mm {x0[2]: 5.3f}° ', end='')
+    print(f'{x0[0]: 6.3f}mm {x0[1]: 6.3f}mm {x0[2]: 6.3f}° ', end='')
     x, y, rotation = x0
     start_vert = search_grid(surf, ref_vert, x, y)
-    print(f'(vert{start_vert: 8d}) = ', end='')
+    print(f'(vert{start_vert: 6d}) = ', end='')
     grid = construct_grid(surf, start_vert, start_label, grid2d, rotation=rotation)
     model = compute_distance(grid, pial)
     SS = corrcoef_nan(gamma, model)

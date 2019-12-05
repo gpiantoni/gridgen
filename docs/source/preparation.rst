@@ -7,6 +7,8 @@ For this analysis, you will need a structural MRI and an angiogram.
 ------------
 Realign the angiogram to the structural MRI and rename it to `angiogram.nii.gz`.
 
+Mask the angiogram with outskull, so that you don't get veins in the skin.
+
 If the angiogram has a resolution higher than 1mm isotropic, you can also resize to 1mm.
 This will speed up the calculation without impacting the results.
 
@@ -56,3 +58,14 @@ After running Freesurfer, you will have the files:
 
   mris_smooth -nw -n 60 lh.outer smooth.pial
   mv lh.smooth.pial lh_smooth.pial
+
+4. Summary of files
+-------------------
+
+* `ecog_file.ns3`
+* `brain.mgz`
+* `lh.pial`
+* `lh_smooth.pial
+* `angiogram.nii.gz`
+
+
