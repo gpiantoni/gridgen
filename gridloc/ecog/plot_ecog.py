@@ -1,13 +1,13 @@
 import plotly.graph_objs as go
 
 
-def plot_ecog(ecog2d):
+def plot_2d(grid2d, value='ecog'):
 
-    n_rows, n_cols = ecog2d.shape
+    n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
-            z=ecog2d['ecog'],
-            text=ecog2d['label'],
+            z=grid2d[value],
+            text=grid2d['label'],
             hoverinfo='text+z',
             colorscale='Hot',
             colorbar=dict(

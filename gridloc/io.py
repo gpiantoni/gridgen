@@ -8,6 +8,7 @@ from textwrap import dedent
 from nibabel.freesurfer import read_geometry
 from nibabel import load as nload
 
+from logging import getLogger
 from .construct import make_grid
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
@@ -15,6 +16,7 @@ SLICER_HEADER = """# Markups fiducial file version = 4.10
 # columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
 """
 
+lg = getLogger(__name__)
 
 def write_grid2d(grid_file, grid2d):
     with grid_file.open('w') as f:
@@ -146,7 +148,7 @@ def export_grid(grid, grid_file, format='slicer'):
             f.write(f'{positions.shape[0]:d}\n')
             for i in range(positions.shape[0]):
                 f.write(f'{-1:d}  {positions[i, 0]:.3f}  {positions[i, 1]:.3f}  { positions[i, 2]:.3f} 1.000\n')
-        print('make sure that you select the brain.mgz associated with the pial surface in freeview')
+        lg.warning('make sure that you select the brain.mgz associated with the pial surface in freeview')
 
 
 def read_surface_ras_shift(T1_path):

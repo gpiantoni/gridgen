@@ -7,6 +7,7 @@ from numpy import set_printoptions
 
 from plotly.offline import plot
 
+from ..ecog.plot_ecog import plot_2d
 from ..fitting import fitting
 from ..io import (
     read_grid2d,
@@ -18,6 +19,7 @@ from ..io import (
     )
 
 PKG_PATH = Path(__file__).parent
+
 lg = getLogger('gridloc')
 
 set_printoptions(suppress=True, precision=3)
@@ -122,7 +124,6 @@ def main(arguments=None):
 
     if args.function == 'ecog':
         from ..ecog.read_ecog import read_brain, put_ecog_on_grid2d
-        from ..ecog.plot_ecog import plot_ecog
 
         lg.info(f'Reading 2d grid from {grid2d_tsv}')
         grid2d = read_grid2d(grid2d_tsv)
@@ -134,7 +135,7 @@ def main(arguments=None):
         write_ecog2d(ecog_tsv, ecog2d)
 
         lg.info(f'Writing ECoG image to {ecog_fig}')
-        fig = plot_ecog(ecog2d)
+        fig = plot_2d(ecog2d, 'ecog')
         plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs='cdn')
 
     if args.function == 'fit':
@@ -143,5 +144,10 @@ def main(arguments=None):
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
+        if parameters['fitting']['intermediate']:
+            parameters['fitting']['intermediate'] = parameters['output'] / 'steps'
+        else:
+            parameters['fitting']['intermediate'] = None
 
         fitting(ecog=ecog2d, **parameters['fitting'])

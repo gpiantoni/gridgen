@@ -10,6 +10,7 @@ MAX_ANGLE = 5
 POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
 
 lg = getLogger(__name__)
+lg.propagate = False
 
 
 def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):

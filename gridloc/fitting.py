@@ -1,7 +1,6 @@
 from scipy.optimize import basinhopping, brute, minimize
 from numpy.linalg import norm
-from numpy.ma import masked_invalid, corrcoef
-from numpy import arange, array, sum, nanmax, nanmin, argmin
+from numpy import arange, array, sum, nanmax, nanmin, argmin, intersect1d, corrcoef
 from logging import getLogger
 
 try:
@@ -13,12 +12,17 @@ from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import vascular_model
 from .construct import construct_grid
-from .io import read_surf, read_surface_ras_shift
+from .io import read_surf, read_surface_ras_shift, export_grid
+
+from plotly.offline import plot
+
+from .ecog.plot_ecog import plot_2d
 
 lg = getLogger(__name__)
 
 
-def fitting(T1_file, dura_file, pial_file, initial, ecog, method='simplex'):
+def fitting(T1_file, dura_file, pial_file, initial, ecog, intermediate=None,
+            method='simplex'):
 
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
@@ -36,6 +40,13 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, method='simplex'):
     lg.debug(f'Target RAS: {init_ras}, vertex #{init_vert} RAS: {dura["pos"][init_vert]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {init_label} is vertex #{init_vert} with orientation {initial["rotation"]}')
 
+    if intermediate is not None:
+        intermediate.mkdir(exist_ok=True)
+
+    if method == 'simplex':
+        m = fitting_simplex(dura, pial, ecog, init_vert, init_label, init_rot, intermediate)
+        lg.info(m)
+
 
 def compare_models(grid, pial, angio, offset, gamma):
 
@@ -50,12 +61,17 @@ def compare_models(grid, pial, angio, offset, gamma):
     return array(x).min()
 
 
-def corrcoef_nan(A, B):
-    a = masked_invalid(A)
-    b = masked_invalid(B)
+def corrcoef_match(ecog, estimate, field='morphology'):
+    """correlation but make sure that the labels match
+    """
+    good = ecog['label'][ecog['good']]
+    ecog_id = intersect1d(ecog['label'], good, return_indices=True)[1]
+    a = ecog['ecog'].flatten('C')[ecog_id]
 
-    msk = (~a.mask & ~b.mask)
-    return corrcoef(a[msk], b[msk])[0, 1]
+    estimate_id = intersect1d(estimate['label'], good, return_indices=True)[1]
+    b = estimate[field].flatten('C')[estimate_id]
+
+    return corrcoef(a, b)[0, 1]
 
 
 def normalize(x):
@@ -66,27 +82,27 @@ def print_results(x0, res, accept):
     lg.info(f'Done: {x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}')
 
 
-def sum_of_squares(A, B):
-
-    a = masked_invalid(A)
-    b = masked_invalid(B)
-
-    msk = (~a.mask & ~b.mask)
-    return sum((a[msk] - b[msk]) ** 2)
-
-
-def _compute_grid(x0, surf, ref_vert, start_label, ecog, pial=None):
-    lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = ')
+def _compute_grid(x0, surf, ref_vert, start_label, ecog, pial=None, intermediate=None):
     x, y, rotation = x0
     start_vert = search_grid(surf, ref_vert, x, y)
+    lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = ')
     grid = construct_grid(surf, start_vert, start_label, ecog['label'], rotation=rotation)
     model = compute_distance(grid, pial)
-    SS = corrcoef_nan(ecog, model)
-    lg.debug(' ' * 35 + f'{SS: 8.3f}')
-    return SS
+    cc = corrcoef_match(ecog, model)
+    lg.debug(' ' * 45 + f'{cc: 8.3f}')
+
+    if intermediate is not None:
+        grid_file = intermediate / f'vert{start_vert}_rot{rotation:06.3f}'
+        export_grid(grid, grid_file, 'freeview')
+
+        image_file = grid_file.with_suffix('.html')
+        fig = plot_2d(model, 'morphology')
+        plot(fig, filename=str(image_file), auto_open=False, include_plotlyjs='cdn')
+
+    return cc
 
 
-def fitting_simplex(dura, pial, ecog, start_vert, start_label, rotation):
+def fitting_simplex(dura, pial, ecog, start_vert, start_label, rotation, intermediate=None):
 
     simplex = array([
         [-3, -3, rotation - 5],
@@ -101,6 +117,7 @@ def fitting_simplex(dura, pial, ecog, start_vert, start_label, rotation):
         start_label,
         ecog,
         pial,
+        intermediate,
         )
 
     m = minimize(
