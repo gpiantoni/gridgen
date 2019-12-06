@@ -3,20 +3,24 @@ from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG
 from argparse import ArgumentParser, RawTextHelpFormatter
 from json import load
 from textwrap import dedent
+from numpy import set_printoptions
 
 from plotly.offline import plot
 
+from ..fitting import fitting
 from ..io import (
     read_grid2d,
     write_grid2d,
     read_ecog2d,
     write_ecog2d,
+    read_surface_ras_shift,
+    export_transform,
     )
-
 
 PKG_PATH = Path(__file__).parent
 lg = getLogger('gridloc')
 
+set_printoptions(suppress=True, precision=3)
 
 def create_arguments():
     parser = ArgumentParser(
@@ -61,6 +65,14 @@ def create_arguments():
         """))
     ecog_arg.set_defaults(function='ecog')
 
+    # fit
+    fit = list_functions.add_parser(
+        'fit', help=dedent("""\
+        Generate the grid, with the correct labels.
+
+        """))
+    fit.set_defaults(function='fit')
+
     return parser
 
 
@@ -99,6 +111,7 @@ def main(arguments=None):
     grid2d_tsv = parameters['output'] / 'grid2d_labels.tsv'
     ecog_tsv = parameters['output'] / 'grid2d_ecog.tsv'
     ecog_fig = parameters['output'] / 'grid2d_ecog.html'
+    transform_file = parameters['output'] / 'tkras'
 
     if args.function == 'grid2d':
         from ..construct import make_grid
@@ -124,6 +137,11 @@ def main(arguments=None):
         fig = plot_ecog(ecog2d)
         plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs='cdn')
 
-    if args.function == 'all':
+    if args.function == 'fit':
+
+        offset = read_surface_ras_shift(parameters['fitting']['T1_file'])
+        export_transform(offset, transform_file)
+
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
+        fitting(ecog=ecog2d, **parameters['fitting'])

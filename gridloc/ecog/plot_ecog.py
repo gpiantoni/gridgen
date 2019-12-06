@@ -9,7 +9,7 @@ def plot_ecog(ecog2d):
             z=ecog2d['ecog'],
             text=ecog2d['label'],
             hoverinfo='text+z',
-            colorscale ='Hot',
+            colorscale='Hot',
             colorbar=dict(
                 title=dict(
                     text='PSD (Hz<sup>-1</sup>)',
