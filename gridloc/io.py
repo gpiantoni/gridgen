@@ -1,4 +1,4 @@
-from numpy import cross, array
+from numpy import cross, array, savetxt
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -32,6 +32,10 @@ def read_grid2d(grid_file):
     grid2d = make_grid(labels.shape[0], labels.shape[1], '{}')
     grid2d['label'] = labels
     return grid2d
+
+
+def write_ecog2d(ecog_file, ecog2d):
+    savetxt(ecog_file, ecog2d['ecog'], fmt='%.5f', delimiter='\t')
 
 
 def read_surf(surf_file, normals=True):

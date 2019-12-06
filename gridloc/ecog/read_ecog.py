@@ -1,6 +1,6 @@
 from wonambi import Dataset
 from wonambi.trans.select import _create_subepochs
-from numpy import std, median, zeros, array, NaN
+from numpy import std, median, zeros, array, NaN, dtype, setdiff1d
 from wonambi.trans import math, filter_, montage, timefrequency, select
 from logging import getLogger
 
@@ -8,7 +8,7 @@ lg = getLogger(__name__)
 
 
 def read_brain(ecog_file, begtime=None, endtime=None, ref_chan=None,
-               freq_range=(55, 95), chan_std_threshold=100, grid_dims=(16, 8)):
+               freq_range=(55, 95), chan_std_threshold=100):
 
     lg.debug(f'Reading {ecog_file} between {begtime}s and {endtime}s')
     d = Dataset(ecog_file)
@@ -29,10 +29,14 @@ def read_brain(ecog_file, begtime=None, endtime=None, ref_chan=None,
     s = median(std(x, axis=2), axis=1)
 
     good_chans = array(d.header['chan_name'])[s < chan_std_threshold]
-    lg.info(f'Keeping {len(good_chans)} channels')
+    lg.debug(f'Rejecting {len(d.header["chan_name"]) - len(good_chans)} channels')
+    good_chans = setdiff1d(good_chans, ref_chan)
+    lg.debug(f'Removing {len(ref_chan)} channels')
+    lg.info(f'Using {len(good_chans)} channels')
 
     data = select(data, chan=good_chans)
 
+    lg.debug(f'Computing Spectrogram')
     tf = timefrequency(data, method='spectrogram', duration=2, overlap=0.5, taper='hann')
     tf = math(tf, operator_name='median', axis='time')
     tf = math(tf, operator_name='dB')
@@ -41,29 +45,23 @@ def read_brain(ecog_file, begtime=None, endtime=None, ref_chan=None,
 
     return tf
 
-"""
-    i = 0
-    gamma = zeros(grid_dims)
-    for i_y in range(grid_dims[1]):
-        for i_x in range(grid_dims[0]):
-            i += 1
-            gamma[i_x, i_y] = x(chan=f'chan{i}', trial=0)
 
-    # TODO: clean up this part
-    gamma[0, 0] = NaN
-    gamma[-1, -1] = NaN
-"""
+def put_ecog_on_grid2d(ecog, grid2d):
+    d_ = dtype([
+        ('label', '<U256'),
+        ('ecog', 'f4'),
+        ('good', 'bool'),
+        ])
+    ecog_on_grid = zeros(grid2d.shape, dtype=d_)
 
+    ecog_on_grid['label'] = grid2d['label']
+    ecog_on_grid['ecog'].fill(NaN)
 
-def main(parameters):
+    for x in range(ecog_on_grid.shape[0]):
+        for y in range(ecog_on_grid.shape[1]):
+            label = ecog_on_grid['label'][x, y]
+            if label in ecog.axis['chan'][0]:
+                ecog_on_grid['ecog'][x, y] = ecog(trial=0, chan=label)
+                ecog_on_grid['good'][x, y] = True
 
-    gamma = read_brain(
-        parameters['ecog']['file'],
-        parameters['ecog']['begtime'],
-        parameters['ecog']['endtime'],
-        parameters['ecog']['ref_chan'],
-        parameters['ecog']['freq_range'],
-        parameters['ecog']['chan_std_threshold'],
-        (parameters['grid']['n_rows'], parameters['grid']['n_columns']))
-
-    return gamma
+    return ecog_on_grid

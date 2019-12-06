@@ -4,11 +4,14 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 from json import load
 from textwrap import dedent
 
+from plotly.offline import plot
+
 from ..io import (
     read_grid2d,
     write_grid2d,
+    write_ecog2d,
     )
-from ..construct import make_grid
+
 
 PKG_PATH = Path(__file__).parent
 lg = getLogger('gridloc')
@@ -91,12 +94,31 @@ def main(arguments=None):
     parameters['output'].mkdir(exist_ok=True, parents=True)
     print(parameters)
 
+    # outputs
     grid2d_tsv = parameters['output'] / 'grid2d_labels.tsv'
+    ecog_tsv = parameters['output'] / 'grid2d_ecog.tsv'
+    ecog_fig = parameters['output'] / 'grid2d_ecog.html'
 
     if args.function == 'grid2d':
+        from ..construct import make_grid
+
         grid2d = make_grid(**parameters['grid'])
         lg.info(f'Writing labels to {grid2d_tsv}')
         write_grid2d(grid2d_tsv, grid2d)
 
     if args.function == 'ecog':
-        pass
+        from ..ecog.read_ecog import read_brain, put_ecog_on_grid2d
+        from ..ecog.plot_ecog import plot_ecog
+
+        lg.info(f'Reading 2d grid from {grid2d_tsv}')
+        grid2d = read_grid2d(grid2d_tsv)
+
+        timefreq = read_brain(**parameters['ecog'])
+        ecog2d = put_ecog_on_grid2d(timefreq, grid2d)
+
+        lg.info(f'Writing ECoG values to {ecog_tsv}')
+        write_ecog2d(ecog_tsv, ecog2d)
+
+        lg.info(f'Writing ECoG image to {ecog_fig}')
+        fig = plot_ecog(ecog2d)
+        plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs='cdn')
