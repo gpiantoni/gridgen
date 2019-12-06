@@ -9,6 +9,7 @@ from plotly.offline import plot
 from ..io import (
     read_grid2d,
     write_grid2d,
+    read_ecog2d,
     write_ecog2d,
     )
 
@@ -122,3 +123,7 @@ def main(arguments=None):
         lg.info(f'Writing ECoG image to {ecog_fig}')
         fig = plot_ecog(ecog2d)
         plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs='cdn')
+
+    if args.function == 'all':
+        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+

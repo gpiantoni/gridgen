@@ -1,4 +1,4 @@
-from numpy import cross, array, savetxt
+from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -36,6 +36,23 @@ def read_grid2d(grid_file):
 
 def write_ecog2d(ecog_file, ecog2d):
     savetxt(ecog_file, ecog2d['ecog'], fmt='%.5f', delimiter='\t')
+
+
+def read_ecog2d(ecog_file, grid_file):
+
+    ecog = loadtxt(ecog_file, delimiter='\t')
+
+    d_ = dtype([
+        ('label', '<U256'),
+        ('ecog', 'f4'),
+        ('good', 'bool'),
+        ])
+    ecog_on_grid = zeros(ecog.shape, dtype=d_)
+    ecog_on_grid['ecog'] = ecog
+    ecog_on_grid['good'] = ~isnan(ecog)
+    ecog_on_grid['label'] = read_grid2d(grid_file)['label']
+
+    return ecog_on_grid
 
 
 def read_surf(surf_file, normals=True):
