@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.2'
+VERSION = '0.3'
 
 long_description = ''
 
@@ -25,4 +25,9 @@ setup(
         'scipy',
         'nibabel',
         ],
+    entry_points={
+        'console_scripts': [
+            'gridloc=gridloc.bin.command:main',
+        ],
+    },
     )

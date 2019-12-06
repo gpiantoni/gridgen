@@ -54,7 +54,7 @@ def construct_grid(surf, start_vert, start_label, grid, rotation=0):
     return grid
 
 
-def make_grid(n_rows, n_cols):
+def make_grid(n_rows, n_columns, chan_pattern):
 
     d_ = dtype([
         ('label', '<U256'),   # labels cannot be longer than 256 char
@@ -62,8 +62,8 @@ def make_grid(n_rows, n_cols):
         ('norm', 'f4', (3, )),
         ('done', 'bool'),
         ])
-    grid = zeros((n_rows, n_cols), dtype=d_)
-    grid['label'] = array([f'elec{x + 1:03d}' for x in range(n_rows * n_cols)]).reshape(n_rows, n_cols, order='F')
+    grid = zeros((n_rows, n_columns), dtype=d_)
+    grid['label'] = array([chan_pattern.format(x + 1) for x in range(n_rows * n_columns)]).reshape(n_rows, n_columns, order='F')
     grid['pos'].fill(NaN)
     grid['norm'].fill(NaN)
     grid['done'] = False

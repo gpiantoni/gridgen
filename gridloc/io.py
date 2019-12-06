@@ -8,10 +8,30 @@ from textwrap import dedent
 from nibabel.freesurfer import read_geometry
 from nibabel import load as nload
 
+from .construct import make_grid
+
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
 # columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
 """
+
+
+def write_grid2d(grid_file, grid2d):
+    with grid_file.open('w') as f:
+        for row in grid2d['label']:
+            f.write('\t'.join(row) + '\n')
+
+
+def read_grid2d(grid_file):
+    labels = []
+    with grid_file.open('r') as f:
+        for row in f.readlines():
+            labels.append([x.strip() for x in row.split('\t')])
+
+    labels = array(labels)
+    grid2d = make_grid(labels.shape[0], labels.shape[1], '{}')
+    grid2d['label'] = labels
+    return grid2d
 
 
 def read_surf(surf_file, normals=True):
