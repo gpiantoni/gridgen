@@ -4,6 +4,7 @@ from multiprocessing import Pool
 from functools import partial
 from pathlib import Path
 from textwrap import dedent
+from warnings import warn
 
 from nibabel.freesurfer import read_geometry
 from nibabel import load as nload
@@ -148,7 +149,7 @@ def export_grid(grid, grid_file, format='slicer'):
             f.write(f'{positions.shape[0]:d}\n')
             for i in range(positions.shape[0]):
                 f.write(f'{-1:d}  {positions[i, 0]:.3f}  {positions[i, 1]:.3f}  { positions[i, 2]:.3f} 1.000\n')
-        lg.warning('make sure that you select the brain.mgz associated with the pial surface in freeview')
+        warn('make sure that you select the correct volume (.mgz file) associated with the pial surface in freeview when loading the points')
 
 
 def read_surface_ras_shift(T1_path):

@@ -40,6 +40,7 @@ def read_brain(ecog_file, begtime=None, endtime=None, ref_chan=None,
     tf = timefrequency(data, method='spectrogram', duration=2, overlap=0.5, taper='hann')
     tf = math(tf, operator_name='median', axis='time')
     tf = math(tf, operator_name='dB')
+    lg.debug(f'Selecting frequency range {freq_range[0]:02.2f}-{freq_range[1]:02.2f}')
     tf = select(tf, freq=freq_range)
     tf = math(tf, operator_name='mean', axis='freq')
 
