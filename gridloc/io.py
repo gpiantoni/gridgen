@@ -1,4 +1,4 @@
-from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt
+from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -6,8 +6,9 @@ from pathlib import Path
 from textwrap import dedent
 from warnings import warn
 
-from nibabel.freesurfer import read_geometry
 from nibabel import load as nload
+from nibabel.freesurfer import read_geometry
+from nibabel.affines import apply_affine
 
 from logging import getLogger
 from .construct import make_grid
@@ -204,3 +205,20 @@ def export_transform(offset, transform_file, format='slicer'):
 
     with transform_file.open('w') as f:
         f.write(dedent(tfm))
+
+
+def read_volume(volume_file, threshold=None):
+    volume = nload(volume_file)
+    data = volume.get_data()
+    i = data >= threshold
+
+    d_ = dtype([
+        ('pos', 'f4', (3, )),
+        ('value', 'f4'),
+        ])
+    output = zeros(i.sum(), dtype=d_)
+
+    output['pos'] = apply_affine(volume.affine, array(where(i)).T)
+    output['value'] = data[i]
+
+    return output

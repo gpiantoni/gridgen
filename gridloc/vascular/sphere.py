@@ -1,29 +1,20 @@
-from nibabel.affines import apply_affine
-from numpy import array, ndindex, mean, unravel_index, where, zeros, nansum
+from numpy import zeros, dtype
 from numpy.linalg import norm
+from scipy.stats import norm as normal_dist
 
 
-def vascular_model(grid, mri, offset):
-    n_rows, n_cols = grid.shape
+def compute_vasculature(grid, angio):
 
-    nd = array(list(ndindex(mri.shape)))
-    ndi = apply_affine(mri.affine, nd)
+    d_ = dtype([
+        ('label', '<U256'),   # labels cannot be longer than 256 char
+        ('vasculature', 'f4'),
+        ])
 
-    positions = grid['pos'].reshape(-1, 3)
-    chan_xyz = positions + offset
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            weights = normal_dist.pdf(norm(angio['pos'] - grid['pos'][i_x, i_y], axis=1), scale=2)
+            distance['vasculature'][i_x, i_y] = (weights * angio['value']).sum()
 
-    center_grid = mean(chan_xyz, axis=0)
-    dist_chan = norm(ndi - center_grid, axis=1)
-    max_dist = max(n_rows, n_cols) * 3 + 5
-    i_closeby = dist_chan < max_dist
-    good_ndi = ndi[i_closeby]
-    val = []
-    for pos in chan_xyz:
-        dist_chan = norm(good_ndi - pos, axis=1)
-        idx = unravel_index(where(i_closeby)[0][dist_chan < 5], mri.shape)
-        m = zeros(mri.shape, dtype=int)
-        m[idx] = 1
-        mq = m * mri.get_data()
-        val.append(nansum(mq) / m.sum())
-
-    return array(val).reshape(n_rows, n_cols)
+    distance['label'] = grid['label']
+    return distance

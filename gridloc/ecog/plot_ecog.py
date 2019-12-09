@@ -3,6 +3,11 @@ import plotly.graph_objs as go
 
 def plot_2d(grid2d, value='ecog'):
 
+    if not value == 'ecog':
+        reversescale = True
+    else:
+        reversescale = False
+
     n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
@@ -10,6 +15,7 @@ def plot_2d(grid2d, value='ecog'):
             text=grid2d['label'],
             hoverinfo='text+z',
             colorscale='Hot',
+            reversescale=reversescale,
             colorbar=dict(
                 title=dict(
                     text='PSD (Hz<sup>-1</sup>)',
