@@ -172,10 +172,14 @@ def fitting_hopping(minimizer_args, rotation):
 
 def fitting_brute(minimizer_args, rotation, brute_ranges):
 
+    # make sure that the last point is included
+    for k, v in brute_ranges.items():
+        brute_ranges[k][1] += brute_ranges[k][2]
+
     ranges = (
         slice(*brute_ranges['x']),
         slice(*brute_ranges['y']),
-        slice(*brute_ranges['orientation']),
+        slice(*brute_ranges['rotation']),
         )
 
     if mkl is not None:
