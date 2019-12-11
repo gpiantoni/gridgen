@@ -24,6 +24,7 @@ setup(
         'numpy',
         'scipy',
         'nibabel',
+        'plotly',
         ],
     entry_points={
         'console_scripts': [
