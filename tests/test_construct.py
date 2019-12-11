@@ -7,11 +7,11 @@ from numpy import array
 from .paths import DATA_PATH, SMOOTH_FILE
 
 
-def test_construct():
+def notest_construct():
     grid_file = DATA_PATH / 'grid_020.fcsv'
 
     surf = read_surf(SMOOTH_FILE)
-    grid2d = make_grid(16, 8)
+    grid2d = make_grid(16, 8, )
     grid = construct_grid(surf, 33154, 'elec016', grid2d, rotation=20)
     assert_array_almost_equal(
         grid['pos'][0, 0],
