@@ -36,6 +36,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, angio_file,
         lg.debug(f'Reading angiogram from {angio_file} and thresholding at {angio_threshold}')
         angio = read_volume(angio_file, angio_threshold)
         angio['pos'] -= offset
+    else:
+        angio = None
 
     ref_label = initial['label']
     init_rot = initial['rotation']
@@ -114,6 +116,7 @@ def compare_models(E, M, V=None, correlation='parametric'):
         V = normalize(V)
         WEIGHTS = arange(0, 1.1, 0.1)
     else:
+        V = 0
         WEIGHTS = [1, ]
 
     x = []
@@ -128,7 +131,6 @@ def compare_models(E, M, V=None, correlation='parametric'):
         x.append(c)
 
     x = array(x)
-    print(x)
     i = argmin(x)
 
     return WEIGHTS[i], x[i]
