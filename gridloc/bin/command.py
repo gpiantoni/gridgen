@@ -30,7 +30,8 @@ def create_arguments():
         formatter_class=RawTextHelpFormatter)
     parser.add_argument('-l', '--log', default='info',
                         help='Logging level: info (default), debug')
-    parser.add_argument('parameters',
+    parser.add_argument(
+        'parameters',
         help='path to file with the parameters for the analysis')
     list_functions = parser.add_subparsers(
         title='Functions',
@@ -145,9 +146,7 @@ def main(arguments=None):
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        if parameters['fitting']['intermediate']:
-            parameters['fitting']['intermediate'] = parameters['output'] / 'steps'
-        else:
-            parameters['fitting']['intermediate'] = None
-
-        fitting(ecog=ecog2d, **parameters['fitting'])
+        fitting(
+            ecog=ecog2d,
+            output=parameters['output'],
+            **parameters['fitting'])

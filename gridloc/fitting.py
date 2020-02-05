@@ -23,8 +23,9 @@ lg = getLogger(__name__)
 
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, angio_file,
-            angio_threshold, intermediate=None, correlation=None,
+            angio_threshold, output, intermediate=None, correlation=None,
             brute_range=(), method='simplex'):
+
 
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
@@ -49,6 +50,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, angio_file,
     lg.info(f'Starting position for {ref_label} is vertex #{init_vert} with orientation {initial["rotation"]}')
 
     if intermediate is not None and intermediate:
+        intermediate = output / 'steps'
         intermediate.mkdir(exist_ok=True)
 
     minimizer_args = (
@@ -74,6 +76,17 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, angio_file,
         m = fitting_brute(minimizer_args, init_rot, brute_range)
         lg.info(m)
 
+    # create grid with best values
+    x, y, rotation = m.x
+    best_vert = search_grid(dura, init_vert, x, y)
+    grid = construct_grid(dura, best_vert, ref_label, ecog['label'], rotation=rotation)
+    morpho = compute_distance(grid, pial)
+
+    grid_file = output / f'bestfit_vert{best_vert}_rot{rotation:06.3f}'
+    _export_results(grid_file, grid, morpho)
+
+    return m
+
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
                     intermediate=None, correlation=None):
@@ -98,11 +111,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
 
     if intermediate is not None and intermediate:
         grid_file = intermediate / f'vert{start_vert}_rot{rotation:06.3f}'
-        export_grid(grid, grid_file, 'freeview')
-
-        image_file = grid_file.with_suffix('.html')
-        fig = plot_2d(morpho, 'morphology')
-        plot(fig, filename=str(image_file), auto_open=False, include_plotlyjs='cdn')
+        _export_results(grid_file, grid, morpho)
 
     return cc
 
@@ -248,3 +257,11 @@ def fitting_brute(minimizer_args, rotation, brute_ranges):
         )
 
     return res
+
+
+def _export_results(grid_file, grid, morpho):
+    export_grid(grid, grid_file, 'freeview')
+
+    image_file = grid_file.with_suffix('.html')
+    fig = plot_2d(morpho, 'morphology')
+    plot(fig, filename=str(image_file), auto_open=False, include_plotlyjs='cdn')
