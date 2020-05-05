@@ -25,6 +25,12 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
         list of channels to exclude
     freq_range : two floats
         frequency range to compute the average power spectrum
+
+    Returns
+    -------
+    wonambi Data
+        where you get one value per channels, which is the average in the
+        frequency range
     """
     lg.debug(f'Reading {file} between {begtime}s and {endtime}s')
     d = Dataset(Path(file).resolve())
@@ -44,6 +50,7 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
     tf = timefrequency(data, method='spectrogram', duration=2, overlap=0.5, taper='hann')
     tf = math(tf, operator_name='median', axis='time')
     tf = math(tf, operator_name='dB')
+
     lg.debug(f'Selecting frequency range {freq_range[0]:02.2f}-{freq_range[1]:02.2f}')
     tf = select(tf, freq=freq_range)
     tf = math(tf, operator_name='mean', axis='freq')
@@ -52,6 +59,24 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
 
 
 def put_ecog_on_grid2d(ecog, grid2d):
+    """Arrange values of the ecog in a 2d grid, based on the 2d electrode
+    location
+
+    Parameters
+    ----------
+    ecog : wonambi Data
+        output of read_ecog(). There should be one value per channel
+    grid2d : 2d array
+        2d array with the channel labels (input is a 2d array with one field called 'label')
+
+    Returns
+    -------
+    2d array
+        array with same shape as grid2d, with fields:
+        - label : channel label
+        - ecog : value computed from 'ecog'
+        - good : whether to include the channel or not
+    """
     d_ = dtype([
         ('label', '<U256'),
         ('ecog', 'f4'),
