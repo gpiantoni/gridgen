@@ -24,28 +24,41 @@ lg = getLogger('gridloc')
 
 set_printoptions(suppress=True, precision=3)
 
+
 def create_arguments():
     parser = ArgumentParser(
-        description='Tools to compute position of ECoG grid on brain',
+        description='Tools to calculate the position of ECoG grid on brain based on the neuronal activity',
         formatter_class=RawTextHelpFormatter)
     parser.add_argument('-l', '--log', default='info',
                         help='Logging level: info (default), debug')
+    parser.add_argument('-o', '--output',
+                        help=dedent("""\
+                        Output directory. Default is the current directory.
+                        You can also specify it in the parameters.
+
+                        Parameters:
+                          output :
+                             path to output directory
+                        """))
     parser.add_argument(
-        'parameters',
-        help='path to file with the parameters for the analysis')
+        'parameters', help=dedent("""\
+        Path to file with the parameters for the analysis. The file with parameters
+        should be formatted as a json file."""))
     list_functions = parser.add_subparsers(
         title='Functions',
-        help='use "all" to run all the steps')
+        help='Use "all" to run all the steps')
 
     # grid
     grid_arg = list_functions.add_parser(
         'grid2d', help=dedent("""\
         Generate the grid, with the correct labels.
+
         Parameters:
           grid :
             n_rows : number of rows
             n_columns : number of columns
             chan_pattern : pattern to name the channels (it should match the naming pattern of the data)
+
         Output:
           grid2d_labels.tsv
 
@@ -56,6 +69,7 @@ def create_arguments():
     ecog_arg = list_functions.add_parser(
         'ecog', help=dedent("""\
         Compute values for each electrodes based on ECoG.
+
         Parameters:
           ecog :
             file : path to ECoG file
@@ -106,7 +120,14 @@ def main(arguments=None):
     with p_json.open() as f:
         parameters = load(f)
 
-    parameters['output'] = Path(parameters['output']).resolve()
+    if args.output is not None:
+        output = args.output
+    elif 'output' in parameters:
+        output = parameters['output']
+    else:
+        output = '.'
+
+    parameters['output'] = Path(output).resolve()
     parameters['output'].mkdir(exist_ok=True, parents=True)
     print(parameters)
 
