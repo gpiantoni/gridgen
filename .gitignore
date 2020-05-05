@@ -1,0 +1,6 @@
+docs/build/
+docs/source/api/
+
+htmlcov/
+
+tests/analysis/output/

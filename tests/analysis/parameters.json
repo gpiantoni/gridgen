@@ -1,0 +1,8 @@
+{
+  "output": "output",
+  "grid": {
+    "n_rows": 4,
+    "n_columns": 5,
+    "chan_pattern": "chan{}"
+  }
+}
