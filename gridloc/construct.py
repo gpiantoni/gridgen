@@ -1,5 +1,4 @@
-from pathlib import Path
-from numpy import NaN, pi, dtype, zeros, array
+from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud
 from logging import getLogger
 
 from .geometry import count_neighbors
@@ -8,8 +7,25 @@ from .generators import index_order
 
 lg = getLogger(__name__)
 
-CWD = Path(__file__).parent
-DATA_PATH = CWD.parent / 'tests' / 'data'
+
+def make_grid_with_labels(n_rows, n_columns, direction='TBLR', chan_pattern='{}'):
+
+    grid = make_grid(n_rows, n_columns)
+
+    if direction[0] in ('L', 'R'):
+        order = 'C'
+    else:
+        order = 'F'
+
+    labels = array([chan_pattern.format(x + 1) for x in range(n_rows * n_columns)]).reshape(n_rows, n_columns, order=order)
+
+    if 'RL' in direction:
+        labels = fliplr(labels)
+    if 'BT' in direction:
+        labels = flipud(labels)
+    grid['label'] = labels
+
+    return grid
 
 
 def construct_grid(surf, start_vert, start_label, labels, rotation=0):
@@ -18,7 +34,7 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
     n_rows, n_cols = labels.shape
 
     # make sure that grid is empty
-    grid = make_grid(n_rows, n_cols, '{}')
+    grid = make_grid(n_rows, n_cols)
     grid['label'] = labels
     grid['pos'].fill(0)
     grid['norm'].fill(0)
@@ -56,7 +72,7 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
     return grid
 
 
-def make_grid(n_rows, n_columns, chan_pattern):
+def make_grid(n_rows, n_columns):
 
     d_ = dtype([
         ('label', '<U256'),   # labels cannot be longer than 256 char
@@ -65,7 +81,6 @@ def make_grid(n_rows, n_columns, chan_pattern):
         ('done', 'bool'),
         ])
     grid = zeros((n_rows, n_columns), dtype=d_)
-    grid['label'] = array([chan_pattern.format(x + 1) for x in range(n_rows * n_columns)]).reshape(n_rows, n_columns, order='F')
     grid['pos'].fill(NaN)
     grid['norm'].fill(NaN)
     grid['done'] = False

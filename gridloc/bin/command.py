@@ -57,6 +57,7 @@ def create_arguments():
           grid :
             n_rows : number of rows
             n_columns : number of columns
+            direction : 'TBLR' (default), 'TBRL', 'BTLR', 'BTRL', 'LRTB', 'LRBT', 'RLTB', 'RLBT'
             chan_pattern : pattern to name the channels (it should match the naming pattern of the data)
 
         Output:
@@ -146,9 +147,10 @@ def main(arguments=None):
     transform_file = parameters['output'] / 'tkras'
 
     if args.function == 'grid2d':
-        from ..construct import make_grid
+        from ..construct import make_grid_with_labels
 
-        grid2d = make_grid(**parameters['grid'])
+        # TODO there should be an intermediate function, with more options
+        grid2d = make_grid_with_labels(**parameters['grid'])
         lg.info(f'Writing labels to {grid2d_tsv}')
         write_grid2d(grid2d_tsv, grid2d)
 
