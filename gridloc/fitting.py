@@ -22,8 +22,8 @@ from .ecog.plot_ecog import plot_2d
 lg = getLogger(__name__)
 
 
-def fitting(T1_file, dura_file, pial_file, initial, ecog, angio_file,
-            angio_threshold, output, intermediate=None, correlation=None,
+def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
+            angio_threshold=None, intermediate=None, correlation=None,
             brute_range=(), method='simplex'):
 
 

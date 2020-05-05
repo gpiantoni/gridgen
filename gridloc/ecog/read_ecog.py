@@ -1,17 +1,33 @@
 from wonambi import Dataset
-from wonambi.trans.select import _create_subepochs
-from numpy import std, median, zeros, array, NaN, dtype, setdiff1d
+from numpy import zeros, NaN, dtype
 from wonambi.trans import math, filter_, montage, timefrequency, select
 from logging import getLogger
+from pathlib import Path
 
 lg = getLogger(__name__)
 
 
-def read_brain(ecog_file, begtime=None, endtime=None, ref_chan=None,
-               freq_range=(55, 95), chan_std_threshold=100):
+def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
+              freq_range=(55, 95)):
+    """Read ECoG data
 
-    lg.debug(f'Reading {ecog_file} between {begtime}s and {endtime}s')
-    d = Dataset(ecog_file)
+    Parameters
+    ----------
+    file : path to file
+        Path to ECoG file
+    begtime : float
+        if specified, data will be read after this point in time (in s)
+    endtime : float
+        if specified, data will be read until this point in time (in s)
+    ref_chan : list of str
+        list of channels to use as reference
+    bad_chan : list of str
+        list of channels to exclude
+    freq_range : two floats
+        frequency range to compute the average power spectrum
+    """
+    lg.debug(f'Reading {file} between {begtime}s and {endtime}s')
+    d = Dataset(Path(file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
     if ref_chan is not None:
@@ -21,22 +37,10 @@ def read_brain(ecog_file, begtime=None, endtime=None, ref_chan=None,
     lg.debug('Apply notch filter')
     data = filter_(data, ftype='notch')
 
-    lg.debug(f'Computing the median of the s.d. in subepochs')
-    x = _create_subepochs(
-        data.data[0],
-        int(data.s_freq),
-        int(data.s_freq / 2))
-    s = median(std(x, axis=2), axis=1)
+    if bad_chan is not None:
+        data = select(data, chan=bad_chan, invert=True)
 
-    good_chans = array(d.header['chan_name'])[s < chan_std_threshold]
-    lg.debug(f'Rejecting {len(d.header["chan_name"]) - len(good_chans)} channels')
-    good_chans = setdiff1d(good_chans, ref_chan)
-    lg.debug(f'Removing {len(ref_chan)} channels')
-    lg.info(f'Using {len(good_chans)} channels')
-
-    data = select(data, chan=good_chans)
-
-    lg.debug(f'Computing Spectrogram')
+    lg.debug('Computing Spectrogram')
     tf = timefrequency(data, method='spectrogram', duration=2, overlap=0.5, taper='hann')
     tf = math(tf, operator_name='median', axis='time')
     tf = math(tf, operator_name='dB')

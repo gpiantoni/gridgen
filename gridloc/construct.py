@@ -70,12 +70,3 @@ def make_grid(n_rows, n_columns, chan_pattern):
     grid['norm'].fill(NaN)
     grid['done'] = False
     return grid
-
-
-if __name__ == '__main__':
-
-    construct_grid(
-        str(DATA_PATH / 'rh.smooth'),
-        2288,
-        16,
-        8)

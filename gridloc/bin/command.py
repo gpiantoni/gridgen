@@ -73,10 +73,9 @@ def create_arguments():
         Parameters:
           ecog :
             file : path to ECoG file
-            ref_chan : list of str, name of the channels to reference to
-            begtime : start time in seconds from beginning of the file
-            endtime : end time in seconds from beginning of the file
-            chan_std_threshold : threshold of the s.d. to reject a channel
+            ref_chan (optional) : list of str, name of the channels to reference to
+            begtime (optional) : start time in seconds from beginning of the file
+            endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
 
         """))
@@ -86,6 +85,15 @@ def create_arguments():
     fit = list_functions.add_parser(
         'fit', help=dedent("""\
         Generate the grid, with the correct labels.
+
+        Parameters:
+          fitting :
+            T1_file : path to T1 image (in particular, the T1.mgz from freesurfer)
+            iniitial : start position for search
+            pial_file : path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
+            dura_file : path to dura surface (for example, the smoothed pial surface)
+            angio_file : path to angiogram (in NIfTI format). Optional.
+            angio_threshold : value to threshold the angio_file. Optional.
 
         """))
     fit.set_defaults(function='fit')
@@ -145,12 +153,12 @@ def main(arguments=None):
         write_grid2d(grid2d_tsv, grid2d)
 
     if args.function == 'ecog':
-        from ..ecog.read_ecog import read_brain, put_ecog_on_grid2d
+        from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
 
         lg.info(f'Reading 2d grid from {grid2d_tsv}')
         grid2d = read_grid2d(grid2d_tsv)
 
-        timefreq = read_brain(**parameters['ecog'])
+        timefreq = read_ecog(**parameters['ecog'])
         ecog2d = put_ecog_on_grid2d(timefreq, grid2d)
 
         lg.info(f'Writing ECoG values to {ecog_tsv}')

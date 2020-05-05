@@ -4,5 +4,20 @@
     "n_rows": 4,
     "n_columns": 5,
     "chan_pattern": "chan{}"
+  },
+  "ecog": {
+    "file": "data/ecog.eeg",
+    "ref_chan": ["chan1", "chan2"],
+    "begtime": 0,
+    "endtime": 10,
+    "freq_range": [60, 90]
+  },
+  "fitting": {
+    "T1_file": "data/T1.mgz",
+    "dura_file": "data/lh_smooth.pial",
+    "pial_file": "data/lh.pial",
+    "angio_file": "angiogram.nii.gz",
+    "angio_threshold": 100,
+    "initial": []
   }
 }
