@@ -1,38 +1,19 @@
-from numpy import zeros, savetxt
-# from gridloc.generators import index_corner, index_up_down
-
-from .paths import GENERATORS_PATH
+from gridloc.construct import make_grid_with_labels
 
 
-def notest_generators_corner():
+def test_make_grids_with_labels():
+    n_rows = 4
+    n_columns = 3
+    chan_pattern = 'chan{:02d}'
 
-    n_rows = 2
-    n_cols = 4
+    grid2d = make_grid_with_labels(n_rows, n_columns, 'TBLR', chan_pattern)
+    assert grid2d['label'][0, 0] == chan_pattern.format(1)  # TL
+    assert grid2d['label'][n_rows - 1, 0] == chan_pattern.format(n_rows)  # TR
+    assert grid2d['label'][0, n_columns - 1] == chan_pattern.format((n_rows - 1 ) * n_columns)  # BL
+    assert grid2d['label'][n_rows - 1, n_columns - 1] == chan_pattern.format(n_rows * n_columns)  # BR
 
-    for direction in ('nw', 'ne', 'sw', 'se'):
-
-        d = zeros((n_rows, n_cols), dtype='int')
-        for i, xy in enumerate(index_corner(n_rows, n_cols, direction)):
-            d[xy] = i
-
-        savetxt(
-            GENERATORS_PATH / f'corner_{direction}.csv',
-            d,
-            delimiter=',',
-            fmt='%d')
-
-
-def notest_generators_updown():
-
-    n_rows = 5
-    n_cols = 4
-
-    d = zeros((n_rows, n_cols), dtype='int')
-    for i, xy in enumerate(index_up_down(n_rows, n_cols)):
-        d[xy] = i
-
-    savetxt(
-        GENERATORS_PATH / f'center_updown.csv',
-        d,
-        delimiter=',',
-        fmt='%d')
+    grid2d = make_grid_with_labels(n_rows, n_columns, 'RLBT', chan_pattern)
+    assert grid2d['label'][0, 0] == chan_pattern.format(n_rows * n_columns)  # TL
+    assert grid2d['label'][n_rows - 1, 0] == chan_pattern.format(n_columns)  # TR
+    assert grid2d['label'][0, n_columns - 1] == chan_pattern.format((n_rows - 1  ) * n_columns + 1)  # BL
+    assert grid2d['label'][n_rows - 1, n_columns - 1] == chan_pattern.format(1)  # BR
