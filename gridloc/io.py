@@ -33,7 +33,7 @@ def read_grid2d(grid_file):
             labels.append([x.strip() for x in row.split('\t')])
 
     labels = array(labels)
-    grid2d = make_grid(labels.shape[0], labels.shape[1], '{}')
+    grid2d = make_grid(labels.shape[0], labels.shape[1])
     grid2d['label'] = labels
     return grid2d
 
