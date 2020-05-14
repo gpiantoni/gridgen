@@ -83,7 +83,7 @@ def put_ecog_on_grid2d(ecog, grid2d):
     """
     d_ = dtype([
         ('label', '<U256'),
-        ('ecog', 'f4'),
+        ('ecog', 'f8'),
         ('good', 'bool'),
         ])
     ecog_on_grid = zeros(grid2d.shape, dtype=d_)

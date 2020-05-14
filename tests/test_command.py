@@ -1,6 +1,6 @@
 from gridloc.bin.command import main
 from json import dump
-from .paths import DATA_PATH, OUTPUT_PATH, PARAMETERS_FILE
+from .paths import DATA_PATH, OUTPUT_PATH, PARAMETERS_FILE, ECOG_FILE
 
 
 PARAMETERS = {
@@ -11,7 +11,7 @@ PARAMETERS = {
         "chan_pattern": "chan{}"
         },
     "ecog": {
-        "file": str(DATA_PATH / "ecog.eeg"),
+        "file": str(ECOG_FILE),
         "ref_chan": [],
         "begtime": 0,
         "endtime": 10,
