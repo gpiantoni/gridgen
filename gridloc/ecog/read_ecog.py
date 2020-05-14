@@ -31,6 +31,10 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
     wonambi Data
         where you get one value per channels, which is the average in the
         frequency range
+
+    TODO
+    ----
+    check whether we should use 'mean' or 'median' across time
     """
     lg.debug(f'Reading {file} between {begtime}s and {endtime}s')
     d = Dataset(Path(file).resolve())
@@ -48,7 +52,7 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
 
     lg.debug('Computing Spectrogram')
     tf = timefrequency(data, method='spectrogram', duration=2, overlap=0.5, taper='hann')
-    tf = math(tf, operator_name='median', axis='time')
+    tf = math(tf, operator_name='mean', axis='time')
     tf = math(tf, operator_name='dB')
 
     lg.debug(f'Selecting frequency range {freq_range[0]:02.2f}-{freq_range[1]:02.2f}')
