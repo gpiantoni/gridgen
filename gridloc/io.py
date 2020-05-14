@@ -39,7 +39,7 @@ def read_grid2d(grid_file):
 
 
 def write_ecog2d(ecog_file, ecog2d):
-    savetxt(ecog_file, ecog2d['ecog'], fmt='%.5f', delimiter='\t')
+    savetxt(ecog_file, ecog2d['ecog'], fmt='%.8f', delimiter='\t')
 
 
 def read_ecog2d(ecog_file, grid_file):
@@ -48,7 +48,7 @@ def read_ecog2d(ecog_file, grid_file):
 
     d_ = dtype([
         ('label', '<U256'),
-        ('ecog', 'f4'),
+        ('ecog', 'f8'),
         ('good', 'bool'),
         ])
     ecog_on_grid = zeros(ecog.shape, dtype=d_)
