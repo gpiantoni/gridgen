@@ -14,7 +14,7 @@ cache:
    - $HOME/.cache/pip
 
 install: 
-  - pip install numpy scipy nibabel plotly
+  - pip install numpy scipy nibabel plotly wonambi
   - pip install -U pytest pytest-cov codecov
   - pip install -U sphinx 
   - pip install -e .
