@@ -1,5 +1,3 @@
-from numpy import array, outer
-from wonambi.utils.simulate import create_data
 from numpy.testing import assert_array_almost_equal
 
 from gridloc.ecog.read_ecog import read_ecog, put_ecog_on_grid2d
