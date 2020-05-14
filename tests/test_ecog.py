@@ -10,7 +10,6 @@ from .paths import ECOG_FILE, OUTPUT_PATH
 
 
 def test_read_ecog():
-    simulate_data()
     tf = read_ecog(ECOG_FILE)
     assert tf.data[0][0] < tf.data[0][1] < tf.data[0][2]
 
@@ -27,11 +26,3 @@ def test_read_ecog():
 
     ecog2d_import = read_ecog2d(ecog_file, grid_file)
     assert_array_almost_equal(ecog2d_import['ecog'], ecog2d['ecog'])
-
-
-def simulate_data():
-    chan_name = [f'chan{x + 1}' for x in range(20)]
-    data = create_data(chan_name=chan_name, s_freq=1024, signal='sine', sine_freq=70, time=(0, 10))
-    ampl_per_chan = array([1, 2, 5, 2, 1, 2, 3, 3, 4, 5, 1, 2, 5, 2, 1, 2, 3, 3, 4, 5])
-    data.data[0] = outer(ampl_per_chan, data.data[0][0, :])  # keep same phase
-    data.export(ECOG_FILE, export_format='BrainVision')
