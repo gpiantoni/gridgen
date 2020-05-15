@@ -14,3 +14,6 @@ def test_io_volume():
     offset = read_surface_ras_shift(T1_FILE)
     assert_array_equal(offset, array([2.9809875, -6.6314774, -30.70549], dtype='f4'))
     export_transform(offset, OUTPUT_PATH / 'tkras.tfm')
+
+    T1 = read_volume(T1_FILE, 150)
+    assert T1.shape[0] == 261
