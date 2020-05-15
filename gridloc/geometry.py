@@ -35,6 +35,39 @@ def count_neighbors(grid, x, y):
 
 
 def search_grid(surf, ref_vert, x, y):
+    """Given a reference vertex, compute a plane perpendicular to the normal of
+    that point. Then, move x-mm in the x direction and y-mm in the y direction,
+    then find the closest vertex to that point.
+
+    Parameters
+    ----------
+    surf : dict
+        surface wuth normals. It's better to use the smooth surface to have
+        reasonable results
+    ref_vert : int
+        index of the reference vertex (the plane will be computed relative to
+        the normal of this vertex)
+    x : float
+        distance in mm from the reference vertex in one direction
+    y : float
+        distance in mm from the reference vertex in the direction perpendicular
+        to x
+
+    Returns
+    -------
+    int
+        index of the vertex which is roughly x-mm and y-mm away
+
+    Notes
+    -----
+    Because vertices are not regularly distributed on the surface, the distance
+    between the reference vertex and the output vertex does not need to be equal
+    to sqrt(x ** 2 + y ** 2), but it should be close enough.
+
+    There are an infinite number of planes perpendicular to the normal. x-y
+    define one of the possible planes. The plane is always the same for the same
+    normal (due to internal convention). You can rotate the plane later.
+    """
     pos = surf['pos'][ref_vert, :]
     normal = surf['pos_norm'][ref_vert, :]
 

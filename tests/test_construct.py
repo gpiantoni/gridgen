@@ -1,10 +1,17 @@
 from gridloc.construct import construct_grid, make_grid
 from gridloc.io import read_surf, export_grid
+from gridloc.geometry import search_grid
 
 from numpy.testing import assert_array_almost_equal
 from numpy import array
 
 from .paths import DATA_PATH, SMOOTH_FILE
+
+
+def test_geometry():
+    smooth = read_surf(SMOOTH_FILE, normals=True)
+    out_vertex = search_grid(smooth, 30000, 5, 5)
+    assert out_vertex == 27729
 
 
 def notest_construct():
