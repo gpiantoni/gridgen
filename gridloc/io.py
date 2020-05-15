@@ -1,4 +1,4 @@
-from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where
+from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where, Inf
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -79,7 +79,7 @@ def read_surf(surf_file, normals=True):
 
     Notes
     -----
-    All the normals are set to 1, by definition. This is necessay when computing
+    All the normals are set to 1, by definition. This is necessary when computing
     the cross-product in later stages.
     """
     pos, tri = read_geometry(surf_file)
@@ -207,8 +207,8 @@ def export_transform(offset, transform_file, format='slicer'):
         f.write(dedent(tfm))
 
 
-def read_volume(volume_file, threshold=None):
-    volume = nload(volume_file)
+def read_volume(volume_file, threshold=-Inf):
+    volume = nload(str(volume_file))
     data = volume.get_data()
     i = data >= threshold
 

@@ -79,6 +79,10 @@ def create_arguments():
             endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
 
+        Output:
+          grid2d_ecog.tsv
+          grid2d_ecog.html
+
         """))
     ecog_arg.set_defaults(function='ecog')
 
@@ -95,6 +99,9 @@ def create_arguments():
             dura_file : path to dura surface (for example, the smoothed pial surface)
             angio_file : path to angiogram (in NIfTI format). Optional.
             angio_threshold : value to threshold the angio_file. Optional.
+
+        Output:
+
 
         """))
     fit.set_defaults(function='fit')

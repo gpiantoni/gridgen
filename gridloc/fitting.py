@@ -26,7 +26,6 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
             angio_threshold=None, intermediate=None, correlation=None,
             brute_range=(), method='simplex'):
 
-
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
     lg.debug(f'Reading positions of {pial_file}')
