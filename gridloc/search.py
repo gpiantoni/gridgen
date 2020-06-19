@@ -33,7 +33,7 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
     for degrees in POSSIBLE_DEGREES:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
-        trans_2d_to_3d = plane @ r.as_dcm()
+        trans_2d_to_3d = plane @ r.as_matrix()
         new_pos = coords_2d @ trans_2d_to_3d + pos_neighbor
         pos_potential.append(new_pos)
         plane_potential.append(trans_2d_to_3d)
@@ -72,8 +72,8 @@ def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
     for degrees in POSSIBLE_DEGREES:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
-        new_pos = direction @ r.as_dcm() * interelec_distance + pos1
-        new_normal = cross(rotation_axis, direction @ r.as_dcm())
+        new_pos = direction @ r.as_matrix() * interelec_distance + pos1
+        new_normal = cross(rotation_axis, direction @ r.as_matrix())
         pos_potential.append(new_pos)
         plane_potential.append(new_normal)
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
@@ -83,7 +83,7 @@ def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
 
     new_pos = pos_potential[idx_min_angle]
     r = Rotation.from_rotvec(rotation_axis * min_angle / 180 * pi)
-    new_normal = cross(rotation_axis, direction @ r.as_dcm())
+    new_normal = cross(rotation_axis, direction @ r.as_matrix())
 
     lg.debug(f'New point in grid row: {x}, column: {y}')
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
@@ -124,7 +124,7 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
     for degrees in POSSIBLE_DEGREES:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
-        new_pos = (search_distance * search_direction) @ r.as_dcm() + center
+        new_pos = (search_distance * search_direction) @ r.as_matrix() + center
         pos_potential.append(new_pos)
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
 
@@ -132,7 +132,7 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
     min_angle = POSSIBLE_DEGREES[idx_min_angle]
     new_pos = pos_potential[idx_min_angle]
     r = Rotation.from_rotvec(rotation_axis * min_angle / 180 * pi)
-    new_normal = normal_center @ r.as_dcm()
+    new_normal = normal_center @ r.as_matrix()
 
     lg.debug(f'New point in grid row: {x}, column: {y}')
     lg.debug(f'\tpos: {new_pos}\n\tnormal: {new_normal}')
