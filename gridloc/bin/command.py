@@ -1,7 +1,7 @@
 from pathlib import Path
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG
 from argparse import ArgumentParser, RawTextHelpFormatter
-from json import load
+from json import load, dumps
 from textwrap import dedent
 from numpy import set_printoptions
 
@@ -80,8 +80,8 @@ def create_arguments():
             freq_range : low and high threshold of the frequency range of interest
 
         Output:
-          grid2d_ecog.tsv
-          grid2d_ecog.html
+          grid2d_ecog.tsv : values of the power spectrum per electrode
+          grid2d_ecog.html : plot of the estimated activity of the power spectrum
 
         """))
     ecog_arg.set_defaults(function='ecog')
@@ -94,14 +94,18 @@ def create_arguments():
         Parameters:
           fitting :
             T1_file : path to T1 image (in particular, the T1.mgz from freesurfer)
-            iniitial : start position for search
             pial_file : path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
             dura_file : path to dura surface (for example, the smoothed pial surface)
             angio_file : path to angiogram (in NIfTI format). Optional.
             angio_threshold : value to threshold the angio_file. Optional.
+            initial : start position for search
+              label : label for the reference electrode
+              RAS : initial location for the reference electrode
+              rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
 
         Output:
-
+          bestfit_vert{}_rot{}.label : electrode locations in freesurfer format
+          bestfit_vert{}_rot{}.html : estimated activity of the best fit based on brain surface
 
         """))
     fit.set_defaults(function='fit')
@@ -130,7 +134,6 @@ def main(arguments=None):
 
     lg.handlers = []
     lg.addHandler(handler)
-    print(args)
 
     p_json = Path(args.parameters).resolve()
     with p_json.open() as f:
@@ -143,9 +146,10 @@ def main(arguments=None):
     else:
         output = '.'
 
+    lg.debug(dumps(parameters, indent=2))
+
     parameters['output'] = Path(output).resolve()
     parameters['output'].mkdir(exist_ok=True, parents=True)
-    print(parameters)
 
     # outputs
     grid2d_tsv = parameters['output'] / 'grid2d_labels.tsv'

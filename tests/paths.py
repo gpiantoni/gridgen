@@ -12,8 +12,8 @@ T1_FILE = DATA_PATH / 'T1.mgz'
 ECOG_FILE = DATA_PATH / 'ecog.eeg'
 
 
-GENERATORS_PATH = ANALYSIS_PATH / 'generators'
-GENERATORS_PATH.mkdir(parents=True, exist_ok=True)
+GENERATED_PATH = ANALYSIS_PATH / 'GENERATED'
+GENERATED_PATH.mkdir(parents=True, exist_ok=True)
 OUTPUT_PATH = ANALYSIS_PATH / 'output'
 
 

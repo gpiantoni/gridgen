@@ -54,9 +54,26 @@ def make_grid_with_labels(n_rows, n_columns, direction='TBLR', chan_pattern='{}'
 
 
 def construct_grid(surf, start_vert, start_label, labels, rotation=0):
-    """Construct 3D grid, based on a starting vertex in a surface
-    """
+    """Construct 3D grid, based on a starting vertex on a surface
 
+    Parameters
+    ----------
+    surf : dict
+        surface with normals. It's better to use the smooth surface to have
+        reasonable results
+    start_vert : int
+        index of the initial vertex
+    start_label : str
+        label of the electrode, which is assumed to be in the initial vertex
+    labels  : 2d array
+        2d array with the channel labels
+    rotation : float
+        rotation from the inferior-rotation axis (clockwise)
+
+    Returns
+    -------
+    grid :
+    """
     radians = rotation / 180 * pi
     n_rows, n_cols = labels.shape
 

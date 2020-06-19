@@ -25,7 +25,26 @@ lg = getLogger(__name__)
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, intermediate=None, correlation=None,
             brute_range=(), method='simplex'):
+    """Fit the brain activity onto the surface
 
+    Parameters
+    ----------
+    T1_file : path
+        path to T1 image (in particular, the T1.mgz from freesurfer)
+    dura_file : path
+        path to dura surface (for example, the smoothed pial surface)
+    pial_file : path
+        path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
+    angio_file : path or None
+        path to angiogram (in NIfTI format). Optional.
+    angio_threshold : float
+        value to threshold the angio_file. Optional.
+    initial : dict
+        start position for search, with fields:
+            label : label for the reference electrode
+            RAS : initial location for the reference electrode
+            rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
+    """
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
     lg.debug(f'Reading positions of {pial_file}')
@@ -89,6 +108,9 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
                     intermediate=None, correlation=None):
+    """Main model to minimize
+
+    """
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
     lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = ')

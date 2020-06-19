@@ -19,8 +19,16 @@
     "T1_file": "/home/gio/tools/gridloc/tests/analysis/data/T1.mgz",
     "dura_file": "/home/gio/tools/gridloc/tests/analysis/data/lh_smooth.pial",
     "pial_file": "/home/gio/tools/gridloc/tests/analysis/data/lh.pial",
-    "angio_file": "/home/gio/tools/gridloc/tests/analysis/data/angiogram.nii.gz",
+    "angio_file": null,
     "angio_threshold": 100,
-    "initial": []
+    "initial": {
+      "label": "chan4",
+      "RAS": [
+        -34,
+        0,
+        8
+      ],
+      "rotation": 0
+    }
   }
 }

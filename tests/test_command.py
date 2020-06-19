@@ -21,9 +21,13 @@ PARAMETERS = {
         "T1_file": str(DATA_PATH / "T1.mgz"),
         "dura_file": str(DATA_PATH / "lh_smooth.pial"),
         "pial_file": str(DATA_PATH / "lh.pial"),
-        "angio_file": str(DATA_PATH / "angiogram.nii.gz"),
+        "angio_file": None,  # str(DATA_PATH / "angiogram.nii.gz"),
         "angio_threshold": 100,
-        "initial": []
+        "initial": {
+            "label": "chan4",
+            "RAS": [-34, 0, 8],
+            "rotation": 0,
+            },
         }
     }
 

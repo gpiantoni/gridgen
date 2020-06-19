@@ -40,4 +40,4 @@ def calc_plane_to_axis(v, radians=0):
 
     # apply rotation about normal (normal points to you, then it's clockwise)
     r = Rotation.from_rotvec(v * radians)
-    return plane @ r.as_dcm()
+    return plane @ r.as_matrix()

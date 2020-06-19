@@ -42,7 +42,7 @@ def search_grid(surf, ref_vert, x, y):
     Parameters
     ----------
     surf : dict
-        surface wuth normals. It's better to use the smooth surface to have
+        surface with normals. It's better to use the smooth surface to have
         reasonable results
     ref_vert : int
         index of the reference vertex (the plane will be computed relative to
