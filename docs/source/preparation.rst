@@ -65,7 +65,7 @@ After running Freesurfer, you will have the files:
 * `ecog_file.ns3`
 * `brain.mgz`
 * `lh.pial`
-* `lh_smooth.pial
+* `lh_smooth.pial`
 * `angiogram.nii.gz`
 
 

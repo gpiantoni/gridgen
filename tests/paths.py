@@ -11,11 +11,9 @@ PIAL_FILE = DATA_PATH / 'lh.pial'
 T1_FILE = DATA_PATH / 'T1.mgz'
 ECOG_FILE = DATA_PATH / 'ecog.eeg'
 
-
-GENERATED_PATH = ANALYSIS_PATH / 'GENERATED'
+GENERATED_PATH = ANALYSIS_PATH / 'generated'
 GENERATED_PATH.mkdir(parents=True, exist_ok=True)
 OUTPUT_PATH = ANALYSIS_PATH / 'output'
-
 
 data = simulate_data()
 data.export(ECOG_FILE, export_format='BrainVision')
