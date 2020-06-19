@@ -54,6 +54,8 @@ def make_grid_with_labels(n_rows, n_columns, direction='TBLR', chan_pattern='{}'
 
 
 def construct_grid(surf, start_vert, start_label, labels, rotation=0):
+    """Construct 3D grid, based on a starting vertex in a surface
+    """
 
     radians = rotation / 180 * pi
     n_rows, n_cols = labels.shape

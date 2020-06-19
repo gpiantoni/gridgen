@@ -1,4 +1,5 @@
 from gridloc.construct import make_grid_with_labels
+from gridloc.generators import index_order
 
 
 def test_make_grids_with_labels():
@@ -17,3 +18,8 @@ def test_make_grids_with_labels():
     assert grid2d['label'][n_rows - 1, 0] == chan_pattern.format(n_columns)  # TR
     assert grid2d['label'][0, n_columns - 1] == chan_pattern.format((n_rows - 1) * n_columns + 1)  # BL
     assert grid2d['label'][n_rows - 1, n_columns - 1] == chan_pattern.format(1)  # BR
+
+
+def test_index_order():
+    grid2d = make_grid_with_labels(2, 2)
+    assert list(index_order(grid2d, '1', 'minor')) == [(0, 0), (0, 1), (1, 0), (1, 1)]
