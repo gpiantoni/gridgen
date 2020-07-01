@@ -3,12 +3,6 @@ language: python
 python:
  - "3.7"
 
-env:
-  global:
-   - API_PATH=docs/source/api
-   - DOCTREES_PATH=docs/build/doctrees
-   - HTML_PATH=docs/build/html
-
 cache: 
  - directories:
    - $HOME/.cache/pip
@@ -16,7 +10,6 @@ cache:
 install: 
   - pip install numpy scipy nibabel plotly wonambi
   - pip install -U pytest pytest-cov codecov
-  - pip install -U sphinx 
   - pip install -e .
 
 script:
@@ -24,17 +17,6 @@ script:
 
 after_success:
   - codecov
-  - sphinx-apidoc -f -M -E -o $API_PATH gridloc
-  - sed -zi "s/Submodules\n----------\n//g" $API_PATH/*.rst
-  - sphinx-build -d $DOCTREES_PATH docs/source/ $HTML_PATH
 
 notifications:
   email: false
-
-deploy:
- - provider: pages
-   skip_cleanup: true
-   local_dir : $HTML_PATH
-   repo : gpiantoni/gridloc
-   target_branch : gh-pages
-   github_token : $GITHUB_TOKEN
