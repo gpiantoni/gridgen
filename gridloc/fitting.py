@@ -37,15 +37,25 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         path to dura surface (for example, the smoothed pial surface)
     pial_file : path
         path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
-    angio_file : path or None
-        path to angiogram (in NIfTI format). Optional.
-    angio_threshold : float
-        value to threshold the angio_file. Optional.
     initial : dict
         start position for search, with fields:
             label : label for the reference electrode
             RAS : initial location for the reference electrode
             rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
+    angio_file : path or None
+        path to angiogram (in NIfTI format). Optional.
+    angio_threshold : float
+        value to threshold the angio_file. Optional.
+    intermediate : bool
+        whether to save the intermediate steps of the fitting procedure
+    correlation : str
+        'parametric' (Pearson) or 'nonparametric' (rank)
+    method : str
+        'simplex', 'hopping', 'bruteforce'
+    brute_range : list of 3 lists of 2 floats
+
+
+
     """
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)

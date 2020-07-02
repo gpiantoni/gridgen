@@ -80,6 +80,7 @@ def create_arguments():
             begtime (optional) : start time in seconds from beginning of the file
             endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
+            bad_chan (optional) : list of str, name of the channels to exclude
 
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
@@ -162,7 +163,6 @@ def main(arguments=None):
     if args.function == 'grid2d':
         from ..construct import make_grid_with_labels
 
-        # TODO there should be an intermediate function, with more options
         grid2d = make_grid_with_labels(**parameters['grid'])
         lg.info(f'Writing labels to {grid2d_tsv}')
         write_grid2d(grid2d_tsv, grid2d)
