@@ -1,4 +1,4 @@
-#Installation
+# Installation
 
 `gridloc` is pure python, so it can be installed on every platform if you have the correct dependencies.
 Make sure if you have at least python 3.6 installed.
