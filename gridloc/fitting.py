@@ -53,13 +53,13 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     method : str
         'simplex', 'hopping', 'bruteforce'
     brute_range : list of 3 lists of 3 floats
-        It should give the range to compute the brute force analysis. The start
-        position is given by "init". As an example:
+        Only if method == 'bruteforce'. It should give the range to compute the
+        brute force analysis. The start position is given by "init".
+        As an example:
 
-        [-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
-        [-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
-        [-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
-
+            [-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
+            [-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
+            [-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
     """
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
