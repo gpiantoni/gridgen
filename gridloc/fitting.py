@@ -39,9 +39,9 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
     initial : dict
         start position for search, with fields:
-            label : label for the reference electrode
-            RAS : initial location for the reference electrode
-            rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
+            - label : label for the reference electrode
+            - RAS : initial location for the reference electrode
+            - rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
     angio_file : path or None
         path to angiogram (in NIfTI format). Optional.
     angio_threshold : float
@@ -52,9 +52,13 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         'parametric' (Pearson) or 'nonparametric' (rank)
     method : str
         'simplex', 'hopping', 'bruteforce'
-    brute_range : list of 3 lists of 2 floats
+    brute_range : list of 3 lists of 3 floats
+        It should give the range to compute the brute force analysis. The start
+        position is given by "init". As an example:
 
-
+        [-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
+        [-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
+        [-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
 
     """
     lg.debug(f'Reading positions and computing normals of {dura_file}')
