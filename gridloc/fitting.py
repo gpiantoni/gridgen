@@ -1,3 +1,5 @@
+"""Functions to compute the actual fitting of the grid onto the brain surface
+"""
 from scipy.optimize import basinhopping, brute, minimize
 from scipy.stats import spearmanr
 from numpy.linalg import norm

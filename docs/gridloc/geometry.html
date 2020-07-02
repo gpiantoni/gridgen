@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
 <title>gridloc.geometry API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Functions to compute vector-based transformation and searches." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,13 +20,17 @@
 <h1 class="title">Module <code>gridloc.geometry</code></h1>
 </header>
 <section id="section-intro">
+<p>Functions to compute vector-based transformation and searches.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import array, zeros, argmin
+<pre><code class="python">&#34;&#34;&#34;Functions to compute vector-based transformation and searches.
+&#34;&#34;&#34;
+from numpy import array, zeros, argmin, cross
 from numpy.linalg import norm
-from gridloc.algebra import calc_plane_to_axis
+from scipy.spatial.transform import Rotation
+
 
 NEIGHBORS = array([
     [-1, 0],
@@ -102,7 +106,46 @@ def search_grid(surf, ref_vert, x, y):
     target = coords_2d @ plane + pos
     new_vector = argmin(norm(surf[&#39;pos&#39;] - target, axis=1))
 
-    return new_vector</code></pre>
+    return new_vector
+
+
+def calc_plane_to_axis(v, radians=0):
+    &#34;&#34;&#34;Compute the plane perpendicular to the input vector. Because there are
+    infinite number of vectors belonging to one plane, we fix the first vector
+    to point towards the superior part of the brain.
+
+    Parameters
+    ----------
+    v : array of 3 values
+        input vector. The dot product of this vector and each of the two output
+        vectors is 0
+    radians : float
+        rotation to apply about the input v vector, clockwise.
+
+    Returns
+    -------
+    2x3 array
+        2 vectors defining the plane perpendicular to input vector
+
+    Notes
+    -----
+    Order of cross-product is very important.
+    The normal of the vector is pointing towards the viewer, the first axis of
+    the plane points up, so by the right-hand rule, the second axis needs to
+    point right (so that it&#39;s comparable to the orientation of an array.)
+    &#34;&#34;&#34;
+    v /= norm(v)  # essential, otherwise it&#39;s not correct
+    perpendicular_v = array([0., 0., 1.])
+    v1 = cross(perpendicular_v, v)
+    v1 /= norm(v1)  # rows
+    v2 = cross(v1, v)  # columns
+    v2 /= norm(v2)  # rows
+
+    plane = array([v2, v1])
+
+    # apply rotation about normal (normal points to you, then it&#39;s clockwise)
+    r = Rotation.from_rotvec(v * radians)
+    return plane @ r.as_matrix()</code></pre>
 </details>
 </section>
 <section>
@@ -112,6 +155,74 @@ def search_grid(surf, ref_vert, x, y):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridloc.geometry.calc_plane_to_axis"><code class="name flex">
+<span>def <span class="ident">calc_plane_to_axis</span></span>(<span>v, radians=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the plane perpendicular to the input vector. Because there are
+infinite number of vectors belonging to one plane, we fix the first vector
+to point towards the superior part of the brain.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>v</code></strong> :&ensp;<code>array</code> of <code>3 values</code></dt>
+<dd>input vector. The dot product of this vector and each of the two output
+vectors is 0</dd>
+<dt><strong><code>radians</code></strong> :&ensp;<code>float</code></dt>
+<dd>rotation to apply about the input v vector, clockwise.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>2x3 array</code></dt>
+<dd>2 vectors defining the plane perpendicular to input vector</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Order of cross-product is very important.
+The normal of the vector is pointing towards the viewer, the first axis of
+the plane points up, so by the right-hand rule, the second axis needs to
+point right (so that it's comparable to the orientation of an array.)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calc_plane_to_axis(v, radians=0):
+    &#34;&#34;&#34;Compute the plane perpendicular to the input vector. Because there are
+    infinite number of vectors belonging to one plane, we fix the first vector
+    to point towards the superior part of the brain.
+
+    Parameters
+    ----------
+    v : array of 3 values
+        input vector. The dot product of this vector and each of the two output
+        vectors is 0
+    radians : float
+        rotation to apply about the input v vector, clockwise.
+
+    Returns
+    -------
+    2x3 array
+        2 vectors defining the plane perpendicular to input vector
+
+    Notes
+    -----
+    Order of cross-product is very important.
+    The normal of the vector is pointing towards the viewer, the first axis of
+    the plane points up, so by the right-hand rule, the second axis needs to
+    point right (so that it&#39;s comparable to the orientation of an array.)
+    &#34;&#34;&#34;
+    v /= norm(v)  # essential, otherwise it&#39;s not correct
+    perpendicular_v = array([0., 0., 1.])
+    v1 = cross(perpendicular_v, v)
+    v1 /= norm(v1)  # rows
+    v2 = cross(v1, v)  # columns
+    v2 /= norm(v2)  # rows
+
+    plane = array([v2, v1])
+
+    # apply rotation about normal (normal points to you, then it&#39;s clockwise)
+    r = Rotation.from_rotvec(v * radians)
+    return plane @ r.as_matrix()</code></pre>
+</details>
+</dd>
 <dt id="gridloc.geometry.count_neighbors"><code class="name flex">
 <span>def <span class="ident">count_neighbors</span></span>(<span>grid, x, y)</span>
 </code></dt>
@@ -245,6 +356,7 @@ normal (due to internal convention). You can rotate the plane later.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridloc.geometry.calc_plane_to_axis" href="#gridloc.geometry.calc_plane_to_axis">calc_plane_to_axis</a></code></li>
 <li><code><a title="gridloc.geometry.count_neighbors" href="#gridloc.geometry.count_neighbors">count_neighbors</a></code></li>
 <li><code><a title="gridloc.geometry.search_grid" href="#gridloc.geometry.search_grid">search_grid</a></code></li>
 </ul>
