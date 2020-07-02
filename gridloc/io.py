@@ -23,12 +23,33 @@ SLICER_HEADER = """# Markups fiducial file version = 4.10
 lg = getLogger(__name__)
 
 def write_grid2d(grid_file, grid2d):
+    """Write the labels of a 2D grid to file
+
+    Parameters
+    ----------
+    grid_file : Path
+        file to write to (preferred extension .csv)
+    grid2d : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    """
     with grid_file.open('w') as f:
         for row in grid2d['label']:
             f.write('\t'.join(row) + '\n')
 
 
 def read_grid2d(grid_file):
+    """Read the labels of a 2D grid to file
+
+    Parameters
+    ----------
+    grid_file : Path
+        file to write to (preferred extension .csv)
+
+    Returns
+    -------
+    grid2d : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    """
     labels = []
     with grid_file.open('r') as f:
         for row in f.readlines():
@@ -41,11 +62,31 @@ def read_grid2d(grid_file):
 
 
 def write_ecog2d(ecog_file, ecog2d):
+    """Write the values of ECoG analysis to file
+
+    Parameters
+    ----------
+    ecog_file : Path
+        file to write to (preferred extension .csv)
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog, good)
+    """
     savetxt(ecog_file, ecog2d['ecog'], fmt='%.8f', delimiter='\t')
 
 
 def read_ecog2d(ecog_file, grid_file):
+    """Read the values of ECoG analysis to file
 
+    Parameters
+    ----------
+    ecog_file : Path
+        file to write to (preferred extension .csv)
+
+    Returns
+    -------
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog)
+    """
     ecog = loadtxt(ecog_file, delimiter='\t')
 
     d_ = dtype([
@@ -210,6 +251,25 @@ def export_transform(offset, transform_file, format='slicer'):
 
 
 def read_volume(volume_file, threshold=-Inf):
+    """Read 3D volume. You can also apply threshold to the data
+
+    Parameters
+    ----------
+    volume_file : path
+        path to the nifti file
+    threshold : float
+        only values above this threshold will be included
+
+    Returns
+    -------
+    ndarray of shape (n_points, ) with fields:
+        - pos : 3 floats (specifying the x, y, z position)
+        - value : float (actual value at that point)
+
+    Notes
+    -----
+    Values below the threhold are not included in the output
+    """
     volume = nload(str(volume_file))
     data = volume.get_data()
     i = data >= threshold

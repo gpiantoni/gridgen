@@ -50,12 +50,33 @@ SLICER_HEADER = &#34;&#34;&#34;# Markups fiducial file version = 4.10
 lg = getLogger(__name__)
 
 def write_grid2d(grid_file, grid2d):
+    &#34;&#34;&#34;Write the labels of a 2D grid to file
+
+    Parameters
+    ----------
+    grid_file : Path
+        file to write to (preferred extension .csv)
+    grid2d : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    &#34;&#34;&#34;
     with grid_file.open(&#39;w&#39;) as f:
         for row in grid2d[&#39;label&#39;]:
             f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)
 
 
 def read_grid2d(grid_file):
+    &#34;&#34;&#34;Read the labels of a 2D grid to file
+
+    Parameters
+    ----------
+    grid_file : Path
+        file to write to (preferred extension .csv)
+
+    Returns
+    -------
+    grid2d : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    &#34;&#34;&#34;
     labels = []
     with grid_file.open(&#39;r&#39;) as f:
         for row in f.readlines():
@@ -68,11 +89,31 @@ def read_grid2d(grid_file):
 
 
 def write_ecog2d(ecog_file, ecog2d):
+    &#34;&#34;&#34;Write the values of ECoG analysis to file
+
+    Parameters
+    ----------
+    ecog_file : Path
+        file to write to (preferred extension .csv)
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog, good)
+    &#34;&#34;&#34;
     savetxt(ecog_file, ecog2d[&#39;ecog&#39;], fmt=&#39;%.8f&#39;, delimiter=&#39;\t&#39;)
 
 
 def read_ecog2d(ecog_file, grid_file):
+    &#34;&#34;&#34;Read the values of ECoG analysis to file
 
+    Parameters
+    ----------
+    ecog_file : Path
+        file to write to (preferred extension .csv)
+
+    Returns
+    -------
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog)
+    &#34;&#34;&#34;
     ecog = loadtxt(ecog_file, delimiter=&#39;\t&#39;)
 
     d_ = dtype([
@@ -237,6 +278,25 @@ def export_transform(offset, transform_file, format=&#39;slicer&#39;):
 
 
 def read_volume(volume_file, threshold=-Inf):
+    &#34;&#34;&#34;Read 3D volume. You can also apply threshold to the data
+
+    Parameters
+    ----------
+    volume_file : path
+        path to the nifti file
+    threshold : float
+        only values above this threshold will be included
+
+    Returns
+    -------
+    ndarray of shape (n_points, ) with fields:
+        - pos : 3 floats (specifying the x, y, z position)
+        - value : float (actual value at that point)
+
+    Notes
+    -----
+    Values below the threhold are not included in the output
+    &#34;&#34;&#34;
     volume = nload(str(volume_file))
     data = volume.get_data()
     i = data &gt;= threshold
@@ -376,13 +436,34 @@ imports them)</p></div>
 <span>def <span class="ident">read_ecog2d</span></span>(<span>ecog_file, grid_file)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Read the values of ECoG analysis to file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ecog_file</code></strong> :&ensp;<code>Path</code></dt>
+<dd>file to write to (preferred extension .csv)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>ecog2d</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>ecog (n_rows, n_columns) with fields (label, ecog)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_ecog2d(ecog_file, grid_file):
+    &#34;&#34;&#34;Read the values of ECoG analysis to file
 
+    Parameters
+    ----------
+    ecog_file : Path
+        file to write to (preferred extension .csv)
+
+    Returns
+    -------
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog)
+    &#34;&#34;&#34;
     ecog = loadtxt(ecog_file, delimiter=&#39;\t&#39;)
 
     d_ = dtype([
@@ -402,12 +483,34 @@ imports them)</p></div>
 <span>def <span class="ident">read_grid2d</span></span>(<span>grid_file)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Read the labels of a 2D grid to file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid_file</code></strong> :&ensp;<code>Path</code></dt>
+<dd>file to write to (preferred extension .csv)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_grid2d(grid_file):
+    &#34;&#34;&#34;Read the labels of a 2D grid to file
+
+    Parameters
+    ----------
+    grid_file : Path
+        file to write to (preferred extension .csv)
+
+    Returns
+    -------
+    grid2d : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    &#34;&#34;&#34;
     labels = []
     with grid_file.open(&#39;r&#39;) as f:
         for row in f.readlines():
@@ -542,12 +645,50 @@ To get from volume to surface coordinates, substract these numbers.</p>
 <span>def <span class="ident">read_volume</span></span>(<span>volume_file, threshold=-inf)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Read 3D volume. You can also apply threshold to the data</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>volume_file</code></strong> :&ensp;<code>path</code></dt>
+<dd>path to the nifti file</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code></dt>
+<dd>only values above this threshold will be included</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ndarray</code> of <code>shape (n_points, ) with fields:</code></dt>
+<dd>
+<ul>
+<li>pos : 3 floats (specifying the x, y, z position)</li>
+<li>value : float (actual value at that point)</li>
+</ul>
+</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Values below the threhold are not included in the output</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_volume(volume_file, threshold=-Inf):
+    &#34;&#34;&#34;Read 3D volume. You can also apply threshold to the data
+
+    Parameters
+    ----------
+    volume_file : path
+        path to the nifti file
+    threshold : float
+        only values above this threshold will be included
+
+    Returns
+    -------
+    ndarray of shape (n_points, ) with fields:
+        - pos : 3 floats (specifying the x, y, z position)
+        - value : float (actual value at that point)
+
+    Notes
+    -----
+    Values below the threhold are not included in the output
+    &#34;&#34;&#34;
     volume = nload(str(volume_file))
     data = volume.get_data()
     i = data &gt;= threshold
@@ -568,12 +709,28 @@ To get from volume to surface coordinates, substract these numbers.</p>
 <span>def <span class="ident">write_ecog2d</span></span>(<span>ecog_file, ecog2d)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Write the values of ECoG analysis to file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ecog_file</code></strong> :&ensp;<code>Path</code></dt>
+<dd>file to write to (preferred extension .csv)</dd>
+<dt><strong><code>ecog2d</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>ecog (n_rows, n_columns) with fields (label, ecog, good)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def write_ecog2d(ecog_file, ecog2d):
+    &#34;&#34;&#34;Write the values of ECoG analysis to file
+
+    Parameters
+    ----------
+    ecog_file : Path
+        file to write to (preferred extension .csv)
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog, good)
+    &#34;&#34;&#34;
     savetxt(ecog_file, ecog2d[&#39;ecog&#39;], fmt=&#39;%.8f&#39;, delimiter=&#39;\t&#39;)</code></pre>
 </details>
 </dd>
@@ -581,12 +738,28 @@ To get from volume to surface coordinates, substract these numbers.</p>
 <span>def <span class="ident">write_grid2d</span></span>(<span>grid_file, grid2d)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Write the labels of a 2D grid to file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid_file</code></strong> :&ensp;<code>Path</code></dt>
+<dd>file to write to (preferred extension .csv)</dd>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def write_grid2d(grid_file, grid2d):
+    &#34;&#34;&#34;Write the labels of a 2D grid to file
+
+    Parameters
+    ----------
+    grid_file : Path
+        file to write to (preferred extension .csv)
+    grid2d : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    &#34;&#34;&#34;
     with grid_file.open(&#39;w&#39;) as f:
         for row in grid2d[&#39;label&#39;]:
             f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)</code></pre>

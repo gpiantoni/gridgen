@@ -3,7 +3,12 @@ import plotly.graph_objs as go
 
 
 def plot_2d(grid2d, value='ecog'):
+    """Plot the 2D grid to a plotly html
 
+    Parameters
+    ----------
+    grid2d :
+    """
     if not value == 'ecog':
         reversescale = True
     else:

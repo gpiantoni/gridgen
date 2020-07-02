@@ -41,6 +41,24 @@ NEIGHBORS = array([
 
 
 def count_neighbors(grid, x, y):
+    &#34;&#34;&#34;Count neighbors around one electrode
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+
+    Returns
+    -------
+    int
+        number of neighbors
+    list of tuple
+        index of the direct neighbor to this channel
+    &#34;&#34;&#34;
     n_rows, n_cols = grid.shape
 
     idx = zeros(4, bool)
@@ -227,12 +245,46 @@ point right (so that it's comparable to the orientation of an array.)</p></div>
 <span>def <span class="ident">count_neighbors</span></span>(<span>grid, x, y)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Count neighbors around one electrode</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done)</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>row index for this electrode</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>column index for this electrode</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>number of neighbors</dd>
+<dt><code>list</code> of <code>tuple</code></dt>
+<dd>index of the direct neighbor to this channel</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def count_neighbors(grid, x, y):
+    &#34;&#34;&#34;Count neighbors around one electrode
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+
+    Returns
+    -------
+    int
+        number of neighbors
+    list of tuple
+        index of the direct neighbor to this channel
+    &#34;&#34;&#34;
     n_rows, n_cols = grid.shape
 
     idx = zeros(4, bool)

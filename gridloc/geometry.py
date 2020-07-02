@@ -14,6 +14,24 @@ NEIGHBORS = array([
 
 
 def count_neighbors(grid, x, y):
+    """Count neighbors around one electrode
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+
+    Returns
+    -------
+    int
+        number of neighbors
+    list of tuple
+        index of the direct neighbor to this channel
+    """
     n_rows, n_cols = grid.shape
 
     idx = zeros(4, bool)
