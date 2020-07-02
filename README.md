@@ -1,3 +1,0 @@
-## GRIDLOC
-
-See Documentation
