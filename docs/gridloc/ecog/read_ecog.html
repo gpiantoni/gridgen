@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
 <title>gridloc.ecog.read_ecog API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Read ECoG data from the grid and convert them to 2D" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +20,13 @@
 <h1 class="title">Module <code>gridloc.ecog.read_ecog</code></h1>
 </header>
 <section id="section-intro">
+<p>Read ECoG data from the grid and convert them to 2D</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from wonambi import Dataset
+<pre><code class="python">&#34;&#34;&#34;Read ECoG data from the grid and convert them to 2D&#34;&#34;&#34;
+from wonambi import Dataset
 from numpy import zeros, NaN, dtype
 from wonambi.trans import math, filter_, montage, timefrequency, select
 from logging import getLogger
@@ -101,8 +103,7 @@ def put_ecog_on_grid2d(ecog, grid2d):
 
     Returns
     -------
-    2d array
-        array with same shape as grid2d, with fields:
+    ndarray of shape (n_rows, n_columns) with fields:
         - label : channel label
         - ecog : value computed from &#39;ecog&#39;
         - good : whether to include the channel or not
@@ -149,11 +150,14 @@ location</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>2d array</code></dt>
-<dd>array with same shape as grid2d, with fields:
-- label : channel label
-- ecog : value computed from 'ecog'
-- good : whether to include the channel or not</dd>
+<dt><code>ndarray</code> of <code>shape (n_rows, n_columns) with fields:</code></dt>
+<dd>
+<ul>
+<li>label : channel label</li>
+<li>ecog : value computed from 'ecog'</li>
+<li>good : whether to include the channel or not</li>
+</ul>
+</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -172,8 +176,7 @@ location</p>
 
     Returns
     -------
-    2d array
-        array with same shape as grid2d, with fields:
+    ndarray of shape (n_rows, n_columns) with fields:
         - label : channel label
         - ecog : value computed from &#39;ecog&#39;
         - good : whether to include the channel or not

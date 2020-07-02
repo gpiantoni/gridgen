@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
 <title>gridloc.bin.command API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Specify how to call gridloc from the command line" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +20,13 @@
 <h1 class="title">Module <code>gridloc.bin.command</code></h1>
 </header>
 <section id="section-intro">
+<p>Specify how to call gridloc from the command line</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from pathlib import Path
+<pre><code class="python">&#34;&#34;&#34;Specify how to call gridloc from the command line&#34;&#34;&#34;
+from pathlib import Path
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG
 from argparse import ArgumentParser, RawTextHelpFormatter
 from json import load, dumps
@@ -52,6 +54,7 @@ set_printoptions(suppress=True, precision=3)
 
 
 def create_arguments():
+    &#34;&#34;&#34;Create the input information for the command line&#34;&#34;&#34;
     parser = ArgumentParser(
         description=&#39;Tools to calculate the position of ECoG grid on brain based on the neuronal activity&#39;,
         formatter_class=RawTextHelpFormatter)
@@ -140,7 +143,7 @@ def create_arguments():
 
 
 def main(arguments=None):
-
+    &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
 
@@ -231,12 +234,13 @@ def main(arguments=None):
 <span>def <span class="ident">create_arguments</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Create the input information for the command line</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_arguments():
+    &#34;&#34;&#34;Create the input information for the command line&#34;&#34;&#34;
     parser = ArgumentParser(
         description=&#39;Tools to calculate the position of ECoG grid on brain based on the neuronal activity&#39;,
         formatter_class=RawTextHelpFormatter)
@@ -328,13 +332,13 @@ def main(arguments=None):
 <span>def <span class="ident">main</span></span>(<span>arguments=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Main function which is called from the command line</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def main(arguments=None):
-
+    &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
 

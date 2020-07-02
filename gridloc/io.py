@@ -1,3 +1,5 @@
+"""Functions to input and output data
+"""
 from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where, Inf
 from numpy.linalg import norm
 from multiprocessing import Pool

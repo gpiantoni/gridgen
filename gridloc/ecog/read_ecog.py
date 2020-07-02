@@ -1,3 +1,4 @@
+"""Read ECoG data from the grid and convert them to 2D"""
 from wonambi import Dataset
 from numpy import zeros, NaN, dtype
 from wonambi.trans import math, filter_, montage, timefrequency, select
@@ -75,8 +76,7 @@ def put_ecog_on_grid2d(ecog, grid2d):
 
     Returns
     -------
-    2d array
-        array with same shape as grid2d, with fields:
+    ndarray of shape (n_rows, n_columns) with fields:
         - label : channel label
         - ecog : value computed from 'ecog'
         - good : whether to include the channel or not

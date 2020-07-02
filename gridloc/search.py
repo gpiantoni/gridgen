@@ -1,3 +1,5 @@
+"""Sub-functions to find one node (electrode) at the time, based on the location
+of the previous nodes"""
 from logging import getLogger
 from numpy import array, arange, argmin, cross, pi, sqrt
 from numpy.linalg import norm
@@ -6,7 +8,9 @@ from scipy.spatial.transform import Rotation
 from .geometry import calc_plane_to_axis
 
 interelec_distance = 3
+"""float : distance between electrodes, in mm"""
 MAX_ANGLE = 5
+"""float : maximum angle that the grid can flex (elasticity of the grid), between two neighboring electrodes"""
 POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
 
 lg = getLogger(__name__)

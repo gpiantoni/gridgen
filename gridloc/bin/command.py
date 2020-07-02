@@ -1,3 +1,4 @@
+"""Specify how to call gridloc from the command line"""
 from pathlib import Path
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -26,6 +27,7 @@ set_printoptions(suppress=True, precision=3)
 
 
 def create_arguments():
+    """Create the input information for the command line"""
     parser = ArgumentParser(
         description='Tools to calculate the position of ECoG grid on brain based on the neuronal activity',
         formatter_class=RawTextHelpFormatter)
@@ -114,7 +116,7 @@ def create_arguments():
 
 
 def main(arguments=None):
-
+    """Main function which is called from the command line"""
     parser = create_arguments()
     args = parser.parse_args(arguments)
 

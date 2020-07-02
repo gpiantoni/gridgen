@@ -24,17 +24,18 @@ def make_grid_with_labels(n_rows, n_columns, direction='TBLR', chan_pattern='{}'
         (where L -> Left, R -> Right, T -> Top, B -> Bottom)
     chan_pattern : str
         pattern to convert number into label string. Examples:
-        'chan{}' -> 'chan1', 'chan2', 'chan3', ...
-        'chan{:02d}' -> 'chan01', 'chan02', 'chan03', ...
-        'elec{:03d}' -> 'elec001', 'elec002', 'elec003', ...
+
+            'chan{}' -> 'chan1', 'chan2', 'chan3', ...
+            'chan{:02d}' -> 'chan01', 'chan02', 'chan03', ...
+            'elec{:03d}' -> 'elec001', 'elec002', 'elec003', ...
 
     Returns
     -------
     ndarray of shape (n_rows, n_columns) with fields:
-      - label : str (labels)
-      - pos : 3 floats (specifying the x, y, z position)
-      - norm : 3 floats (specifying the normals)
-      - done : bool (where the position has been computed or not)
+        - label : str (labels)
+        - pos : 3 floats (specifying the x, y, z position)
+        - norm : 3 floats (specifying the normals)
+        - done : bool (where the position has been computed or not)
     """
     grid = make_grid(n_rows, n_columns)
 
@@ -73,7 +74,11 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
 
     Returns
     -------
-    grid :
+    ndarray of shape (n_rows, n_columns) with fields:
+        - label : str (labels)
+        - pos : 3 floats (specifying the x, y, z position)
+        - norm : 3 floats (specifying the normals)
+        - done : bool (where the position has been computed or not)
     """
     radians = rotation / 180 * pi
     n_rows, n_cols = labels.shape
@@ -130,10 +135,10 @@ def make_grid(n_rows, n_columns):
     Returns
     -------
     ndarray of shape (n_rows, n_columns) with fields:
-      - label : str (labels)
-      - pos : 3 floats (specifying the x, y, z position)
-      - norm : 3 floats (specifying the normals)
-      - done : bool (where the position has been computed or not)
+        - label : str (labels)
+        - pos : 3 floats (specifying the x, y, z position)
+        - norm : 3 floats (specifying the normals)
+        - done : bool (where the position has been computed or not)
     """
     d_ = dtype([
         ('label', '<U256'),   # labels cannot be longer than 256 char
@@ -164,10 +169,12 @@ def index_order(indices, start_point, order='major'):
         whether to start from the major (longer) axis or from the minor (shorter)
         axis
 
-    Returns
-    -------
-    generator of tuples
-        each tuple contains the index for the row (x) and the column (y)
+    Yields
+    ------
+    int
+        index for the row (x)
+    int
+        index for the row (x)
 
     Notes
     -----
