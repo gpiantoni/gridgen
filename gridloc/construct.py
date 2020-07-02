@@ -70,7 +70,7 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
     labels  : 2d array
         2d array with the channel labels
     rotation : float
-        rotation from the inferior-rotation axis (clockwise)
+        rotation from the inferior-superior axis (clockwise, in degrees)
 
     Returns
     -------

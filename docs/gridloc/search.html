@@ -47,7 +47,35 @@ lg.propagate = False
 
 
 def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
+    &#34;&#34;&#34;Find the position of an electrode which has 1 neighbor perpendicular to it.
+    We try to estimate the position of electrode `x` based on the position of `a`.
 
+        a -- x
+
+    In this example, radians would be π/2, because `x` is at the right side of `a`.
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    neighbors : 2d array
+        the row specifies the x and y coordinates of the neighbor `a`.
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+    radians : float
+        rotation from the inferior-superior axis (clockwise, in radians)
+
+    Returns
+    -------
+    2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+        position and normal of the new electrode included
+    &#34;&#34;&#34;
     x_neighbor, y_neighbor = neighbors[0, :]
     pos_neighbor = grid[&#39;pos&#39;][x_neighbor, y_neighbor]  # this cannot be nan
     normal_neighbor = grid[&#39;norm&#39;][x_neighbor, y_neighbor]  # this cannot be nan
@@ -88,6 +116,35 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
 
 
 def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
+    &#34;&#34;&#34;Find the position of an electrode which has 1 neighbor on the same line.
+    We try to estimate the position of electrode `x` based on the position of `a`
+    and `b`.
+
+        a -- b -- x
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    neighbors : 2d array
+        the row specifies the x and y coordinates of the neighbor `b`.
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+    opposite : tuple of 2 floats
+        x and y indices of the electrode opposite to the electrode of interest
+        (i.e. `a`)
+
+    Returns
+    -------
+    2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+        position and normal of the new electrode included
+    &#34;&#34;&#34;
     x1, y1 = neighbors[0, :]
     x2, y2 = opposite
 
@@ -128,10 +185,40 @@ def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
 
 
 def find_new_pos_2d(grid, neighbors, surf, x, y):
-    &#34;&#34;&#34;Make line from first neighbor to second neighbor, and the new point
-    should be on the right of that line
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Find the position of an electrode which has already 2 neighbors. So, we
+    try to estimate the position of electrode `x` based on the position of `a`
+    and `b`.
 
+        b -- x
+        |    |
+        |    |
+        c -- a
+
+    Make a line from `a` to `b`, and the new point `x` should be on the right
+    of that line (convention). Note that point `c` is not included in calculations
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    neighbors : 2d array
+        each row specifies the x and y coordinates of the two neighbors. The
+        order is very important in this case and it should have been taken
+        care of by `count_neighbors()`.
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+
+    Returns
+    -------
+    2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+        position and normal of the new electrode included
+    &#34;&#34;&#34;
     x1, y1 = neighbors[0, :]
     x2, y2 = neighbors[1, :]
 
@@ -198,13 +285,67 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
 <span>def <span class="ident">find_new_pos_0d</span></span>(<span>grid, neighbors, surf, x, y, radians=0)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Find the position of an electrode which has 1 neighbor perpendicular to it.
+We try to estimate the position of electrode <code>x</code> based on the position of <code>a</code>.</p>
+<pre><code>a -- x
+</code></pre>
+<p>In this example, radians would be π/2, because <code>x</code> is at the right side of <code>a</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done)</dd>
+<dt><strong><code>neighbors</code></strong> :&ensp;<code>2d array</code></dt>
+<dd>the row specifies the x and y coordinates of the neighbor <code>a</code>.</dd>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>surface with normals. It's better to use the smooth surface to have
+reasonable results</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>row index for this electrode</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>column index for this electrode</dd>
+<dt><strong><code>radians</code></strong> :&ensp;<code>float</code></dt>
+<dd>rotation from the inferior-superior axis (clockwise, in radians)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+position and normal of the new electrode included</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
+    &#34;&#34;&#34;Find the position of an electrode which has 1 neighbor perpendicular to it.
+    We try to estimate the position of electrode `x` based on the position of `a`.
 
+        a -- x
+
+    In this example, radians would be π/2, because `x` is at the right side of `a`.
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    neighbors : 2d array
+        the row specifies the x and y coordinates of the neighbor `a`.
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+    radians : float
+        rotation from the inferior-superior axis (clockwise, in radians)
+
+    Returns
+    -------
+    2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+        position and normal of the new electrode included
+    &#34;&#34;&#34;
     x_neighbor, y_neighbor = neighbors[0, :]
     pos_neighbor = grid[&#39;pos&#39;][x_neighbor, y_neighbor]  # this cannot be nan
     normal_neighbor = grid[&#39;norm&#39;][x_neighbor, y_neighbor]  # this cannot be nan
@@ -248,12 +389,68 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
 <span>def <span class="ident">find_new_pos_1d</span></span>(<span>grid, neighbors, surf, x, y, opposite)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Find the position of an electrode which has 1 neighbor on the same line.
+We try to estimate the position of electrode <code>x</code> based on the position of <code>a</code>
+and <code>b</code>.</p>
+<pre><code>a -- b -- x
+</code></pre>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done)</dd>
+<dt><strong><code>neighbors</code></strong> :&ensp;<code>2d array</code></dt>
+<dd>the row specifies the x and y coordinates of the neighbor <code>b</code>.</dd>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>surface with normals. It's better to use the smooth surface to have
+reasonable results</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>row index for this electrode</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>column index for this electrode</dd>
+<dt><strong><code>opposite</code></strong> :&ensp;<code>tuple</code> of <code>2 floats</code></dt>
+<dd>x and y indices of the electrode opposite to the electrode of interest
+(i.e. <code>a</code>)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+position and normal of the new electrode included</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
+    &#34;&#34;&#34;Find the position of an electrode which has 1 neighbor on the same line.
+    We try to estimate the position of electrode `x` based on the position of `a`
+    and `b`.
+
+        a -- b -- x
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    neighbors : 2d array
+        the row specifies the x and y coordinates of the neighbor `b`.
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+    opposite : tuple of 2 floats
+        x and y indices of the electrode opposite to the electrode of interest
+        (i.e. `a`)
+
+    Returns
+    -------
+    2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+        position and normal of the new electrode included
+    &#34;&#34;&#34;
     x1, y1 = neighbors[0, :]
     x2, y2 = opposite
 
@@ -297,17 +494,77 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
 <span>def <span class="ident">find_new_pos_2d</span></span>(<span>grid, neighbors, surf, x, y)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Make line from first neighbor to second neighbor, and the new point
-should be on the right of that line</p></div>
+<div class="desc"><p>Find the position of an electrode which has already 2 neighbors. So, we
+try to estimate the position of electrode <code>x</code> based on the position of <code>a</code>
+and <code>b</code>.</p>
+<pre><code>b -- x
+|    |
+|    |
+c -- a
+</code></pre>
+<p>Make a line from <code>a</code> to <code>b</code>, and the new point <code>x</code> should be on the right
+of that line (convention). Note that point <code>c</code> is not included in calculations</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid</code></strong> :&ensp;<code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done)</dd>
+<dt><strong><code>neighbors</code></strong> :&ensp;<code>2d array</code></dt>
+<dd>each row specifies the x and y coordinates of the two neighbors. The
+order is very important in this case and it should have been taken
+care of by <code>count_neighbors()</code>.</dd>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>surface with normals. It's better to use the smooth surface to have
+reasonable results</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>row index for this electrode</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>column index for this electrode</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>2d ndarray</code></dt>
+<dd>grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+position and normal of the new electrode included</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_new_pos_2d(grid, neighbors, surf, x, y):
-    &#34;&#34;&#34;Make line from first neighbor to second neighbor, and the new point
-    should be on the right of that line
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Find the position of an electrode which has already 2 neighbors. So, we
+    try to estimate the position of electrode `x` based on the position of `a`
+    and `b`.
 
+        b -- x
+        |    |
+        |    |
+        c -- a
+
+    Make a line from `a` to `b`, and the new point `x` should be on the right
+    of that line (convention). Note that point `c` is not included in calculations
+
+    Parameters
+    ----------
+    grid : 2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done)
+    neighbors : 2d array
+        each row specifies the x and y coordinates of the two neighbors. The
+        order is very important in this case and it should have been taken
+        care of by `count_neighbors()`.
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    x : int
+        row index for this electrode
+    y : int
+        column index for this electrode
+
+    Returns
+    -------
+    2d ndarray
+        grid (n_rows, n_columns) with fields (label, pos, norm, done), with the
+        position and normal of the new electrode included
+    &#34;&#34;&#34;
     x1, y1 = neighbors[0, :]
     x2, y2 = neighbors[1, :]
 
