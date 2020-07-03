@@ -8,8 +8,7 @@ from pathlib import Path
 lg = getLogger(__name__)
 
 
-def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
-              freq_range=(55, 95)):
+def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95)):
     """Read ECoG data
 
     Parameters
@@ -20,8 +19,6 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
         if specified, data will be read after this point in time (in s)
     endtime : float
         if specified, data will be read until this point in time (in s)
-    ref_chan : list of str
-        list of channels to use as reference
     bad_chan : list of str
         list of channels to exclude
     freq_range : two floats
@@ -41,15 +38,15 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
     d = Dataset(Path(file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
-    if ref_chan is not None:
-        lg.debug(f'Rereference to {ref_chan}')
-        data = montage(data, ref_chan=ref_chan)
+    if bad_chan is not None:
+        lg.debug(f'Excluding {len(bad_chan)} channels')
+        data = select(data, chan=bad_chan, invert=True)
+
+    lg.debug('Rereference to average')
+    data = montage(data, ref_to_avg=True)
 
     lg.debug('Apply notch filter')
     data = filter_(data, ftype='notch')
-
-    if bad_chan is not None:
-        data = select(data, chan=bad_chan, invert=True)
 
     lg.debug('Computing Spectrogram')
     tf = timefrequency(data, method='spectrogram', duration=2, overlap=0.5, taper='hann')

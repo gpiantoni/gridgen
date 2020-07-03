@@ -76,7 +76,6 @@ def create_arguments():
         Parameters:
           ecog :
             file : path to ECoG file
-            ref_chan (optional) : list of str, name of the channels to reference to
             begtime (optional) : start time in seconds from beginning of the file
             endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
