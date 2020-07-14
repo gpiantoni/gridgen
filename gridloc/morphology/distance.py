@@ -1,4 +1,4 @@
-from numpy import dot, arccos, pi, ones, zeros, cross, dtype
+from numpy import dot, arccos, pi, zeros, cross, dtype
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 

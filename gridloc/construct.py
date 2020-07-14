@@ -67,7 +67,7 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
         index of the initial vertex
     start_label : str
         label of the electrode, which is assumed to be in the initial vertex
-    labels  : 2d array
+    labels : 2d array
         2d array with the channel labels
     rotation : float
         rotation from the inferior-superior axis (clockwise, in degrees)
