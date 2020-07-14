@@ -9,7 +9,7 @@ from .paths import ECOG_FILE, OUTPUT_PATH
 
 def test_read_ecog():
     tf = read_ecog(ECOG_FILE)
-    assert tf.data[0][0] < tf.data[0][1] < tf.data[0][2]
+    assert tf.data[0][1] < tf.data[0][2]
 
     grid2d = make_grid_with_labels(4, 5, 'TBLR', 'chan{}')
     ecog2d = put_ecog_on_grid2d(tf, grid2d)

@@ -12,7 +12,6 @@ PARAMETERS = {
         },
     "ecog": {
         "file": str(ECOG_FILE),
-        "ref_chan": [],
         "begtime": 0,
         "endtime": 10,
         "freq_range": [60, 90]
