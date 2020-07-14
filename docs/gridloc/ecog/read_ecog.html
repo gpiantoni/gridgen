@@ -35,8 +35,7 @@ from pathlib import Path
 lg = getLogger(__name__)
 
 
-def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
-              freq_range=(55, 95)):
+def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95)):
     &#34;&#34;&#34;Read ECoG data
 
     Parameters
@@ -47,8 +46,6 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
         if specified, data will be read after this point in time (in s)
     endtime : float
         if specified, data will be read until this point in time (in s)
-    ref_chan : list of str
-        list of channels to use as reference
     bad_chan : list of str
         list of channels to exclude
     freq_range : two floats
@@ -68,15 +65,15 @@ def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
     d = Dataset(Path(file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
-    if ref_chan is not None:
-        lg.debug(f&#39;Rereference to {ref_chan}&#39;)
-        data = montage(data, ref_chan=ref_chan)
+    if bad_chan is not None:
+        lg.debug(f&#39;Excluding {len(bad_chan)} channels&#39;)
+        data = select(data, chan=bad_chan, invert=True)
+
+    lg.debug(&#39;Rereference to average&#39;)
+    data = montage(data, ref_to_avg=True)
 
     lg.debug(&#39;Apply notch filter&#39;)
     data = filter_(data, ftype=&#39;notch&#39;)
-
-    if bad_chan is not None:
-        data = select(data, chan=bad_chan, invert=True)
 
     lg.debug(&#39;Computing Spectrogram&#39;)
     tf = timefrequency(data, method=&#39;spectrogram&#39;, duration=2, overlap=0.5, taper=&#39;hann&#39;)
@@ -202,7 +199,7 @@ location</p>
 </details>
 </dd>
 <dt id="gridloc.ecog.read_ecog.read_ecog"><code class="name flex">
-<span>def <span class="ident">read_ecog</span></span>(<span>file, begtime=None, endtime=None, ref_chan=None, bad_chan=None, freq_range=(55, 95))</span>
+<span>def <span class="ident">read_ecog</span></span>(<span>file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read ECoG data</p>
@@ -214,8 +211,6 @@ location</p>
 <dd>if specified, data will be read after this point in time (in s)</dd>
 <dt><strong><code>endtime</code></strong> :&ensp;<code>float</code></dt>
 <dd>if specified, data will be read until this point in time (in s)</dd>
-<dt><strong><code>ref_chan</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
-<dd>list of channels to use as reference</dd>
 <dt><strong><code>bad_chan</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
 <dd>list of channels to exclude</dd>
 <dt><strong><code>freq_range</code></strong> :&ensp;<code>two floats</code></dt>
@@ -233,8 +228,7 @@ frequency range</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_ecog(file, begtime=None, endtime=None, ref_chan=None, bad_chan=None,
-              freq_range=(55, 95)):
+<pre><code class="python">def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95)):
     &#34;&#34;&#34;Read ECoG data
 
     Parameters
@@ -245,8 +239,6 @@ frequency range</dd>
         if specified, data will be read after this point in time (in s)
     endtime : float
         if specified, data will be read until this point in time (in s)
-    ref_chan : list of str
-        list of channels to use as reference
     bad_chan : list of str
         list of channels to exclude
     freq_range : two floats
@@ -266,15 +258,15 @@ frequency range</dd>
     d = Dataset(Path(file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
-    if ref_chan is not None:
-        lg.debug(f&#39;Rereference to {ref_chan}&#39;)
-        data = montage(data, ref_chan=ref_chan)
+    if bad_chan is not None:
+        lg.debug(f&#39;Excluding {len(bad_chan)} channels&#39;)
+        data = select(data, chan=bad_chan, invert=True)
+
+    lg.debug(&#39;Rereference to average&#39;)
+    data = montage(data, ref_to_avg=True)
 
     lg.debug(&#39;Apply notch filter&#39;)
     data = filter_(data, ftype=&#39;notch&#39;)
-
-    if bad_chan is not None:
-        data = select(data, chan=bad_chan, invert=True)
 
     lg.debug(&#39;Computing Spectrogram&#39;)
     tf = timefrequency(data, method=&#39;spectrogram&#39;, duration=2, overlap=0.5, taper=&#39;hann&#39;)
