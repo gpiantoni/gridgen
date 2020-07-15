@@ -1,9 +1,36 @@
 """The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility"""
 
-from numpy import array
+from numpy import array, arange, meshgrid
 from numpy.linalg import norm
+from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
+
+
+def getROI(surf, ref_vert, ROIsize=18, intElec=3):
+    """generate 10x10 grid, on one plane
+
+    TODO
+    ----
+    we should calculate pos and norm from
+    pos -> projected position
+    normal -> normal to the hullcortex
+    """
+    pos = surf['pos'][ref_vert, :]
+    normal = surf['pos_norm'][ref_vert, :]
+
+    # trying to replicate getROI.m (l. 69-90) but we do not consider the orientation here
+    steps = arange(-ROIsize + intElec, ROIsize - intElec, intElec)
+    x_mesh, y_mesh = meshgrid(steps, steps)
+
+    ROI = []
+    for x, y in zip(x_mesh.flatten(), y_mesh.flatten()):
+        coords_2d = array([x, y])
+        plane = calc_plane_to_axis(normal)
+        target = coords_2d @ plane + pos
+        ROI.append(target)
+
+    return array(ROI)
 
 
 def projectElectrodes(surf, subjstructs, normway):
@@ -35,7 +62,7 @@ def projectElectrodes(surf, subjstructs, normway):
     than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
     if the vertex does not belong to any triangle). projectElectrodes.m includes
     those (0, 0, 0) in the calculation, but it might not be correct.
-    See l. 138 (there are no NaN in normals but only (0, 0, 0).
+    See l. 138 (there are no NaN in normals but only (0, 0, 0)).
 
     To replicate it completely, you'd need to take the empty normals into account.
     """
@@ -44,9 +71,7 @@ def projectElectrodes(surf, subjstructs, normway):
     normals = []
     pints = []
     for electrode in subjstructs['electrodes']:
-        dvect = norm(electrode - surf['pos'], axis=1)  # l. 104-112
-        closevert = dvect < (normdist ** 2)  # l. 120
-        normal = surf['pos_norm'][closevert, :].mean(axis=0)  # l. 144  (but see Notes)
+        normal = normElec(surf, electrode, normdist)
         pint = project_to_cortex(surf, electrode, normal)[1]  # l. 198-237
 
         normals.append(normal)
@@ -56,3 +81,11 @@ def projectElectrodes(surf, subjstructs, normway):
     subjstructs['trielectrodes'] = array(pints)
 
     return subjstructs
+
+
+def normElec(surf, electrode, normdist):
+    dvect = norm(electrode - surf['pos'], axis=1)  # l. 104-112 of projectElectrodes.m
+    closevert = dvect < (normdist ** 2)  # l. 120 of projectElectrodes.m
+    normal = surf['pos_norm'][closevert, :].mean(axis=0)  # l. 144 of projectElectrodes.m
+
+    return normal / norm(normal)
