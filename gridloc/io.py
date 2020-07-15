@@ -1,6 +1,6 @@
 """Functions to input and output data
 """
-from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where, Inf
+from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where, Inf, empty, NaN, unique
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -124,6 +124,9 @@ def read_surf(surf_file, normals=True):
     -----
     All the normals are set to 1, by definition. This is necessary when computing
     the cross-product in later stages.
+
+    It can handle meshes which have vertices that do not belong to a triangle.
+    The normal for a vertex without triangle is NaN
     """
     pos, tri = read_geometry(surf_file)
     surf = {
@@ -133,20 +136,25 @@ def read_surf(surf_file, normals=True):
         'pos_norm': None,
         }
 
-    tris = surf['pos'][surf['tri']]
-
     if not normals:
         return surf
+
+    tris = surf['pos'][surf['tri']]
 
     surf['tri_norm'] = cross(tris[:, 1, :] - tris[:, 0, :], tris[:, 2, :] - tris[:, 0, :])
     surf['tri_norm'] /= norm(surf['tri_norm'], axis=1)[:, None]
 
+    i_vertices = unique(surf['tri'])
     with Pool() as p:
         f_compute = partial(_average_normal_per_vertex, tri_norm=surf['tri_norm'], tri=surf['tri'])
-        vert_norm = p.map(f_compute, range(surf['pos'].shape[0]))
+        vert_norm = p.map(f_compute, i_vertices)
 
-    surf['pos_norm'] = array(vert_norm)
-    surf['pos_norm'] /= norm(surf['pos_norm'], axis=1)[:, None]
+    pos_norm = array(vert_norm)
+    pos_norm /= norm(pos_norm, axis=1)[:, None]
+
+    surf['pos_norm'] = empty(surf['pos'].shape)
+    surf['pos_norm'].fill(NaN)
+    surf['pos_norm'][i_vertices] = pos_norm
 
     return surf
 
