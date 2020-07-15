@@ -83,10 +83,10 @@ def search_grid(surf, ref_vert, x, y):
     -----
     Because vertices are not regularly distributed on the surface, the distance
     between the reference vertex and the output vertex does not need to be equal
-    to sqrt(x ** 2 + y ** 2), but it should be close enough.
+    to `sqrt(x ** 2 + y ** 2)`, but it should be close enough.
 
     There are an infinite number of planes perpendicular to the normal. x-y
-    define one of the possible planes. The plane is always the same for the same
+    define one of the possible planes. The plane is always the same for one
     normal (due to internal convention). You can rotate the plane later.
     """
     pos = surf['pos'][ref_vert, :]

@@ -1,4 +1,5 @@
 from numpy import cross, NaN, einsum, empty, isnan, nanargmin
+from numpy.linalg import norm
 
 EPSILON = 1e-5
 
@@ -10,7 +11,7 @@ def project_to_cortex(surf, point, normal):
     ----------
     surf : dict with 'pos', 'tri'
         surface of the brain use to project the electrodes (it's not necessary
-        to have 'tri_norm'
+        to have 'tri_norm')
     point : (3, ) array
         x, y, z coordinates of the electrodes
     normal : (3, ) array
@@ -23,6 +24,7 @@ def project_to_cortex(surf, point, normal):
     array (3, )
         projected position onto the surface
     """
+    normal /= norm(normal)
     t = intersect_ray_triangle(
         surf['pos'][surf['tri'][:, 0]],
         surf['pos'][surf['tri'][:, 1]],
