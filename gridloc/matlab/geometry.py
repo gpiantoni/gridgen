@@ -23,6 +23,11 @@ def project_to_cortex(surf, point, normal):
         distance between surface and electrode
     array (3, )
         projected position onto the surface
+
+
+    Notes
+    -----
+    Returns NaN values when there is no intersection possible to the cortex.
     """
     normal = normal / norm(normal)
     t = intersect_ray_triangle(
@@ -31,6 +36,9 @@ def project_to_cortex(surf, point, normal):
         surf['pos'][surf['tri'][:, 2]],
         point,
         normal)
+
+    if isnan(t).all():
+        return NaN, array([NaN, NaN, NaN])
 
     i = nanargmin(t)
     projected_point = point + normal * t[i]
