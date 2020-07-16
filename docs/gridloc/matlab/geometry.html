@@ -24,7 +24,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin
+<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum
 from numpy.linalg import norm
 
 EPSILON = 1e-5
@@ -49,14 +49,22 @@ def project_to_cortex(surf, point, normal):
         distance between surface and electrode
     array (3, )
         projected position onto the surface
+
+
+    Notes
+    -----
+    Returns NaN values when there is no intersection possible to the cortex.
     &#34;&#34;&#34;
-    normal /= norm(normal)
+    normal = normal / norm(normal)
     t = intersect_ray_triangle(
         surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 0]],
         surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 1]],
         surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 2]],
         point,
         normal)
+
+    if isnan(t).all():
+        return NaN, array([NaN, NaN, NaN])
 
     i = nanargmin(t)
     projected_point = point + normal * t[i]
@@ -123,7 +131,31 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
     i_good = ~isnan(out_dist)
     out_dist[i_good] = t[i_good]
 
-    return out_dist</code></pre>
+    return out_dist
+
+
+def check_if_point_in_triangle(v0, v1, v2, p):
+    &#34;&#34;&#34;They have to be on the same plane&#34;&#34;&#34;
+    p_bary = cartesian_to_barycentric(v0, v1, v2, p)
+    return (0 &lt;= p_bary).all() and (p_bary &lt;= 1).all()
+
+
+def intersect_line_plane(vertex0, tri_norm, pos, pos_norm):
+    pos_norm = pos_norm / norm(pos_norm)
+    t = (dot(tri_norm, vertex0) - dot(tri_norm, pos)) / dot(pos_norm, tri_norm)
+    intersection = pos + pos_norm * t
+    return t, intersection
+
+
+def cartesian_to_barycentric(v0, v1, v2, p):
+    S = sum((v0 - v1) * (v0 - v2))
+    S1 = sum((v1 - p) * (v2 - p))
+    S2 = sum((p - v2) * (p - v1))
+
+    a = S1 / S
+    b = S2 / S
+    c = 1 - a - b
+    return array([a, b, c])</code></pre>
 </details>
 </section>
 <section>
@@ -133,6 +165,57 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridloc.matlab.geometry.cartesian_to_barycentric"><code class="name flex">
+<span>def <span class="ident">cartesian_to_barycentric</span></span>(<span>v0, v1, v2, p)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cartesian_to_barycentric(v0, v1, v2, p):
+    S = sum((v0 - v1) * (v0 - v2))
+    S1 = sum((v1 - p) * (v2 - p))
+    S2 = sum((p - v2) * (p - v1))
+
+    a = S1 / S
+    b = S2 / S
+    c = 1 - a - b
+    return array([a, b, c])</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.geometry.check_if_point_in_triangle"><code class="name flex">
+<span>def <span class="ident">check_if_point_in_triangle</span></span>(<span>v0, v1, v2, p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>They have to be on the same plane</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_if_point_in_triangle(v0, v1, v2, p):
+    &#34;&#34;&#34;They have to be on the same plane&#34;&#34;&#34;
+    p_bary = cartesian_to_barycentric(v0, v1, v2, p)
+    return (0 &lt;= p_bary).all() and (p_bary &lt;= 1).all()</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.geometry.intersect_line_plane"><code class="name flex">
+<span>def <span class="ident">intersect_line_plane</span></span>(<span>vertex0, tri_norm, pos, pos_norm)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def intersect_line_plane(vertex0, tri_norm, pos, pos_norm):
+    pos_norm = pos_norm / norm(pos_norm)
+    t = (dot(tri_norm, vertex0) - dot(tri_norm, pos)) / dot(pos_norm, tri_norm)
+    intersection = pos + pos_norm * t
+    return t, intersection</code></pre>
+</details>
+</dd>
 <dt id="gridloc.matlab.geometry.intersect_ray_triangle"><code class="name flex">
 <span>def <span class="ident">intersect_ray_triangle</span></span>(<span>vertex0, vertex1, vertex2, rayOrigin, rayVector)</span>
 </code></dt>
@@ -249,7 +332,9 @@ to have 'tri_norm')</dd>
 <dd>distance between surface and electrode</dd>
 <dt><code>array (3, )</code></dt>
 <dd>projected position onto the surface</dd>
-</dl></div>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Returns NaN values when there is no intersection possible to the cortex.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -273,14 +358,22 @@ to have 'tri_norm')</dd>
         distance between surface and electrode
     array (3, )
         projected position onto the surface
+
+
+    Notes
+    -----
+    Returns NaN values when there is no intersection possible to the cortex.
     &#34;&#34;&#34;
-    normal /= norm(normal)
+    normal = normal / norm(normal)
     t = intersect_ray_triangle(
         surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 0]],
         surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 1]],
         surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 2]],
         point,
         normal)
+
+    if isnan(t).all():
+        return NaN, array([NaN, NaN, NaN])
 
     i = nanargmin(t)
     projected_point = point + normal * t[i]
@@ -306,6 +399,9 @@ to have 'tri_norm')</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridloc.matlab.geometry.cartesian_to_barycentric" href="#gridloc.matlab.geometry.cartesian_to_barycentric">cartesian_to_barycentric</a></code></li>
+<li><code><a title="gridloc.matlab.geometry.check_if_point_in_triangle" href="#gridloc.matlab.geometry.check_if_point_in_triangle">check_if_point_in_triangle</a></code></li>
+<li><code><a title="gridloc.matlab.geometry.intersect_line_plane" href="#gridloc.matlab.geometry.intersect_line_plane">intersect_line_plane</a></code></li>
 <li><code><a title="gridloc.matlab.geometry.intersect_ray_triangle" href="#gridloc.matlab.geometry.intersect_ray_triangle">intersect_ray_triangle</a></code></li>
 <li><code><a title="gridloc.matlab.geometry.project_to_cortex" href="#gridloc.matlab.geometry.project_to_cortex">project_to_cortex</a></code></li>
 </ul>

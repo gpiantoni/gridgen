@@ -30,9 +30,36 @@ of the Matlab functions, for compatibility</p>
 <pre><code class="python">&#34;&#34;&#34;The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility&#34;&#34;&#34;
 
-from numpy import array
+from numpy import array, arange, meshgrid, nanmean, isnan
 from numpy.linalg import norm
+from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
+
+
+def getROI(surf, ref_vert, ROIsize=18, intElec=3):
+    &#34;&#34;&#34;generate 10x10 grid, on one plane
+
+    TODO
+    ----
+    we should calculate pos and norm from
+    pos -&gt; projected position
+    normal -&gt; normal to the hullcortex
+    &#34;&#34;&#34;
+    pos = surf[&#39;pos&#39;][ref_vert, :]
+    normal = surf[&#39;pos_norm&#39;][ref_vert, :]
+
+    # trying to replicate getROI.m (l. 69-90) but we do not consider the orientation here
+    steps = arange(-ROIsize + intElec, ROIsize - intElec, intElec)
+    x_mesh, y_mesh = meshgrid(steps, steps)
+
+    ROI = []
+    for x, y in zip(x_mesh.flatten(), y_mesh.flatten()):
+        coords_2d = array([x, y])
+        plane = calc_plane_to_axis(normal)
+        target = coords_2d @ plane + pos
+        ROI.append(target)
+
+    return array(ROI)
 
 
 def projectElectrodes(surf, subjstructs, normway):
@@ -56,35 +83,47 @@ def projectElectrodes(surf, subjstructs, normway):
     dict with &#39;electrodes&#39;, &#39;normals&#39;, &#39;trielectrodes&#39;
         for each electrode, it returns its normal (based on neighboring mesh
         vertices) and the projection onto the surface.
-
-    Notes
-    -----
-    It&#39;s not possible to replicate projectElectrodes.m completely. When `normway`
-    is a scalar, it takes the normal of the points of the mesh which are closer
-    than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
-    if the vertex does not belong to any triangle). projectElectrodes.m includes
-    those (0, 0, 0) in the calculation, but it might not be correct.
-    See l. 138 (there are no NaN in normals but only (0, 0, 0).
-
-    To replicate it completely, you&#39;d need to take the empty normals into account.
     &#34;&#34;&#34;
     normdist = normway  # if normway is scalar
 
     normals = []
     pints = []
     for electrode in subjstructs[&#39;electrodes&#39;]:
-        dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)  # l. 104-112
-        closevert = dvect &lt; (normdist ** 2)  # l. 120
-        normal = surf[&#39;pos_norm&#39;][closevert, :].mean(axis=0)  # l. 144  (but see Notes)
-        pint = project_to_cortex(surf, electrode, normal)[1]  # l. 198-237
+        normal = normElec(surf, electrode, normdist)
+        # note the sign of normal is inverted
+        pint = project_to_cortex(surf, electrode, -1 * normal)[1]  # l. 198-237
 
         normals.append(normal)
         pints.append(pint)
 
-    subjstructs[&#39;normals&#39;] = array(normals)
+    subjstructs[&#39;normal&#39;] = array(normals)
     subjstructs[&#39;trielectrodes&#39;] = array(pints)
 
-    return subjstructs</code></pre>
+    return subjstructs
+
+
+def normElec(surf, electrode, normdist, NaN_as_zeros=True):
+    &#34;&#34;&#34;
+    Notes
+    -----
+    When `normway` is a scalar, it takes the normal of the points of the mesh which are closer
+    than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
+    if the vertex does not belong to any triangle). projectElectrodes.m includes
+    those (0, 0, 0) in the calculation, but it might not be correct.
+    See l. 138 (there are no NaN in normals but only (0, 0, 0)).
+
+    To replicate the matlab behavior, make sure that `NaN_as_zeros` is True.
+    &#34;&#34;&#34;
+    dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)  # l. 104-112 of projectElectrodes.m
+    closevert = dvect &lt; normdist  # l. 120 of projectElectrodes.m
+    normal = surf[&#39;pos_norm&#39;][closevert, :].mean(axis=0)  # l. 144 of projectElectrodes.m
+
+    normals2av = surf[&#39;pos_norm&#39;][closevert, :].copy()
+    if NaN_as_zeros:
+        normals2av[isnan(normals2av)] = 0
+    normal = nanmean(normals2av, axis=0)
+
+    return normal</code></pre>
 </details>
 </section>
 <section>
@@ -94,6 +133,84 @@ def projectElectrodes(surf, subjstructs, normway):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridloc.matlab.compat.getROI"><code class="name flex">
+<span>def <span class="ident">getROI</span></span>(<span>surf, ref_vert, ROIsize=18, intElec=3)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>generate 10x10 grid, on one plane</p>
+<h2 id="todo">Todo</h2>
+<p>we should calculate pos and norm from
+pos -&gt; projected position
+normal -&gt; normal to the hullcortex</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getROI(surf, ref_vert, ROIsize=18, intElec=3):
+    &#34;&#34;&#34;generate 10x10 grid, on one plane
+
+    TODO
+    ----
+    we should calculate pos and norm from
+    pos -&gt; projected position
+    normal -&gt; normal to the hullcortex
+    &#34;&#34;&#34;
+    pos = surf[&#39;pos&#39;][ref_vert, :]
+    normal = surf[&#39;pos_norm&#39;][ref_vert, :]
+
+    # trying to replicate getROI.m (l. 69-90) but we do not consider the orientation here
+    steps = arange(-ROIsize + intElec, ROIsize - intElec, intElec)
+    x_mesh, y_mesh = meshgrid(steps, steps)
+
+    ROI = []
+    for x, y in zip(x_mesh.flatten(), y_mesh.flatten()):
+        coords_2d = array([x, y])
+        plane = calc_plane_to_axis(normal)
+        target = coords_2d @ plane + pos
+        ROI.append(target)
+
+    return array(ROI)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.normElec"><code class="name flex">
+<span>def <span class="ident">normElec</span></span>(<span>surf, electrode, normdist, NaN_as_zeros=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="notes">Notes</h2>
+<p>When <code>normway</code> is a scalar, it takes the normal of the points of the mesh which are closer
+than <code>normway</code>. However, some points have a normal of (0, 0, 0) (default assigned
+if the vertex does not belong to any triangle). projectElectrodes.m includes
+those (0, 0, 0) in the calculation, but it might not be correct.
+See l. 138 (there are no NaN in normals but only (0, 0, 0)).</p>
+<p>To replicate the matlab behavior, make sure that <code>NaN_as_zeros</code> is True.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def normElec(surf, electrode, normdist, NaN_as_zeros=True):
+    &#34;&#34;&#34;
+    Notes
+    -----
+    When `normway` is a scalar, it takes the normal of the points of the mesh which are closer
+    than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
+    if the vertex does not belong to any triangle). projectElectrodes.m includes
+    those (0, 0, 0) in the calculation, but it might not be correct.
+    See l. 138 (there are no NaN in normals but only (0, 0, 0)).
+
+    To replicate the matlab behavior, make sure that `NaN_as_zeros` is True.
+    &#34;&#34;&#34;
+    dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)  # l. 104-112 of projectElectrodes.m
+    closevert = dvect &lt; normdist  # l. 120 of projectElectrodes.m
+    normal = surf[&#39;pos_norm&#39;][closevert, :].mean(axis=0)  # l. 144 of projectElectrodes.m
+
+    normals2av = surf[&#39;pos_norm&#39;][closevert, :].copy()
+    if NaN_as_zeros:
+        normals2av[isnan(normals2av)] = 0
+    normal = nanmean(normals2av, axis=0)
+
+    return normal</code></pre>
+</details>
+</dd>
 <dt id="gridloc.matlab.compat.projectElectrodes"><code class="name flex">
 <span>def <span class="ident">projectElectrodes</span></span>(<span>surf, subjstructs, normway)</span>
 </code></dt>
@@ -117,15 +234,7 @@ to have 'tri_norm')</dd>
 <dt><code>dict with 'electrodes', 'normals', 'trielectrodes'</code></dt>
 <dd>for each electrode, it returns its normal (based on neighboring mesh
 vertices) and the projection onto the surface.</dd>
-</dl>
-<h2 id="notes">Notes</h2>
-<p>It's not possible to replicate projectElectrodes.m completely. When <code>normway</code>
-is a scalar, it takes the normal of the points of the mesh which are closer
-than <code>normway</code>. However, some points have a normal of (0, 0, 0) (default assigned
-if the vertex does not belong to any triangle). projectElectrodes.m includes
-those (0, 0, 0) in the calculation, but it might not be correct.
-See l. 138 (there are no NaN in normals but only (0, 0, 0).</p>
-<p>To replicate it completely, you'd need to take the empty normals into account.</p></div>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -151,32 +260,20 @@ See l. 138 (there are no NaN in normals but only (0, 0, 0).</p>
     dict with &#39;electrodes&#39;, &#39;normals&#39;, &#39;trielectrodes&#39;
         for each electrode, it returns its normal (based on neighboring mesh
         vertices) and the projection onto the surface.
-
-    Notes
-    -----
-    It&#39;s not possible to replicate projectElectrodes.m completely. When `normway`
-    is a scalar, it takes the normal of the points of the mesh which are closer
-    than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
-    if the vertex does not belong to any triangle). projectElectrodes.m includes
-    those (0, 0, 0) in the calculation, but it might not be correct.
-    See l. 138 (there are no NaN in normals but only (0, 0, 0).
-
-    To replicate it completely, you&#39;d need to take the empty normals into account.
     &#34;&#34;&#34;
     normdist = normway  # if normway is scalar
 
     normals = []
     pints = []
     for electrode in subjstructs[&#39;electrodes&#39;]:
-        dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)  # l. 104-112
-        closevert = dvect &lt; (normdist ** 2)  # l. 120
-        normal = surf[&#39;pos_norm&#39;][closevert, :].mean(axis=0)  # l. 144  (but see Notes)
-        pint = project_to_cortex(surf, electrode, normal)[1]  # l. 198-237
+        normal = normElec(surf, electrode, normdist)
+        # note the sign of normal is inverted
+        pint = project_to_cortex(surf, electrode, -1 * normal)[1]  # l. 198-237
 
         normals.append(normal)
         pints.append(pint)
 
-    subjstructs[&#39;normals&#39;] = array(normals)
+    subjstructs[&#39;normal&#39;] = array(normals)
     subjstructs[&#39;trielectrodes&#39;] = array(pints)
 
     return subjstructs</code></pre>
@@ -200,6 +297,8 @@ See l. 138 (there are no NaN in normals but only (0, 0, 0).</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridloc.matlab.compat.getROI" href="#gridloc.matlab.compat.getROI">getROI</a></code></li>
+<li><code><a title="gridloc.matlab.compat.normElec" href="#gridloc.matlab.compat.normElec">normElec</a></code></li>
 <li><code><a title="gridloc.matlab.compat.projectElectrodes" href="#gridloc.matlab.compat.projectElectrodes">projectElectrodes</a></code></li>
 </ul>
 </li>
