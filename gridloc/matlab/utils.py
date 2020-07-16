@@ -1,8 +1,10 @@
 """Functions directly useful to compat.py
 """
 
-from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array
-from numpy.linalg import norm
+from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye
+from numpy.linalg import norm, solve
+from scipy.spatial.transform import Rotation
+
 EPSILON = 1e-5
 
 
@@ -22,11 +24,34 @@ def calcCoords(c, GridSteps, dims):
 
 
 def plane_intersect(N1, A1, N2, A2):
-    """Taken from plane_intersect.m"""
+    """Python implementation of plane_intersect.m
+
+    Parameters
+    ----------
+    N1 : (3, ) array
+        equation for the first plane
+    A1 : (3, ) array
+        point belonging to the first plane
+    N2 : (3, ) array
+        equation for the second plane
+    A2 : (3, ) array
+        point belonging to the second plane
+
+    Returns
+    -------
+    array (3, )
+        one point belonging to the intersection of the plane
+    array (3, )
+        equation describing the plane
+
+    Notes
+    -----
+    It will return NaN if there is no intersection between the two planes.
+    """
     P = array([0., 0., 0.])
     N = cross(N1, N2)
     if norm(N) < EPSILON:  # parallel or coincide
-        return NaN, NaN
+        return array([NaN, NaN, NaN]), NaN
 
     maxc = argmax(abs(N))
 
@@ -49,3 +74,33 @@ def plane_intersect(N1, A1, N2, A2):
         P[2] = 0
 
     return P, N
+
+
+def AxelRot(radians, u, x0):
+    """Python implementation of AxelRot.m
+
+    Parameters
+    ----------
+    radians : float
+        rotation in radians, clockwise
+    u : (3, ) array
+        axis about to which compute the rotation
+    x0 : (3, ) array
+        point for shift
+
+    Returns
+    -------
+    array (4, 4)
+        affine matrix with rotation and translation
+    """
+    u = u / norm(u)
+    AxisShift = x0 - (x0 @ u) * u  # l. 85
+
+    Mshift = eye(4)
+    Mshift[:3, 3] = -AxisShift
+
+    Mroto = eye(4)
+    Mroto[:3, :3] = Rotation.from_rotvec(u * radians).as_matrix()  # l.92
+
+    # be careful about the sign of AxisShift
+    return solve(Mshift, Mroto) @ Mshift  # l. 94
