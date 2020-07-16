@@ -1,4 +1,4 @@
-from numpy import cross, NaN, einsum, empty, isnan, nanargmin
+from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum
 from numpy.linalg import norm
 
 EPSILON = 1e-5
@@ -24,7 +24,7 @@ def project_to_cortex(surf, point, normal):
     array (3, )
         projected position onto the surface
     """
-    normal /= norm(normal)
+    normal = normal / norm(normal)
     t = intersect_ray_triangle(
         surf['pos'][surf['tri'][:, 0]],
         surf['pos'][surf['tri'][:, 1]],
@@ -98,3 +98,27 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
     out_dist[i_good] = t[i_good]
 
     return out_dist
+
+
+def check_if_point_in_triangle(v0, v1, v2, p):
+    """They have to be on the same plane"""
+    p_bary = cartesian_to_barycentric(v0, v1, v2, p)
+    return (0 <= p_bary).all() and (p_bary <= 1).all()
+
+
+def intersect_line_plane(vertex0, tri_norm, pos, pos_norm):
+    pos_norm = pos_norm / norm(pos_norm)
+    t = (dot(tri_norm, vertex0) - dot(tri_norm, pos)) / dot(pos_norm, tri_norm)
+    intersection = pos + pos_norm * t
+    return t, intersection
+
+
+def cartesian_to_barycentric(v0, v1, v2, p):
+    S = sum((v0 - v1) * (v0 - v2))
+    S1 = sum((v1 - p) * (v2 - p))
+    S2 = sum((p - v2) * (p - v1))
+
+    a = S1 / S
+    b = S2 / S
+    c = 1 - a - b
+    return array([a, b, c])
