@@ -1,10 +1,11 @@
 """The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility"""
 
-from numpy import array, arange, meshgrid, nanmean, isnan
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross
 from numpy.linalg import norm
 from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
+from .utils import plane_intersect, AxelRot, _apply_affine
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -95,3 +96,28 @@ def normElec(surf, electrode, normdist, NaN_as_zeros=True):
     normal = nanmean(normals2av, axis=0)
 
     return normal
+
+
+def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
+
+    N = normElec(hullcortex, c, 25)
+    d = dot(N, c)
+
+    point = c
+    normal = N
+    tangPlane = coords.copy().reshape(prod(dims), 3)
+    tangPlane[:, 0] = (-normal[1] * tangPlane[:, 1] - normal[2] * tangPlane[:, 2] - d) / normal[0]  # l. 19
+    N = tangPlane[0, :] - tangPlane[7, :]
+    M = coords[0, :] - coords[7, :]
+
+    AngleBetweenPlanes = arctan2(norm(cross(M, N)), dot(M, N))
+
+    Point, IntersectionPlanes = plane_intersect(array([1., 0., 0.]), coords[0, :], normal, point)
+
+    RotMatrix = AxelRot(AngleBetweenPlanes, IntersectionPlanes, Point)
+    coords_Tangent = _apply_affine(coords, RotMatrix)
+
+    if hemi == 'r':
+        coords_Tangent[:, 0] = coords_Tangent[::-1, 0]  # l. 54-65
+
+    return coords_Tangent

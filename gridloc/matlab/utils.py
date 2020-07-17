@@ -1,7 +1,7 @@
 """Functions directly useful to compat.py
 """
 
-from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye
+from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
 
@@ -104,3 +104,23 @@ def AxelRot(radians, u, x0):
 
     # be careful about the sign of AxisShift
     return solve(Mshift, Mroto) @ Mshift  # l. 94
+
+
+def _apply_affine(c, affine):
+    """Apply affine matrix to many points at the same time.
+
+    Parameters
+    ----------
+    c : (n, 3) array
+        points to transform
+    affine : (4, 4) array
+        affine matrix (bottom row should be [0, 0, 0, 1])
+
+    Returns
+    -------
+    array (n, 3)
+        points transformed
+    """
+    C = c_[c, ones(c.shape[0])]
+    X = (affine @ C.T).T
+    return X[:, :3]
