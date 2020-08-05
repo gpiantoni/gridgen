@@ -24,13 +24,13 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum
+<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where
 from numpy.linalg import norm
 
 EPSILON = 1e-5
 
 
-def project_to_cortex(surf, point, normal):
+def project_to_cortex(surf, point, normal, sorted_triangles=None):
     &#34;&#34;&#34;Project a point (electrode) onto the triangulated mesh (surface).
 
     Parameters
@@ -42,6 +42,10 @@ def project_to_cortex(surf, point, normal):
         x, y, z coordinates of the electrodes
     normal : (3, ) array
         normal of the electrodes
+    sorted_triangles : (n, ) array
+        indices of triangles to select (order is important). If you pass this
+        parameters, it will return the first triangle which is intersected by
+        the line
 
     Returns
     -------
@@ -55,24 +59,33 @@ def project_to_cortex(surf, point, normal):
     -----
     Returns NaN values when there is no intersection possible to the cortex.
     &#34;&#34;&#34;
+    if sorted_triangles is None:
+        vertices = surf[&#39;tri&#39;]
+    else:
+        vertices = surf[&#39;tri&#39;][sorted_triangles]
+
     normal = normal / norm(normal)
     t = intersect_ray_triangle(
-        surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 0]],
-        surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 1]],
-        surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 2]],
+        surf[&#39;pos&#39;][vertices][:, 0, :],
+        surf[&#39;pos&#39;][vertices][:, 1, :],
+        surf[&#39;pos&#39;][vertices][:, 2, :],
         point,
-        normal)
+        normal,
+        line=True)
 
     if isnan(t).all():
         return NaN, array([NaN, NaN, NaN])
 
-    i = nanargmin(t)
+    if sorted_triangles is None:
+        i = nanargmin(t)
+    else:
+        i = where(~isnan(t))[0]
     projected_point = point + normal * t[i]
 
     return t[i], projected_point
 
 
-def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
+def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
     &#34;&#34;&#34;Implementation of the Möller-Trumbore algorithm to detect ray-triangle
     intersection.
 
@@ -89,6 +102,10 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
         start position of the ray
     rayVector : (3, ) array
         direction of the ray vector
+    line : bool
+        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+        if True, it detects intersection in both direction (treated as a line
+        with two directions)
 
     Returns
     -------
@@ -125,8 +142,9 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
     out_dist[i_outside] = NaN
 
     t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
-    i_opposite = t &lt; EPSILON
-    out_dist[i_opposite] = NaN
+    if not line:
+        i_opposite = t &lt; EPSILON
+        out_dist[i_opposite] = NaN
 
     i_good = ~isnan(out_dist)
     out_dist[i_good] = t[i_good]
@@ -217,7 +235,7 @@ def cartesian_to_barycentric(v0, v1, v2, p):
 </details>
 </dd>
 <dt id="gridloc.matlab.geometry.intersect_ray_triangle"><code class="name flex">
-<span>def <span class="ident">intersect_ray_triangle</span></span>(<span>vertex0, vertex1, vertex2, rayOrigin, rayVector)</span>
+<span>def <span class="ident">intersect_ray_triangle</span></span>(<span>vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Implementation of the Möller-Trumbore algorithm to detect ray-triangle
@@ -234,6 +252,10 @@ intersection.</p>
 <dd>start position of the ray</dd>
 <dt><strong><code>rayVector</code></strong> :&ensp;<code>(3, ) array</code></dt>
 <dd>direction of the ray vector</dd>
+<dt><strong><code>line</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+if True, it detects intersection in both direction (treated as a line
+with two directions)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -249,7 +271,7 @@ to the triangle (so, this is a ray, not a line).</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
+<pre><code class="python">def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
     &#34;&#34;&#34;Implementation of the Möller-Trumbore algorithm to detect ray-triangle
     intersection.
 
@@ -266,6 +288,10 @@ to the triangle (so, this is a ray, not a line).</dd>
         start position of the ray
     rayVector : (3, ) array
         direction of the ray vector
+    line : bool
+        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+        if True, it detects intersection in both direction (treated as a line
+        with two directions)
 
     Returns
     -------
@@ -302,8 +328,9 @@ to the triangle (so, this is a ray, not a line).</dd>
     out_dist[i_outside] = NaN
 
     t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
-    i_opposite = t &lt; EPSILON
-    out_dist[i_opposite] = NaN
+    if not line:
+        i_opposite = t &lt; EPSILON
+        out_dist[i_opposite] = NaN
 
     i_good = ~isnan(out_dist)
     out_dist[i_good] = t[i_good]
@@ -312,7 +339,7 @@ to the triangle (so, this is a ray, not a line).</dd>
 </details>
 </dd>
 <dt id="gridloc.matlab.geometry.project_to_cortex"><code class="name flex">
-<span>def <span class="ident">project_to_cortex</span></span>(<span>surf, point, normal)</span>
+<span>def <span class="ident">project_to_cortex</span></span>(<span>surf, point, normal, sorted_triangles=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Project a point (electrode) onto the triangulated mesh (surface).</p>
@@ -325,6 +352,10 @@ to have 'tri_norm')</dd>
 <dd>x, y, z coordinates of the electrodes</dd>
 <dt><strong><code>normal</code></strong> :&ensp;<code>(3, ) array</code></dt>
 <dd>normal of the electrodes</dd>
+<dt><strong><code>sorted_triangles</code></strong> :&ensp;<code>(n, ) array</code></dt>
+<dd>indices of triangles to select (order is important). If you pass this
+parameters, it will return the first triangle which is intersected by
+the line</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -339,7 +370,7 @@ to have 'tri_norm')</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def project_to_cortex(surf, point, normal):
+<pre><code class="python">def project_to_cortex(surf, point, normal, sorted_triangles=None):
     &#34;&#34;&#34;Project a point (electrode) onto the triangulated mesh (surface).
 
     Parameters
@@ -351,6 +382,10 @@ to have 'tri_norm')</dd>
         x, y, z coordinates of the electrodes
     normal : (3, ) array
         normal of the electrodes
+    sorted_triangles : (n, ) array
+        indices of triangles to select (order is important). If you pass this
+        parameters, it will return the first triangle which is intersected by
+        the line
 
     Returns
     -------
@@ -364,18 +399,27 @@ to have 'tri_norm')</dd>
     -----
     Returns NaN values when there is no intersection possible to the cortex.
     &#34;&#34;&#34;
+    if sorted_triangles is None:
+        vertices = surf[&#39;tri&#39;]
+    else:
+        vertices = surf[&#39;tri&#39;][sorted_triangles]
+
     normal = normal / norm(normal)
     t = intersect_ray_triangle(
-        surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 0]],
-        surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 1]],
-        surf[&#39;pos&#39;][surf[&#39;tri&#39;][:, 2]],
+        surf[&#39;pos&#39;][vertices][:, 0, :],
+        surf[&#39;pos&#39;][vertices][:, 1, :],
+        surf[&#39;pos&#39;][vertices][:, 2, :],
         point,
-        normal)
+        normal,
+        line=True)
 
     if isnan(t).all():
         return NaN, array([NaN, NaN, NaN])
 
-    i = nanargmin(t)
+    if sorted_triangles is None:
+        i = nanargmin(t)
+    else:
+        i = where(~isnan(t))[0]
     projected_point = point + normal * t[i]
 
     return t[i], projected_point</code></pre>

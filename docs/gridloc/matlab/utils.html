@@ -28,7 +28,7 @@
 <pre><code class="python">&#34;&#34;&#34;Functions directly useful to compat.py
 &#34;&#34;&#34;
 
-from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye
+from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
 
@@ -130,7 +130,66 @@ def AxelRot(radians, u, x0):
     Mroto[:3, :3] = Rotation.from_rotvec(u * radians).as_matrix()  # l.92
 
     # be careful about the sign of AxisShift
-    return solve(Mshift, Mroto) @ Mshift  # l. 94</code></pre>
+    return solve(Mshift, Mroto) @ Mshift  # l. 94
+
+
+def _apply_affine(c, affine):
+    &#34;&#34;&#34;Apply affine matrix to many points at the same time.
+
+    Parameters
+    ----------
+    c : (n, 3) array
+        points to transform
+    affine : (4, 4) array
+        affine matrix (bottom row should be [0, 0, 0, 1])
+
+    Returns
+    -------
+    array (n, 3)
+        points transformed
+    &#34;&#34;&#34;
+    C = c_[c, ones(c.shape[0])]
+    X = (affine @ C.T).T
+    return X[:, :3]
+
+
+def _sort_closest_triangles(surf, electrode, intersval):
+    &#34;&#34;&#34;sort triangles based on the distance of the vertices. First compute
+    which vertices are closer than `intersval` to the electrode, then select
+    only vertices which have that vertex. This function keeps the order of distance
+    of the vertices. Each vertex has three triangles, so the order of the first
+    3 triangles is arbitrary. Here we use matlab convention for compatibility.
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    electrode : (3, ) array
+        x, y, z coordinates of the electrodes
+    intersval : float
+        radius in which the vertices should be
+
+    Returns
+    -------
+    list
+        sorted list of indices of triangles, sorted mostly by the distance of
+        their closest vertex to `electrode`.
+    &#34;&#34;&#34;
+    dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)
+    closevert = where(dvect &lt; intersval)[0]
+    dvecti = argsort(dvect[closevert])
+    sortvert = closevert[dvecti]
+
+    # l. 176-192
+    sorttri = []
+    tri = surf[&#39;tri&#39;].copy()
+    for cv in sortvert:
+        rows = concatenate([where(cv == tri[:, i])[0] for i in range(3)])
+        tri[rows, :] = 0
+        sorttri.extend(rows.tolist())
+
+    return sorttri</code></pre>
 </details>
 </section>
 <section>

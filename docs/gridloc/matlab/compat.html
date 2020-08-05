@@ -30,10 +30,11 @@ of the Matlab functions, for compatibility</p>
 <pre><code class="python">&#34;&#34;&#34;The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility&#34;&#34;&#34;
 
-from numpy import array, arange, meshgrid, nanmean, isnan
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross
 from numpy.linalg import norm
 from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
+from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -62,7 +63,8 @@ def getROI(surf, ref_vert, ROIsize=18, intElec=3):
     return array(ROI)
 
 
-def projectElectrodes(surf, subjstructs, normway):
+def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype=&#39;&#39;,
+                      intersval=0):
     &#34;&#34;&#34;Replicate projectElectrodes. This function is a ray-triangle intersection.
     The normal of the point is specified in `normway` if normway has three values.
     Otherwise, it computes the normal based on the direction of the points of the
@@ -77,6 +79,13 @@ def projectElectrodes(surf, subjstructs, normway):
         location of the electrodes
     normway : float
         distance to use to include mesh points when computing the normal
+    normUse : bool
+        if true, it uses the normals of `subjstructs`, if false it recomputes them
+    interstype : str
+        if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
+        to specify a radius `intersval`)
+    intersval : float
+        radius when `interstype` == `&#39;fixed&#39;`
 
     Returns
     -------
@@ -84,14 +93,28 @@ def projectElectrodes(surf, subjstructs, normway):
         for each electrode, it returns its normal (based on neighboring mesh
         vertices) and the projection onto the surface.
     &#34;&#34;&#34;
+    assert interstype in (&#39;&#39;, &#39;fixed&#39;)
+
     normdist = normway  # if normway is scalar
 
     normals = []
     pints = []
-    for electrode in subjstructs[&#39;electrodes&#39;]:
-        normal = normElec(surf, electrode, normdist)
+    for i in range(subjstructs[&#39;electrodes&#39;].shape[0]):
+        electrode = subjstructs[&#39;electrodes&#39;][i, :]
+
+        if normUse:
+            normal = subjstructs[&#39;normal&#39;][i, :]
+        else:
+            normal = normElec(surf, electrode, normdist)
+
+        if interstype == &#39;fixed&#39;:
+            sorttri = _sort_closest_triangles(surf, electrode, intersval)
+
+        else:
+            sorttri = None
+
         # note the sign of normal is inverted
-        pint = project_to_cortex(surf, electrode, -1 * normal)[1]  # l. 198-237
+        pint = project_to_cortex(surf, electrode, -1 * normal, sorted_triangles=sorttri)[1]  # l. 198-237
 
         normals.append(normal)
         pints.append(pint)
@@ -123,7 +146,32 @@ def normElec(surf, electrode, normdist, NaN_as_zeros=True):
         normals2av[isnan(normals2av)] = 0
     normal = nanmean(normals2av, axis=0)
 
-    return normal</code></pre>
+    return normal
+
+
+def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
+
+    N = normElec(hullcortex, c, 25)
+    d = dot(N, c)
+
+    point = c
+    normal = N
+    tangPlane = coords.copy().reshape(prod(dims), 3)
+    tangPlane[:, 0] = (-normal[1] * tangPlane[:, 1] - normal[2] * tangPlane[:, 2] - d) / normal[0]  # l. 19
+    N = tangPlane[0, :] - tangPlane[7, :]
+    M = coords[0, :] - coords[7, :]
+
+    AngleBetweenPlanes = arctan2(norm(cross(M, N)), dot(M, N))
+
+    Point, IntersectionPlanes = plane_intersect(array([1., 0., 0.]), coords[0, :], normal, point)
+
+    RotMatrix = AxelRot(AngleBetweenPlanes, IntersectionPlanes, Point)
+    coords_Tangent = _apply_affine(coords, RotMatrix)
+
+    if hemi == &#39;r&#39;:
+        coords_Tangent[:, 0] = coords_Tangent[::-1, 0]  # l. 54-65
+
+    return coords_Tangent</code></pre>
 </details>
 </section>
 <section>
@@ -133,6 +181,40 @@ def normElec(surf, electrode, normdist, NaN_as_zeros=True):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridloc.matlab.compat.calcTangent"><code class="name flex">
+<span>def <span class="ident">calcTangent</span></span>(<span>hullcortex, c, coords, dims, lngth, hemi)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
+
+    N = normElec(hullcortex, c, 25)
+    d = dot(N, c)
+
+    point = c
+    normal = N
+    tangPlane = coords.copy().reshape(prod(dims), 3)
+    tangPlane[:, 0] = (-normal[1] * tangPlane[:, 1] - normal[2] * tangPlane[:, 2] - d) / normal[0]  # l. 19
+    N = tangPlane[0, :] - tangPlane[7, :]
+    M = coords[0, :] - coords[7, :]
+
+    AngleBetweenPlanes = arctan2(norm(cross(M, N)), dot(M, N))
+
+    Point, IntersectionPlanes = plane_intersect(array([1., 0., 0.]), coords[0, :], normal, point)
+
+    RotMatrix = AxelRot(AngleBetweenPlanes, IntersectionPlanes, Point)
+    coords_Tangent = _apply_affine(coords, RotMatrix)
+
+    if hemi == &#39;r&#39;:
+        coords_Tangent[:, 0] = coords_Tangent[::-1, 0]  # l. 54-65
+
+    return coords_Tangent</code></pre>
+</details>
+</dd>
 <dt id="gridloc.matlab.compat.getROI"><code class="name flex">
 <span>def <span class="ident">getROI</span></span>(<span>surf, ref_vert, ROIsize=18, intElec=3)</span>
 </code></dt>
@@ -212,7 +294,7 @@ See l. 138 (there are no NaN in normals but only (0, 0, 0)).</p>
 </details>
 </dd>
 <dt id="gridloc.matlab.compat.projectElectrodes"><code class="name flex">
-<span>def <span class="ident">projectElectrodes</span></span>(<span>surf, subjstructs, normway)</span>
+<span>def <span class="ident">projectElectrodes</span></span>(<span>surf, subjstructs, normway, normUse=False, interstype='', intersval=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Replicate projectElectrodes. This function is a ray-triangle intersection.
@@ -228,6 +310,13 @@ to have 'tri_norm')</dd>
 <dd>location of the electrodes</dd>
 <dt><strong><code>normway</code></strong> :&ensp;<code>float</code></dt>
 <dd>distance to use to include mesh points when computing the normal</dd>
+<dt><strong><code>normUse</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if true, it uses the normals of <code>subjstructs</code>, if false it recomputes them</dd>
+<dt><strong><code>interstype</code></strong> :&ensp;<code>str</code></dt>
+<dd>if <code>''</code> all triangles of the model are processed; if <code>'fixed'</code>, you need
+to specify a radius <code>intersval</code>)</dd>
+<dt><strong><code>intersval</code></strong> :&ensp;<code>float</code></dt>
+<dd>radius when <code>interstype</code> == <code>'fixed'</code></dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -239,7 +328,8 @@ vertices) and the projection onto the surface.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def projectElectrodes(surf, subjstructs, normway):
+<pre><code class="python">def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype=&#39;&#39;,
+                      intersval=0):
     &#34;&#34;&#34;Replicate projectElectrodes. This function is a ray-triangle intersection.
     The normal of the point is specified in `normway` if normway has three values.
     Otherwise, it computes the normal based on the direction of the points of the
@@ -254,6 +344,13 @@ vertices) and the projection onto the surface.</dd>
         location of the electrodes
     normway : float
         distance to use to include mesh points when computing the normal
+    normUse : bool
+        if true, it uses the normals of `subjstructs`, if false it recomputes them
+    interstype : str
+        if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
+        to specify a radius `intersval`)
+    intersval : float
+        radius when `interstype` == `&#39;fixed&#39;`
 
     Returns
     -------
@@ -261,14 +358,28 @@ vertices) and the projection onto the surface.</dd>
         for each electrode, it returns its normal (based on neighboring mesh
         vertices) and the projection onto the surface.
     &#34;&#34;&#34;
+    assert interstype in (&#39;&#39;, &#39;fixed&#39;)
+
     normdist = normway  # if normway is scalar
 
     normals = []
     pints = []
-    for electrode in subjstructs[&#39;electrodes&#39;]:
-        normal = normElec(surf, electrode, normdist)
+    for i in range(subjstructs[&#39;electrodes&#39;].shape[0]):
+        electrode = subjstructs[&#39;electrodes&#39;][i, :]
+
+        if normUse:
+            normal = subjstructs[&#39;normal&#39;][i, :]
+        else:
+            normal = normElec(surf, electrode, normdist)
+
+        if interstype == &#39;fixed&#39;:
+            sorttri = _sort_closest_triangles(surf, electrode, intersval)
+
+        else:
+            sorttri = None
+
         # note the sign of normal is inverted
-        pint = project_to_cortex(surf, electrode, -1 * normal)[1]  # l. 198-237
+        pint = project_to_cortex(surf, electrode, -1 * normal, sorted_triangles=sorttri)[1]  # l. 198-237
 
         normals.append(normal)
         pints.append(pint)
@@ -297,6 +408,7 @@ vertices) and the projection onto the surface.</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridloc.matlab.compat.calcTangent" href="#gridloc.matlab.compat.calcTangent">calcTangent</a></code></li>
 <li><code><a title="gridloc.matlab.compat.getROI" href="#gridloc.matlab.compat.getROI">getROI</a></code></li>
 <li><code><a title="gridloc.matlab.compat.normElec" href="#gridloc.matlab.compat.normElec">normElec</a></code></li>
 <li><code><a title="gridloc.matlab.compat.projectElectrodes" href="#gridloc.matlab.compat.projectElectrodes">projectElectrodes</a></code></li>
