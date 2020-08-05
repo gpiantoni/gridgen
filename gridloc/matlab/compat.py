@@ -5,7 +5,7 @@ from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, c
 from numpy.linalg import norm
 from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
-from .utils import plane_intersect, AxelRot, _apply_affine
+from .utils import plane_intersect, AxelRot, _apply_affine, _find_closest_triangles
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -34,7 +34,8 @@ def getROI(surf, ref_vert, ROIsize=18, intElec=3):
     return array(ROI)
 
 
-def projectElectrodes(surf, subjstructs, normway):
+def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype='',
+                      intersval=0):
     """Replicate projectElectrodes. This function is a ray-triangle intersection.
     The normal of the point is specified in `normway` if normway has three values.
     Otherwise, it computes the normal based on the direction of the points of the
@@ -49,6 +50,13 @@ def projectElectrodes(surf, subjstructs, normway):
         location of the electrodes
     normway : float
         distance to use to include mesh points when computing the normal
+    normUse : bool
+        if true, it uses the normals of `subjstructs`, if false it recomputes them
+    interstype : str
+        if `''` all triangles of the model are processed; if `'fixed'`, you need
+        to specify a radius `intersval`)
+    intersval : float
+        radius when `interstype` == `'fixed'`
 
     Returns
     -------
@@ -56,14 +64,28 @@ def projectElectrodes(surf, subjstructs, normway):
         for each electrode, it returns its normal (based on neighboring mesh
         vertices) and the projection onto the surface.
     """
+    assert interstype in ('', 'fixed')
+
     normdist = normway  # if normway is scalar
 
     normals = []
     pints = []
-    for electrode in subjstructs['electrodes']:
-        normal = normElec(surf, electrode, normdist)
+    for i in range(subjstructs['electrodes'].shape[0]):
+        electrode = subjstructs['electrodes'][i, :]
+
+        if normUse:
+            normal = subjstructs['normal'][i, :]
+        else:
+            normal = normElec(surf, electrode, normdist)
+
+        if interstype == 'fixed':
+            sorttri = _find_closest_triangles(surf, electrode, intersval)
+
+        else:
+            sorttri = None
+
         # note the sign of normal is inverted
-        pint = project_to_cortex(surf, electrode, -1 * normal)[1]  # l. 198-237
+        pint = project_to_cortex(surf, electrode, -1 * normal, sorted_triangles=sorttri)[1]  # l. 198-237
 
         normals.append(normal)
         pints.append(pint)

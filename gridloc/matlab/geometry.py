@@ -1,10 +1,10 @@
-from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum
+from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where
 from numpy.linalg import norm
 
 EPSILON = 1e-5
 
 
-def project_to_cortex(surf, point, normal):
+def project_to_cortex(surf, point, normal, sorted_triangles=None):
     """Project a point (electrode) onto the triangulated mesh (surface).
 
     Parameters
@@ -16,6 +16,10 @@ def project_to_cortex(surf, point, normal):
         x, y, z coordinates of the electrodes
     normal : (3, ) array
         normal of the electrodes
+    sorted_triangles : (n, ) array
+        indices of triangles to select (order is important). If you pass this
+        parameters, it will return the first triangle which is intersected by
+        the line
 
     Returns
     -------
@@ -29,24 +33,33 @@ def project_to_cortex(surf, point, normal):
     -----
     Returns NaN values when there is no intersection possible to the cortex.
     """
+    if sorted_triangles is None:
+        vertices = surf['tri']
+    else:
+        vertices = surf['tri'][sorted_triangles]
+
     normal = normal / norm(normal)
     t = intersect_ray_triangle(
-        surf['pos'][surf['tri'][:, 0]],
-        surf['pos'][surf['tri'][:, 1]],
-        surf['pos'][surf['tri'][:, 2]],
+        surf['pos'][vertices][:, 0, :],
+        surf['pos'][vertices][:, 1, :],
+        surf['pos'][vertices][:, 2, :],
         point,
-        normal)
+        normal,
+        line=True)
 
     if isnan(t).all():
         return NaN, array([NaN, NaN, NaN])
 
-    i = nanargmin(t)
+    if sorted_triangles is None:
+        i = nanargmin(t)
+    else:
+        i = where(~isnan(t))[0]
     projected_point = point + normal * t[i]
 
     return t[i], projected_point
 
 
-def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
+def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
     """Implementation of the Möller-Trumbore algorithm to detect ray-triangle
     intersection.
 
@@ -63,6 +76,10 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
         start position of the ray
     rayVector : (3, ) array
         direction of the ray vector
+    line : bool
+        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+        if True, it detects intersection in both direction (treated as a line
+        with two directions)
 
     Returns
     -------
@@ -99,8 +116,9 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector):
     out_dist[i_outside] = NaN
 
     t = f * einsum('ij,ij->i', edge2, q)
-    i_opposite = t < EPSILON
-    out_dist[i_opposite] = NaN
+    if not line:
+        i_opposite = t < EPSILON
+        out_dist[i_opposite] = NaN
 
     i_good = ~isnan(out_dist)
     out_dist[i_good] = t[i_good]

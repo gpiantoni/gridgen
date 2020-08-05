@@ -1,7 +1,7 @@
 """Functions directly useful to compat.py
 """
 
-from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones
+from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
 
@@ -124,3 +124,22 @@ def _apply_affine(c, affine):
     C = c_[c, ones(c.shape[0])]
     X = (affine @ C.T).T
     return X[:, :3]
+
+
+def _find_closest_triangles(surf, electrode, intersval):
+    """TODO
+    """
+    dvect = norm(electrode - surf['pos'], axis=1)
+    closevert = where(dvect < intersval)[0]
+    dvecti = argsort(dvect[closevert])
+    sortvert = closevert[dvecti]
+
+    # l. 176-192
+    sorttri = []
+    tri = surf['tri'].copy()
+    for cv in sortvert:
+        rows = concatenate([where(cv == tri[:, i])[0] for i in range(3)])
+        tri[rows, :] = 0
+        sorttri.extend(rows.tolist())
+
+    return sorttri
