@@ -3,6 +3,9 @@ of the Matlab functions, for compatibility"""
 
 from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross
 from numpy.linalg import norm
+from multiprocessing import Pool
+from functools import partial
+
 from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles
@@ -143,3 +146,40 @@ def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
         coords_Tangent[:, 0] = coords_Tangent[::-1, 0]  # l. 54-65
 
     return coords_Tangent
+
+
+def createGrid(sub, intElec=(3, 3), auxDims=(8, 16), hemi='r'):
+    """Create GRID per ROI point and project on cortex
+    """
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi)
+    with Pool() as p:
+        ROI = p.map(f, range(sub['electrodes'].shape[0]))
+
+    return ROI
+
+
+def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi):
+    ROI_pos = sub['trielectrodes'][roi_punt, :]
+    ROI_norm = sub['normal'][roi_punt, :]
+
+    twoDgridElectrodes = calcCoords(ROI_pos, intElec, auxDims)
+    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemi)
+
+    normNormals = ROI_norm / norm(ROI_norm)
+
+    # apply first rotation
+    _transform = AxelRot(-45 / 180 * pi, normNormals, ROI_pos)
+    electrodes_start = _apply_affine(electrodes_start, _transform)  # l. 44-50
+
+    normdist = 25
+    intersval = 30  # use largest range anyway
+
+    coords = []
+    rotations = range(90)
+    for rotation in rotations:
+        _transform = AxelRot(rotation / 180 * pi, normNormals, ROI_pos)
+        new_turn = {'electrodes': _apply_affine(electrodes_start, _transform)}
+        new_turn = projectElectrodes(hullcortex, new_turn, normdist, normUse=False, interstype='fixed', intersval=intersval)
+        coords.append(new_turn)
+
+    return coords
