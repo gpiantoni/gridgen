@@ -126,8 +126,28 @@ def _apply_affine(c, affine):
     return X[:, :3]
 
 
-def _find_closest_triangles(surf, electrode, intersval):
-    """TODO
+def _sort_closest_triangles(surf, electrode, intersval):
+    """sort triangles based on the distance of the vertices. First compute
+    which vertices are closer than `intersval` to the electrode, then select
+    only vertices which have that vertex. This function keeps the order of distance
+    of the vertices. Each vertex has three triangles, so the order of the first
+    3 triangles is arbitrary. Here we use matlab convention for compatibility.
+
+    Parameters
+    ----------
+    surf : dict with 'pos', 'tri'
+        surface of the brain use to project the electrodes (it's not necessary
+        to have 'tri_norm')
+    electrode : (3, ) array
+        x, y, z coordinates of the electrodes
+    intersval : float
+        radius in which the vertices should be
+
+    Returns
+    -------
+    list
+        sorted list of indices of triangles, sorted mostly by the distance of
+        their closest vertex to `electrode`.
     """
     dvect = norm(electrode - surf['pos'], axis=1)
     closevert = where(dvect < intersval)[0]

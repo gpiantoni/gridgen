@@ -5,7 +5,7 @@ from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, c
 from numpy.linalg import norm
 from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
-from .utils import plane_intersect, AxelRot, _apply_affine, _find_closest_triangles
+from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -79,7 +79,7 @@ def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype='',
             normal = normElec(surf, electrode, normdist)
 
         if interstype == 'fixed':
-            sorttri = _find_closest_triangles(surf, electrode, intersval)
+            sorttri = _sort_closest_triangles(surf, electrode, intersval)
 
         else:
             sorttri = None
