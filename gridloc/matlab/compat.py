@@ -1,14 +1,14 @@
 """The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility"""
 
-from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
 from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
-from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles
+from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -148,17 +148,17 @@ def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
     return coords_Tangent
 
 
-def createGrid(sub, intElec=(3, 3), auxDims=(8, 16), hemi='r'):
+def createGrid(sub, intElec=(3, 3), auxDims=(8, 16), hemi='r', hullcortex=None):
     """Create GRID per ROI point and project on cortex
     """
-    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi)
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
     with Pool() as p:
         ROI = p.map(f, range(sub['electrodes'].shape[0]))
 
     return ROI
 
 
-def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi):
+def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi, hullcortex):
     ROI_pos = sub['trielectrodes'][roi_punt, :]
     ROI_norm = sub['normal'][roi_punt, :]
 
@@ -183,3 +183,26 @@ def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi):
         coords.append(new_turn)
 
     return coords
+
+
+def projectToCoarser(ROI, cortexcoarser, turns=None):
+    """
+    Project the create grid onto the coarser model
+
+    turns is not necessary
+    """
+    f = partial(projectElectrodes_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
+    with Pool() as p:
+        ROI = p.map(f, range(sub['electrodes'].shape[0]))
+
+
+def projectToCoarser_per_point(coords, cortexcoarser):
+    intersval = 35
+    all_ss = []
+    for one_coord in coords:
+        ss = {
+            'electrodes': one_coord['trielectrodes'],
+            'normal': one_coord['normal'],
+            }
+        ss = projectElectrodes(cortexcoarser, ss , 25, normUse=True, interstype='fixed', intersval=intersval)
+        one_coord['pint'] = ss['trielectrodes']
