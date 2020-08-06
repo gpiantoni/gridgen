@@ -191,18 +191,32 @@ def projectToCoarser(ROI, cortexcoarser, turns=None):
 
     turns is not necessary
     """
-    f = partial(projectElectrodes_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
+    f = partial(projectToCoarser_per_point, cortexcoarser=cortexcoarser)
     with Pool() as p:
-        ROI = p.map(f, range(sub['electrodes'].shape[0]))
+        ROI = p.map(f, ROI)
+
+    return ROI
 
 
 def projectToCoarser_per_point(coords, cortexcoarser):
     intersval = 35
-    all_ss = []
     for one_coord in coords:
         ss = {
             'electrodes': one_coord['trielectrodes'],
             'normal': one_coord['normal'],
             }
-        ss = projectElectrodes(cortexcoarser, ss , 25, normUse=True, interstype='fixed', intersval=intersval)
+        ss = projectElectrodes(cortexcoarser, ss, 25, normUse=True, interstype='fixed', intersval=intersval)
         one_coord['pint'] = ss['trielectrodes']
+
+
+def calculateModel(null, ROI, cortex, normAngio=None):
+    """Use only the first dimension
+    """
+    for coords in ROI:
+        for one_coord in coords:
+            # only the first dimension
+            McM = abs(one_coord['pint'][:, 0] - coords[0]['trielectrodes'][:, 0])
+            McM = 1 - (McM - McM.min()) / McM.max()
+            one_coord['McM'] = one_coord['weights'] = McM
+
+    return ROI
