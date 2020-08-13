@@ -88,7 +88,7 @@ def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype='',
             sorttri = None
 
         # note the sign of normal is inverted
-        pint = project_to_cortex(surf, electrode, -1 * normal, sorted_triangles=sorttri)[1]  # l. 198-237
+        pint = project_to_cortex(surf, electrode, normal, sorted_triangles=sorttri)[1]  # l. 198-237
 
         normals.append(normal)
         pints.append(pint)
@@ -207,6 +207,8 @@ def projectToCoarser_per_point(coords, cortexcoarser):
             }
         ss = projectElectrodes(cortexcoarser, ss, 25, normUse=True, interstype='fixed', intersval=intersval)
         one_coord['pint'] = ss['trielectrodes']
+
+    return coords
 
 
 def calculateModel(null, ROI, cortex, normAngio=None):

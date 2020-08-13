@@ -51,7 +51,7 @@ def project_to_cortex(surf, point, normal, sorted_triangles=None):
         return NaN, array([NaN, NaN, NaN])
 
     if sorted_triangles is None:
-        i = nanargmin(t)
+        i = nanargmin(abs(t))
     else:
         i = where(~isnan(t))[0][0]
     projected_point = point + normal * t[i]
