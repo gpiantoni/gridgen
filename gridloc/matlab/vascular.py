@@ -1,10 +1,20 @@
-from numpy import where, array, argmin
+from numpy import where, array, argmin, zeros, max, c_
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
+from scipy.stats import zscore
 
 from nibabel import load
 from nibabel.affines import apply_affine
+
+
+def calculateAngioMap(subj_info, Tthreshold, voxelDepth, plotAngio=False):
+
+    zscore_threshold = 0.1
+    xyztCortex, t_surf = voxplot_func_gm(sfile, tfile, cortex, Tthreshold, VoxelDepth)
+    angioMap = ctmr_vox_plot(cortex, xyztCortex, t_surf, 1, v=None, noplot=True)
+    normAngio = (zscore(angioMap) <= zscore_threshold).astype('float')
+    return angioMap, normAngio
 
 
 def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
@@ -52,9 +62,25 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
     return xyztCortex, t_surf
 
 
+def ctmr_vox_plot(cname, xyz, weights, ssize, v=None, noplot=True):
+    """I don't understand implementation but it mirrors the matlab
+    implementation.
+    """
+    cortex = cname
+
+    c = zeros(cortex['pos'].shape[0])
+    eps = 1e-5  # we need epsilon for some rounding errors
+    for pos, weight in zip(xyz, weights):
+        d = (abs(pos - cortex['pos']) <= (ssize + eps)).all(axis=1)
+        c = max(c_[c[:, None], d[:, None] * weight], axis=1)
+
+    return c
+
+
 def close_to_surface(i, xyzt, xyzs, VoxelDepth):
     if (norm(xyzt[i, :] - xyzs, axis=1) <= VoxelDepth).any():
         return i
+
 
 def find_closest_vertex(pos, cortexpos):
     i_min = argmin(norm(pos - cortexpos, axis=1))
