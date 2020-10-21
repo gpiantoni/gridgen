@@ -8,10 +8,11 @@ from nibabel import load
 from nibabel.affines import apply_affine
 
 
-def calculateAngioMap(subj_info, Tthreshold, voxelDepth, plotAngio=False):
+def calculateAngioMap(subj_info, Tthreshold, voxelDepth, plotAngio=False, cortex=None):
+    """cortex is not in matlab, but it's necessary"""
 
     zscore_threshold = 0.1
-    xyztCortex, t_surf = voxplot_func_gm(sfile, tfile, cortex, Tthreshold, VoxelDepth)
+    xyztCortex, t_surf = voxplot_func_gm(subj_info['sfile'], subj_info['tfile'], cortex, Tthreshold, voxelDepth)
     angioMap = ctmr_vox_plot(cortex, xyztCortex, t_surf, 1, v=None, noplot=True)
     normAngio = (zscore(angioMap) <= zscore_threshold).astype('float')
     return angioMap, normAngio
