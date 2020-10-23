@@ -1,4 +1,4 @@
-from numpy import where, array, argmin, zeros, max, c_
+from numpy import where, array, argmin, zeros, max, c_, ravel
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -27,13 +27,10 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
     t = t_info.get_fdata()
 
     i_t = t >= Tthreshold
-    t_surf = t[i_t]
-    xyz = where(i_t)
-    xyz = array(xyz).T
+    xyz = where_matlab(i_t)
     xyzt = apply_affine(t_info.affine, xyz)
 
-    xyz = where(s == 1)
-    xyz = array(xyz).T
+    xyz = where_matlab(s == 1)
     xyzs = apply_affine(s_info.affine, xyz)
 
     with Pool() as p:
@@ -45,10 +42,9 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
                 VoxelDepth=Dthreshold,
             ),
             range(xyzt.shape[0]))
+    tsel = array(tsel)
 
-    tsel = array([x for x in tsel if x is not None])
     xyzt = xyzt[tsel]
-    t_surf = t_surf[tsel]
 
     with Pool() as p:
         xyztCortex = p.map(
@@ -59,6 +55,13 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
             xyzt)
 
     xyztCortex = array(xyztCortex)
+
+    # matlab order
+    t_F = ravel(t, order='F')
+    i_t_F = ravel(i_t, order='F')
+
+    t_surf = t_F[i_t_F]
+    t_surf = t_surf[tsel]
 
     return xyztCortex, t_surf
 
@@ -79,10 +82,20 @@ def ctmr_vox_plot(cname, xyz, weights, ssize, v=None, noplot=True):
 
 
 def close_to_surface(i, xyzt, xyzs, VoxelDepth):
-    if (norm(xyzt[i, :] - xyzs, axis=1) <= VoxelDepth).any():
-        return i
+    return (norm(xyzt[i, :] - xyzs, axis=1) <= VoxelDepth).any()
 
 
 def find_closest_vertex(pos, cortexpos):
     i_min = argmin(norm(pos - cortexpos, axis=1))
     return cortexpos[i_min, :]
+
+
+def where_matlab(i):
+    """WHERE but using matlab convention, in which the last column is sorted first.
+
+    It only works for 3 dimensions
+    """
+    a = array(where(i)).T
+    a = a[a[:, 0].argsort()]
+    a = a[a[:, 1].argsort(kind='mergesort')]
+    return a[a[:, 2].argsort(kind='mergesort')]
