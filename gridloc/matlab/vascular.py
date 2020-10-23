@@ -73,9 +73,9 @@ def ctmr_vox_plot(cname, xyz, weights, ssize, v=None, noplot=True):
     cortex = cname
 
     c = zeros(cortex['pos'].shape[0])
-    eps = 1e-5  # we need epsilon for some rounding errors
+    # eps = 1e-5  # we need epsilon for some rounding errors
     for pos, weight in zip(xyz, weights):
-        d = (abs(pos - cortex['pos']) <= (ssize + eps)).all(axis=1)
+        d = (abs(pos - cortex['pos']) < ssize).all(axis=1)
         c = max(c_[c[:, None], d[:, None] * weight], axis=1)
 
     return c
