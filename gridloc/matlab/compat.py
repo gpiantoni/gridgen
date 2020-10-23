@@ -148,9 +148,26 @@ def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
     return coords_Tangent
 
 
-def createGrid(sub, intElec=(3, 3), auxDims=(8, 16), hemi='r', hullcortex=None):
+def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None):
     """Create GRID per ROI point and project on cortex
+
+    Parameters
+    ----------
+    sub : dict of array
+        the same as 'projectedROIpoints'
+    rotation : None
+        not used (but it might be in the future)
+    turns : None
+        not used (but it might be in the future)
+    auxDims : tuple of int
+        dimensions of the grid
+    subj_info : dict
+        information about this subject
+    hullcortex : dict with 'pos' and 'tri'
+        hull cortex
     """
+    hemi = subj_info['hemiVect']['hemi']
+    intElec = subj_info['intElec']
     f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
     with Pool() as p:
         ROI = p.map(f, range(sub['electrodes'].shape[0]))

@@ -24,7 +24,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import where, array, argmin, zeros, max, c_
+<pre><code class="python">from numpy import where, array, argmin, zeros, max, c_, ravel
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -53,13 +53,10 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
     t = t_info.get_fdata()
 
     i_t = t &gt;= Tthreshold
-    t_surf = t[i_t]
-    xyz = where(i_t)
-    xyz = array(xyz).T
+    xyz = where_matlab(i_t)
     xyzt = apply_affine(t_info.affine, xyz)
 
-    xyz = where(s == 1)
-    xyz = array(xyz).T
+    xyz = where_matlab(s == 1)
     xyzs = apply_affine(s_info.affine, xyz)
 
     with Pool() as p:
@@ -71,10 +68,9 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
                 VoxelDepth=Dthreshold,
             ),
             range(xyzt.shape[0]))
+    tsel = array(tsel)
 
-    tsel = array([x for x in tsel if x is not None])
     xyzt = xyzt[tsel]
-    t_surf = t_surf[tsel]
 
     with Pool() as p:
         xyztCortex = p.map(
@@ -86,6 +82,13 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
 
     xyztCortex = array(xyztCortex)
 
+    # matlab order
+    t_F = ravel(t, order=&#39;F&#39;)
+    i_t_F = ravel(i_t, order=&#39;F&#39;)
+
+    t_surf = t_F[i_t_F]
+    t_surf = t_surf[tsel]
+
     return xyztCortex, t_surf
 
 
@@ -96,22 +99,32 @@ def ctmr_vox_plot(cname, xyz, weights, ssize, v=None, noplot=True):
     cortex = cname
 
     c = zeros(cortex[&#39;pos&#39;].shape[0])
-    eps = 1e-5  # we need epsilon for some rounding errors
+    # eps = 1e-5  # we need epsilon for some rounding errors
     for pos, weight in zip(xyz, weights):
-        d = (abs(pos - cortex[&#39;pos&#39;]) &lt;= (ssize + eps)).all(axis=1)
+        d = (abs(pos - cortex[&#39;pos&#39;]) &lt; ssize).all(axis=1)
         c = max(c_[c[:, None], d[:, None] * weight], axis=1)
 
     return c
 
 
 def close_to_surface(i, xyzt, xyzs, VoxelDepth):
-    if (norm(xyzt[i, :] - xyzs, axis=1) &lt;= VoxelDepth).any():
-        return i
+    return (norm(xyzt[i, :] - xyzs, axis=1) &lt;= VoxelDepth).any()
 
 
 def find_closest_vertex(pos, cortexpos):
     i_min = argmin(norm(pos - cortexpos, axis=1))
-    return cortexpos[i_min, :]</code></pre>
+    return cortexpos[i_min, :]
+
+
+def where_matlab(i):
+    &#34;&#34;&#34;WHERE but using matlab convention, in which the last column is sorted first.
+
+    It only works for 3 dimensions
+    &#34;&#34;&#34;
+    a = array(where(i)).T
+    a = a[a[:, 0].argsort()]
+    a = a[a[:, 1].argsort(kind=&#39;mergesort&#39;)]
+    return a[a[:, 2].argsort(kind=&#39;mergesort&#39;)]</code></pre>
 </details>
 </section>
 <section>
@@ -150,8 +163,7 @@ def find_closest_vertex(pos, cortexpos):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close_to_surface(i, xyzt, xyzs, VoxelDepth):
-    if (norm(xyzt[i, :] - xyzs, axis=1) &lt;= VoxelDepth).any():
-        return i</code></pre>
+    return (norm(xyzt[i, :] - xyzs, axis=1) &lt;= VoxelDepth).any()</code></pre>
 </details>
 </dd>
 <dt id="gridloc.matlab.vascular.ctmr_vox_plot"><code class="name flex">
@@ -171,9 +183,9 @@ implementation.</p></div>
     cortex = cname
 
     c = zeros(cortex[&#39;pos&#39;].shape[0])
-    eps = 1e-5  # we need epsilon for some rounding errors
+    # eps = 1e-5  # we need epsilon for some rounding errors
     for pos, weight in zip(xyz, weights):
-        d = (abs(pos - cortex[&#39;pos&#39;]) &lt;= (ssize + eps)).all(axis=1)
+        d = (abs(pos - cortex[&#39;pos&#39;]) &lt; ssize).all(axis=1)
         c = max(c_[c[:, None], d[:, None] * weight], axis=1)
 
     return c</code></pre>
@@ -211,13 +223,10 @@ implementation.</p></div>
     t = t_info.get_fdata()
 
     i_t = t &gt;= Tthreshold
-    t_surf = t[i_t]
-    xyz = where(i_t)
-    xyz = array(xyz).T
+    xyz = where_matlab(i_t)
     xyzt = apply_affine(t_info.affine, xyz)
 
-    xyz = where(s == 1)
-    xyz = array(xyz).T
+    xyz = where_matlab(s == 1)
     xyzs = apply_affine(s_info.affine, xyz)
 
     with Pool() as p:
@@ -229,10 +238,9 @@ implementation.</p></div>
                 VoxelDepth=Dthreshold,
             ),
             range(xyzt.shape[0]))
+    tsel = array(tsel)
 
-    tsel = array([x for x in tsel if x is not None])
     xyzt = xyzt[tsel]
-    t_surf = t_surf[tsel]
 
     with Pool() as p:
         xyztCortex = p.map(
@@ -244,7 +252,35 @@ implementation.</p></div>
 
     xyztCortex = array(xyztCortex)
 
+    # matlab order
+    t_F = ravel(t, order=&#39;F&#39;)
+    i_t_F = ravel(i_t, order=&#39;F&#39;)
+
+    t_surf = t_F[i_t_F]
+    t_surf = t_surf[tsel]
+
     return xyztCortex, t_surf</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.vascular.where_matlab"><code class="name flex">
+<span>def <span class="ident">where_matlab</span></span>(<span>i)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>WHERE but using matlab convention, in which the last column is sorted first.</p>
+<p>It only works for 3 dimensions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def where_matlab(i):
+    &#34;&#34;&#34;WHERE but using matlab convention, in which the last column is sorted first.
+
+    It only works for 3 dimensions
+    &#34;&#34;&#34;
+    a = array(where(i)).T
+    a = a[a[:, 0].argsort()]
+    a = a[a[:, 1].argsort(kind=&#39;mergesort&#39;)]
+    return a[a[:, 2].argsort(kind=&#39;mergesort&#39;)]</code></pre>
 </details>
 </dd>
 </dl>
@@ -264,12 +300,13 @@ implementation.</p></div>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="gridloc.matlab.vascular.calculateAngioMap" href="#gridloc.matlab.vascular.calculateAngioMap">calculateAngioMap</a></code></li>
 <li><code><a title="gridloc.matlab.vascular.close_to_surface" href="#gridloc.matlab.vascular.close_to_surface">close_to_surface</a></code></li>
 <li><code><a title="gridloc.matlab.vascular.ctmr_vox_plot" href="#gridloc.matlab.vascular.ctmr_vox_plot">ctmr_vox_plot</a></code></li>
 <li><code><a title="gridloc.matlab.vascular.find_closest_vertex" href="#gridloc.matlab.vascular.find_closest_vertex">find_closest_vertex</a></code></li>
 <li><code><a title="gridloc.matlab.vascular.voxplot_func_gm" href="#gridloc.matlab.vascular.voxplot_func_gm">voxplot_func_gm</a></code></li>
+<li><code><a title="gridloc.matlab.vascular.where_matlab" href="#gridloc.matlab.vascular.where_matlab">where_matlab</a></code></li>
 </ul>
 </li>
 </ul>

@@ -177,9 +177,26 @@ def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
     return coords_Tangent
 
 
-def createGrid(sub, intElec=(3, 3), auxDims=(8, 16), hemi=&#39;r&#39;, hullcortex=None):
+def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None):
     &#34;&#34;&#34;Create GRID per ROI point and project on cortex
+
+    Parameters
+    ----------
+    sub : dict of array
+        the same as &#39;projectedROIpoints&#39;
+    rotation : None
+        not used (but it might be in the future)
+    turns : None
+        not used (but it might be in the future)
+    auxDims : tuple of int
+        dimensions of the grid
+    subj_info : dict
+        information about this subject
+    hullcortex : dict with &#39;pos&#39; and &#39;tri&#39;
+        hull cortex
     &#34;&#34;&#34;
+    hemi = subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;]
+    intElec = subj_info[&#39;intElec&#39;]
     f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
     with Pool() as p:
         ROI = p.map(f, range(sub[&#39;electrodes&#39;].shape[0]))
@@ -317,17 +334,49 @@ def calculateModel(null, ROI, cortex, normAngio=None):
 </details>
 </dd>
 <dt id="gridloc.matlab.compat.createGrid"><code class="name flex">
-<span>def <span class="ident">createGrid</span></span>(<span>sub, intElec=(3, 3), auxDims=(8, 16), hemi='r', hullcortex=None)</span>
+<span>def <span class="ident">createGrid</span></span>(<span>sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create GRID per ROI point and project on cortex</p></div>
+<div class="desc"><p>Create GRID per ROI point and project on cortex</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sub</code></strong> :&ensp;<code>dict</code> of <code>array</code></dt>
+<dd>the same as 'projectedROIpoints'</dd>
+<dt><strong><code>rotation</code></strong> :&ensp;<code>None</code></dt>
+<dd>not used (but it might be in the future)</dd>
+<dt><strong><code>turns</code></strong> :&ensp;<code>None</code></dt>
+<dd>not used (but it might be in the future)</dd>
+<dt><strong><code>auxDims</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>dimensions of the grid</dd>
+<dt><strong><code>subj_info</code></strong> :&ensp;<code>dict</code></dt>
+<dd>information about this subject</dd>
+<dt><strong><code>hullcortex</code></strong> :&ensp;<code>dict with 'pos' and 'tri'</code></dt>
+<dd>hull cortex</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def createGrid(sub, intElec=(3, 3), auxDims=(8, 16), hemi=&#39;r&#39;, hullcortex=None):
+<pre><code class="python">def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None):
     &#34;&#34;&#34;Create GRID per ROI point and project on cortex
+
+    Parameters
+    ----------
+    sub : dict of array
+        the same as &#39;projectedROIpoints&#39;
+    rotation : None
+        not used (but it might be in the future)
+    turns : None
+        not used (but it might be in the future)
+    auxDims : tuple of int
+        dimensions of the grid
+    subj_info : dict
+        information about this subject
+    hullcortex : dict with &#39;pos&#39; and &#39;tri&#39;
+        hull cortex
     &#34;&#34;&#34;
+    hemi = subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;]
+    intElec = subj_info[&#39;intElec&#39;]
     f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
     with Pool() as p:
         ROI = p.map(f, range(sub[&#39;electrodes&#39;].shape[0]))
