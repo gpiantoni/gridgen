@@ -1,7 +1,7 @@
 """The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility"""
 
-from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -230,12 +230,37 @@ def projectToCoarser_per_point(coords, cortexcoarser):
 
 def calculateModel(null, ROI, cortex, normAngio=None):
     """Use only the first dimension
+    Cortex is only needed when using normAngio
     """
     for coords in ROI:
         for one_coord in coords:
+
             # only the first dimension
-            McM = abs(one_coord['pint'][:, 0] - coords[0]['trielectrodes'][:, 0])
+            McM = abs(one_coord['pint'][:, 0] - one_coord['trielectrodes'][:, 0])
             McM = 1 - (McM - McM.min()) / McM.max()
-            one_coord['McM'] = one_coord['weights'] = McM
+            one_coord['McM'] = McM
+
+            if normAngio is None:
+                one_coord['weights'] = one_coord['McM']
+
+    if normAngio is not None:
+        f = partial(_calculateVascularModel, cortex=cortex, normAngio=normAngio)
+        with Pool() as p:
+            ROI = p.map(f, ROI)
 
     return ROI
+
+
+def _calculateVascularModel(coords, cortex, normAngio):
+    for one_coord in coords:
+        v = []
+        for pint in one_coord['pint']:
+            dist = norm(pint - cortex['pos'], axis=1)
+            with errstate(invalid='ignore'):
+                idx = dist <= 2
+            v.append(mean(normAngio[idx]))
+        one_coord['MvM'] = array(v)
+
+        one_coord['weights'] = 0.5 * one_coord['MvM'] + 0.5 * one_coord['McM']
+
+    return coords
