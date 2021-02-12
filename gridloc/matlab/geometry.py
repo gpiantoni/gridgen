@@ -1,6 +1,5 @@
-from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where
+from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where, ones
 from numpy.linalg import norm
-from numpy import nansum
 
 EPSILON = 1e-5
 
@@ -40,7 +39,6 @@ def project_to_cortex(surf, point, normal, sorted_triangles=None):
         vertices = surf['tri'][sorted_triangles]
 
     normal = normal / norm(normal)
-    print(normal)
     t = intersect_ray_triangle(
         surf['pos'][vertices][:, 0, :],
         surf['pos'][vertices][:, 1, :],
@@ -95,37 +93,36 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line
     -----
     Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     """
-    out_dist = empty(vertex0.shape[0])
+    i_good = ones(vertex0.shape[0], dtype=bool)
     edge1 = vertex1 - vertex0
     edge2 = vertex2 - vertex0
     h = cross(rayVector, edge2, axis=-1)
     a = einsum('ij,ij->i', edge1, h)  # dot product
 
     i_parallel = (a > -EPSILON) & (a < EPSILON)
-    out_dist[i_parallel] = NaN
+    i_good[i_parallel] = False
 
     f = 1 / a
 
     s = rayOrigin - vertex0
     u = f * einsum('ij,ij->i', s, h)
     i_outside = (u < 0.0) | (u > 1.0)
-    out_dist[i_outside] = NaN
+    i_good[i_outside] = False
 
     q = cross(s, edge1)
     v = f * einsum('j,ij->i', rayVector, q)
 
     i_outside = (v < 0.0) | (u + v > 1.0)
-    out_dist[i_outside] = NaN
+    i_good[i_outside] = False
 
     t = f * einsum('ij,ij->i', edge2, q)
     if not line:
         i_opposite = t < EPSILON
-        out_dist[i_opposite] = NaN
+        i_good[i_opposite] = NaN
 
-    i_good = ~isnan(out_dist)
-    out_dist[i_good] = t[i_good]
+    t[~i_good] = NaN
 
-    return out_dist
+    return t
 
 
 def check_if_point_in_triangle(v0, v1, v2, p):
