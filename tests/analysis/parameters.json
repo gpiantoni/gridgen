@@ -1,13 +1,12 @@
 {
-  "output": "/home/gio/tools/gridloc/tests/analysis/output",
+  "output": "/home/giovanni/tools/gridloc/tests/analysis/output",
   "grid": {
     "n_rows": 4,
     "n_columns": 5,
     "chan_pattern": "chan{}"
   },
   "ecog": {
-    "file": "/home/gio/tools/gridloc/tests/analysis/data/ecog.eeg",
-    "ref_chan": [],
+    "file": "/home/giovanni/tools/gridloc/tests/analysis/data/ecog.eeg",
     "begtime": 0,
     "endtime": 10,
     "freq_range": [
@@ -16,9 +15,9 @@
     ]
   },
   "fitting": {
-    "T1_file": "/home/gio/tools/gridloc/tests/analysis/data/T1.mgz",
-    "dura_file": "/home/gio/tools/gridloc/tests/analysis/data/lh_smooth.pial",
-    "pial_file": "/home/gio/tools/gridloc/tests/analysis/data/lh.pial",
+    "T1_file": "/home/giovanni/tools/gridloc/tests/analysis/data/T1.mgz",
+    "dura_file": "/home/giovanni/tools/gridloc/tests/analysis/data/lh_smooth.pial",
+    "pial_file": "/home/giovanni/tools/gridloc/tests/analysis/data/lh.pial",
     "angio_file": null,
     "angio_threshold": 100,
     "initial": {

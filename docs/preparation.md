@@ -13,7 +13,7 @@ This will speed up the calculation without impacting the results.
 
 ```bash
 flirt -in angiogram.nii.gz -ref angiogram.nii.gz -applyisoxfm 1 -o angio_1mm
-mv angio_1mm.nii.gz angiogram.gz
+mv angio_1mm.nii.gz angiogram.nii.gz
 ```
 
 ## 2. Freesurfer

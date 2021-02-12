@@ -1,5 +1,6 @@
 from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where
 from numpy.linalg import norm
+from numpy import nansum
 
 EPSILON = 1e-5
 
@@ -39,6 +40,7 @@ def project_to_cortex(surf, point, normal, sorted_triangles=None):
         vertices = surf['tri'][sorted_triangles]
 
     normal = normal / norm(normal)
+    print(normal)
     t = intersect_ray_triangle(
         surf['pos'][vertices][:, 0, :],
         surf['pos'][vertices][:, 1, :],
