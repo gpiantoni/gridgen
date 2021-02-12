@@ -1,4 +1,4 @@
-from numpy import where, array, argmin, zeros, max, c_, ravel
+from numpy import where, array, argmin, sum, max, ravel
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -69,16 +69,24 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
 def ctmr_vox_plot(cname, xyz, weights, ssize, v=None, noplot=True):
     """I don't understand implementation but it mirrors the matlab
     implementation.
-    """
     cortex = cname
 
     c = zeros(cortex['pos'].shape[0])
     # eps = 1e-5  # we need epsilon for some rounding errors
     for pos, weight in zip(xyz, weights):
-        d = (abs(pos - cortex['pos']) < ssize).all(axis=1)
+        d = (abs(pos - cortex['pos']) <= ssize).all(axis=1)
         c = max(c_[c[:, None], d[:, None] * weight], axis=1)
 
-    return c
+    """
+    c = []
+    for pos in cname['pos']:
+        d = (abs(pos - xyz) <= ssize).all(axis=1)
+        if sum(d):
+            c.append(max(weights[d]))
+        else:
+            c.append(0)
+
+    return array(c)
 
 
 def close_to_surface(i, xyzt, xyzs, VoxelDepth):
