@@ -51,7 +51,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     correlation : str
         'parametric' (Pearson) or 'nonparametric' (rank)
     method : str
-        'simplex', 'hopping', 'bruteforce'
+        'simplex', 'hopping', 'brute'
     brute_range : list of 3 lists of 3 floats
         Only if method == 'bruteforce'. It should give the range to compute the
         brute force analysis. The start position is given by "init".
