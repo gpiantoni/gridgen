@@ -6,9 +6,11 @@ from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
-from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
+
+from ..geometry import calc_plane_to_axis
+from ..construct import make_grid_with_labels
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -264,3 +266,53 @@ def _calculateVascularModel(coords, cortex, normAngio):
         one_coord['weights'] = 0.5 * one_coord['MvM'] + 0.5 * one_coord['McM']
 
     return coords
+
+
+def indexFuncLegacy(subj_info):
+    """Computes the label to assign to the electrode position (so not to the
+    ecog activity, as in matlab function)
+
+    Requires
+      - hemiVect:
+        - hemi: 'l' or 'r'
+        - side: 'u' (up), 'd' (down), 'l' (left), or 'r' (right)
+
+    - dims [n_columns, n_rows]
+    Note that `dims` is first columns, then rows, so for the normal grid it's
+    [8, 16]
+
+    """
+    n_columns, n_rows = subj_info['dims']
+
+    if subj_info['hemiVect']['hemi'] == 'l':
+        if subj_info['hemiVect']['side'] == 'u':
+            direction = 'TBLR'
+
+        elif subj_info['hemiVect']['side'] == 'd':
+            direction = 'BTRL'
+
+        elif subj_info['hemiVect']['side'] == 'l':
+            direction = 'LRBT'
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info['hemiVect']['side'] == 'r':
+            direction = 'RLTB'
+            n_rows, n_columns = n_columns, n_rows
+
+    elif subj_info['hemiVect']['hemi'] == 'r':
+        if subj_info['hemiVect']['side'] == 'u':
+            direction = 'TBRL'
+
+        elif subj_info['hemiVect']['side'] == 'd':
+            direction = 'BTLR'
+
+        elif subj_info['hemiVect']['side'] == 'r':
+            direction = 'LRTB'
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info['hemiVect']['side'] == 'l':
+            direction = 'RLBT'
+            n_rows, n_columns = n_columns, n_rows
+
+    elec2d = make_grid_with_labels(n_rows, n_columns, direction=direction, chan_pattern='chan{}')
+    return elec2d['label'].flatten(order='F')
