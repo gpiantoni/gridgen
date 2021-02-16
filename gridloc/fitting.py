@@ -100,36 +100,45 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     if method == 'simplex':
         m = fitting_simplex(minimizer_args, init_rot)
-        lg.info(m)
+        best_fit = m.x
 
     elif method == 'hopping':
         m = fitting_hopping(minimizer_args, init_rot)
-        lg.info(m)
+        best_fit = m.x
 
     elif method == 'brute':
         m = fitting_brute(minimizer_args, init_rot, brute_range)
-        lg.info(m)
+        best_fit = m[0]
 
     # create grid with best values
-    x, y, rotation = m.x
-    best_vert = search_grid(dura, init_vert, x, y)
-    grid = construct_grid(dura, best_vert, ref_label, ecog['label'], rotation=rotation)
-    morpho = compute_distance(grid, pial)
+    x, y, rotation = best_fit
+    out = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{out["vert"]: 6d}) = {out["cc"]: 8.3f} (vascular contribution: {out["percent_vasc"]:.2f}%')
 
-    grid_file = output / f'bestfit_vert{best_vert}_rot{rotation:06.3f}'
-    _export_results(grid_file, grid, morpho)
+    grid_file_name = f'bestfit_vert{out["vert"]}_rot{rotation:03.0f}'
+    grid_file = output / (grid_file_name + '_morpho')
+    _export_results(grid_file, out["grid"], out["morpho"])
+    lg.debug(f'Exported morpho to {grid_file}')
 
-    return m
+    if out['vasc'] is not None:
+        grid_file = output / (grid_file_name + '_vascular')
+        _export_results(grid_file, out["grid"], out["vasc"])
+        lg.debug(f'Exported vascular to {grid_file}')
+
+    # TODO: both models together
+    # TODO: export CC values
+    # TODO: export elec locations
 
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    intermediate=None, correlation=None):
+                    intermediate=None, correlation=None, final=False):
     """Main model to minimize
 
     """
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = ')
+    if not final:
+        lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = ')
 
     grid = construct_grid(dura, start_vert, ref_label, ecog['label'], rotation=rotation)
 
@@ -144,13 +153,25 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
         v = None
 
     i, cc = compare_models(e, m, v, correlation=correlation)
-    lg.debug(' ' * 45 + f'{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
+    if not final:
+        lg.debug(' ' * 45 + f'{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
 
-    if intermediate is not None and intermediate:
+    if not final and intermediate is not None and intermediate:
         grid_file = intermediate / f'vert{start_vert}_rot{rotation:06.3f}'
         _export_results(grid_file, grid, morpho)
 
-    return cc
+    if final:
+        return {
+            'vert': start_vert,
+            'grid': grid,
+            'morpho': morpho,
+            'vasc': v,
+            'percent_vasc': 100 * (1 - i),
+            'cc': cc,
+            }
+
+    else:
+        return cc
 
 
 def compare_models(E, M, V=None, correlation='parametric'):
