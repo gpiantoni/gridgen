@@ -10,6 +10,7 @@ from plotly.offline import plot
 
 from ..ecog.plot_ecog import plot_2d
 from ..fitting import fitting
+from ..matlab.pipeline import compare_to_matlab
 from ..io import (
     read_grid2d,
     write_grid2d,
@@ -33,13 +34,13 @@ def create_arguments():
         formatter_class=RawTextHelpFormatter)
     parser.add_argument('-l', '--log', default='info',
                         help='Logging level: info (default), debug')
-    parser.add_argument('-o', '--output',
+    parser.add_argument('-o', '--output_dir',
                         help=dedent("""\
                         Output directory. Default is the current directory.
                         You can also specify it in the parameters.
 
                         Parameters:
-                          output :
+                          output_dir :
                              path to output directory
                         """))
     parser.add_argument(
@@ -75,11 +76,11 @@ def create_arguments():
 
         Parameters:
           ecog :
-            file : path to ECoG file
+            ecog_file : path to ECoG file
             begtime (optional) : start time in seconds from beginning of the file
             endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
-            bad_chan (optional) : list of str, name of the channels to exclude
+            bad_channels (optional) : list of str, name of the channels to exclude
 
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
@@ -112,6 +113,10 @@ def create_arguments():
         """))
     fit.set_defaults(function='fit')
 
+    mat = list_functions.add_parser(
+        'matlab', help=dedent(""""""))
+    mat.set_defaults(function='matlab')
+
     return parser
 
 
@@ -141,23 +146,24 @@ def main(arguments=None):
     with p_json.open() as f:
         parameters = load(f)
 
-    if args.output is not None:
-        output = args.output
-    elif 'output' in parameters:
-        output = parameters['output']
+    if args.output_dir is not None:
+        output = args.output_dir
+    elif 'output_dir' in parameters:
+        output = parameters['output_dir']
     else:
         output = '.'
 
     lg.debug(dumps(parameters, indent=2))
 
-    parameters['output'] = Path(output).resolve()
-    parameters['output'].mkdir(exist_ok=True, parents=True)
+    parameters['output_dir'] = output
+    parameters = convert_to_path(parameters)
+    parameters['output_dir'].mkdir(exist_ok=True, parents=True)
 
     # outputs
-    grid2d_tsv = parameters['output'] / 'grid2d_labels.tsv'
-    ecog_tsv = parameters['output'] / 'grid2d_ecog.tsv'
-    ecog_fig = parameters['output'] / 'grid2d_ecog.html'
-    transform_file = parameters['output'] / 'tkras'
+    grid2d_tsv = parameters['output_dir'] / 'grid2d_labels.tsv'
+    ecog_tsv = parameters['output_dir'] / 'grid2d_ecog.tsv'
+    ecog_fig = parameters['output_dir'] / 'grid2d_ecog.html'
+    transform_file = parameters['output_dir'] / 'tkras'
 
     if args.function == 'grid2d':
         from ..construct import make_grid_with_labels
@@ -191,5 +197,17 @@ def main(arguments=None):
 
         fitting(
             ecog=ecog2d,
-            output=parameters['output'],
+            output=parameters['output_dir'],
             **parameters['fitting'])
+
+    if args.function == 'matlab':
+        compare_to_matlab(parameters)
+
+
+def convert_to_path(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = convert_to_path(v)
+        elif k.endswith('_file') or k.endswith('_dir'):
+            d[k] = Path(v).resolve()
+    return d

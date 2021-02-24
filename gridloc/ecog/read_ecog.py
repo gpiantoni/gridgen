@@ -8,18 +8,18 @@ from pathlib import Path
 lg = getLogger(__name__)
 
 
-def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95)):
+def read_ecog(ecog_file, begtime=None, endtime=None, bad_channels=None, freq_range=(55, 95)):
     """Read ECoG data
 
     Parameters
     ----------
-    file : path to file
+    ecog_file : path to file
         Path to ECoG file
     begtime : float
         if specified, data will be read after this point in time (in s)
     endtime : float
         if specified, data will be read until this point in time (in s)
-    bad_chan : list of str
+    bad_channels : list of str
         list of channels to exclude
     freq_range : two floats
         frequency range to compute the average power spectrum
@@ -34,13 +34,13 @@ def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 9
     ----
     check whether we should use 'mean' or 'median' across time
     """
-    lg.debug(f'Reading {file} between {begtime}s and {endtime}s')
-    d = Dataset(Path(file).resolve())
+    lg.debug(f'Reading {ecog_file} between {begtime}s and {endtime}s')
+    d = Dataset(Path(ecog_file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
-    if bad_chan is not None:
-        lg.debug(f'Excluding {len(bad_chan)} channels')
-        data = select(data, chan=bad_chan, invert=True)
+    if bad_channels is not None:
+        lg.debug(f'Excluding {len(bad_channels)} channels')
+        data = select(data, chan=bad_channels, invert=True)
 
     lg.debug('Rereference to average')
     data = montage(data, ref_to_avg=True)
