@@ -78,7 +78,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     correlation : str
         &#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)
     method : str
-        &#39;simplex&#39;, &#39;hopping&#39;, &#39;bruteforce&#39;
+        &#39;simplex&#39;, &#39;hopping&#39;, &#39;brute&#39;
     brute_range : list of 3 lists of 3 floats
         Only if method == &#39;bruteforce&#39;. It should give the range to compute the
         brute force analysis. The start position is given by &#34;init&#34;.
@@ -127,36 +127,45 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     if method == &#39;simplex&#39;:
         m = fitting_simplex(minimizer_args, init_rot)
-        lg.info(m)
+        best_fit = m.x
 
     elif method == &#39;hopping&#39;:
         m = fitting_hopping(minimizer_args, init_rot)
-        lg.info(m)
+        best_fit = m.x
 
     elif method == &#39;brute&#39;:
         m = fitting_brute(minimizer_args, init_rot, brute_range)
-        lg.info(m)
+        best_fit = m[0]
 
     # create grid with best values
-    x, y, rotation = m.x
-    best_vert = search_grid(dura, init_vert, x, y)
-    grid = construct_grid(dura, best_vert, ref_label, ecog[&#39;label&#39;], rotation=rotation)
-    morpho = compute_distance(grid, pial)
+    x, y, rotation = best_fit
+    out = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    lg.info(f&#39;Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{out[&#34;vert&#34;]: 6d}) = {out[&#34;cc&#34;]: 8.3f} (vascular contribution: {out[&#34;percent_vasc&#34;]:.2f}%&#39;)
 
-    grid_file = output / f&#39;bestfit_vert{best_vert}_rot{rotation:06.3f}&#39;
-    _export_results(grid_file, grid, morpho)
+    grid_file_name = f&#39;bestfit_vert{out[&#34;vert&#34;]}_rot{rotation:03.0f}&#39;
+    grid_file = output / (grid_file_name + &#39;_morpho&#39;)
+    _export_results(grid_file, out[&#34;grid&#34;], out[&#34;morpho&#34;])
+    lg.debug(f&#39;Exported morpho to {grid_file}&#39;)
 
-    return m
+    if out[&#39;vasc&#39;] is not None:
+        grid_file = output / (grid_file_name + &#39;_vascular&#39;)
+        _export_results(grid_file, out[&#34;grid&#34;], out[&#34;vasc&#34;])
+        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
+
+    # TODO: both models together
+    # TODO: export CC values
+    # TODO: export elec locations
 
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    intermediate=None, correlation=None):
+                    intermediate=None, correlation=None, final=False):
     &#34;&#34;&#34;Main model to minimize
 
     &#34;&#34;&#34;
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = &#39;)
+    if not final:
+        lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = &#39;)
 
     grid = construct_grid(dura, start_vert, ref_label, ecog[&#39;label&#39;], rotation=rotation)
 
@@ -171,13 +180,25 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
         v = None
 
     i, cc = compare_models(e, m, v, correlation=correlation)
-    lg.debug(&#39; &#39; * 45 + f&#39;{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
+    if not final:
+        lg.debug(&#39; &#39; * 45 + f&#39;{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
-    if intermediate is not None and intermediate:
+    if not final and intermediate is not None and intermediate:
         grid_file = intermediate / f&#39;vert{start_vert}_rot{rotation:06.3f}&#39;
         _export_results(grid_file, grid, morpho)
 
-    return cc
+    if final:
+        return {
+            &#39;vert&#39;: start_vert,
+            &#39;grid&#39;: grid,
+            &#39;morpho&#39;: morpho,
+            &#39;vasc&#39;: v,
+            &#39;percent_vasc&#39;: 100 * (1 - i),
+            &#39;cc&#39;: cc,
+            }
+
+    else:
+        return cc
 
 
 def compare_models(E, M, V=None, correlation=&#39;parametric&#39;):
@@ -377,7 +398,7 @@ def _export_results(grid_file, grid, morpho):
 </details>
 </dd>
 <dt id="gridloc.fitting.corr_ecog_model"><code class="name flex">
-<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, dura, ref_vert, ref_label, ecog, pial, angio=None, intermediate=None, correlation=None)</span>
+<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, dura, ref_vert, ref_label, ecog, pial, angio=None, intermediate=None, correlation=None, final=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main model to minimize</p></div>
@@ -386,13 +407,14 @@ def _export_results(grid_file, grid, morpho):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    intermediate=None, correlation=None):
+                    intermediate=None, correlation=None, final=False):
     &#34;&#34;&#34;Main model to minimize
 
     &#34;&#34;&#34;
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = &#39;)
+    if not final:
+        lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = &#39;)
 
     grid = construct_grid(dura, start_vert, ref_label, ecog[&#39;label&#39;], rotation=rotation)
 
@@ -407,13 +429,25 @@ def _export_results(grid_file, grid, morpho):
         v = None
 
     i, cc = compare_models(e, m, v, correlation=correlation)
-    lg.debug(&#39; &#39; * 45 + f&#39;{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
+    if not final:
+        lg.debug(&#39; &#39; * 45 + f&#39;{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
-    if intermediate is not None and intermediate:
+    if not final and intermediate is not None and intermediate:
         grid_file = intermediate / f&#39;vert{start_vert}_rot{rotation:06.3f}&#39;
         _export_results(grid_file, grid, morpho)
 
-    return cc</code></pre>
+    if final:
+        return {
+            &#39;vert&#39;: start_vert,
+            &#39;grid&#39;: grid,
+            &#39;morpho&#39;: morpho,
+            &#39;vasc&#39;: v,
+            &#39;percent_vasc&#39;: 100 * (1 - i),
+            &#39;cc&#39;: cc,
+            }
+
+    else:
+        return cc</code></pre>
 </details>
 </dd>
 <dt id="gridloc.fitting.corrcoef_match"><code class="name flex">
@@ -465,7 +499,7 @@ def _export_results(grid_file, grid, morpho):
 <dt><strong><code>correlation</code></strong> :&ensp;<code>str</code></dt>
 <dd>'parametric' (Pearson) or 'nonparametric' (rank)</dd>
 <dt><strong><code>method</code></strong> :&ensp;<code>str</code></dt>
-<dd>'simplex', 'hopping', 'bruteforce'</dd>
+<dd>'simplex', 'hopping', 'brute'</dd>
 <dt><strong><code>brute_range</code></strong> :&ensp;<code>list</code> of <code>3 lists</code> of <code>3 floats</code></dt>
 <dd>Only if method == 'bruteforce'. It should give the range to compute the
 brute force analysis. The start position is given by "init".
@@ -506,7 +540,7 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
     correlation : str
         &#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)
     method : str
-        &#39;simplex&#39;, &#39;hopping&#39;, &#39;bruteforce&#39;
+        &#39;simplex&#39;, &#39;hopping&#39;, &#39;brute&#39;
     brute_range : list of 3 lists of 3 floats
         Only if method == &#39;bruteforce&#39;. It should give the range to compute the
         brute force analysis. The start position is given by &#34;init&#34;.
@@ -555,26 +589,30 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
 
     if method == &#39;simplex&#39;:
         m = fitting_simplex(minimizer_args, init_rot)
-        lg.info(m)
+        best_fit = m.x
 
     elif method == &#39;hopping&#39;:
         m = fitting_hopping(minimizer_args, init_rot)
-        lg.info(m)
+        best_fit = m.x
 
     elif method == &#39;brute&#39;:
         m = fitting_brute(minimizer_args, init_rot, brute_range)
-        lg.info(m)
+        best_fit = m[0]
 
     # create grid with best values
-    x, y, rotation = m.x
-    best_vert = search_grid(dura, init_vert, x, y)
-    grid = construct_grid(dura, best_vert, ref_label, ecog[&#39;label&#39;], rotation=rotation)
-    morpho = compute_distance(grid, pial)
+    x, y, rotation = best_fit
+    out = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    lg.info(f&#39;Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{out[&#34;vert&#34;]: 6d}) = {out[&#34;cc&#34;]: 8.3f} (vascular contribution: {out[&#34;percent_vasc&#34;]:.2f}%&#39;)
 
-    grid_file = output / f&#39;bestfit_vert{best_vert}_rot{rotation:06.3f}&#39;
-    _export_results(grid_file, grid, morpho)
+    grid_file_name = f&#39;bestfit_vert{out[&#34;vert&#34;]}_rot{rotation:03.0f}&#39;
+    grid_file = output / (grid_file_name + &#39;_morpho&#39;)
+    _export_results(grid_file, out[&#34;grid&#34;], out[&#34;morpho&#34;])
+    lg.debug(f&#39;Exported morpho to {grid_file}&#39;)
 
-    return m</code></pre>
+    if out[&#39;vasc&#39;] is not None:
+        grid_file = output / (grid_file_name + &#39;_vascular&#39;)
+        _export_results(grid_file, out[&#34;grid&#34;], out[&#34;vasc&#34;])
+        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)</code></pre>
 </details>
 </dd>
 <dt id="gridloc.fitting.fitting_brute"><code class="name flex">

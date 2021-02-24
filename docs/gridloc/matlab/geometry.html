@@ -24,7 +24,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where
+<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where, ones
 from numpy.linalg import norm
 
 EPSILON = 1e-5
@@ -119,37 +119,36 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line
     -----
     Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     &#34;&#34;&#34;
-    out_dist = empty(vertex0.shape[0])
+    i_good = ones(vertex0.shape[0], dtype=bool)
     edge1 = vertex1 - vertex0
     edge2 = vertex2 - vertex0
     h = cross(rayVector, edge2, axis=-1)
     a = einsum(&#39;ij,ij-&gt;i&#39;, edge1, h)  # dot product
 
     i_parallel = (a &gt; -EPSILON) &amp; (a &lt; EPSILON)
-    out_dist[i_parallel] = NaN
+    i_good[i_parallel] = False
 
     f = 1 / a
 
     s = rayOrigin - vertex0
     u = f * einsum(&#39;ij,ij-&gt;i&#39;, s, h)
     i_outside = (u &lt; 0.0) | (u &gt; 1.0)
-    out_dist[i_outside] = NaN
+    i_good[i_outside] = False
 
     q = cross(s, edge1)
     v = f * einsum(&#39;j,ij-&gt;i&#39;, rayVector, q)
 
     i_outside = (v &lt; 0.0) | (u + v &gt; 1.0)
-    out_dist[i_outside] = NaN
+    i_good[i_outside] = False
 
     t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
     if not line:
         i_opposite = t &lt; EPSILON
-        out_dist[i_opposite] = NaN
+        i_good[i_opposite] = NaN
 
-    i_good = ~isnan(out_dist)
-    out_dist[i_good] = t[i_good]
+    t[~i_good] = NaN
 
-    return out_dist
+    return t
 
 
 def check_if_point_in_triangle(v0, v1, v2, p):
@@ -305,37 +304,36 @@ to the triangle (so, this is a ray, not a line).</dd>
     -----
     Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     &#34;&#34;&#34;
-    out_dist = empty(vertex0.shape[0])
+    i_good = ones(vertex0.shape[0], dtype=bool)
     edge1 = vertex1 - vertex0
     edge2 = vertex2 - vertex0
     h = cross(rayVector, edge2, axis=-1)
     a = einsum(&#39;ij,ij-&gt;i&#39;, edge1, h)  # dot product
 
     i_parallel = (a &gt; -EPSILON) &amp; (a &lt; EPSILON)
-    out_dist[i_parallel] = NaN
+    i_good[i_parallel] = False
 
     f = 1 / a
 
     s = rayOrigin - vertex0
     u = f * einsum(&#39;ij,ij-&gt;i&#39;, s, h)
     i_outside = (u &lt; 0.0) | (u &gt; 1.0)
-    out_dist[i_outside] = NaN
+    i_good[i_outside] = False
 
     q = cross(s, edge1)
     v = f * einsum(&#39;j,ij-&gt;i&#39;, rayVector, q)
 
     i_outside = (v &lt; 0.0) | (u + v &gt; 1.0)
-    out_dist[i_outside] = NaN
+    i_good[i_outside] = False
 
     t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
     if not line:
         i_opposite = t &lt; EPSILON
-        out_dist[i_opposite] = NaN
+        i_good[i_opposite] = NaN
 
-    i_good = ~isnan(out_dist)
-    out_dist[i_good] = t[i_good]
+    t[~i_good] = NaN
 
-    return out_dist</code></pre>
+    return t</code></pre>
 </details>
 </dd>
 <dt id="gridloc.matlab.geometry.project_to_cortex"><code class="name flex">

@@ -30,14 +30,16 @@ of the Matlab functions, for compatibility</p>
 <pre><code class="python">&#34;&#34;&#34;The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility&#34;&#34;&#34;
 
-from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
-from ..geometry import calc_plane_to_axis
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
+
+from ..geometry import calc_plane_to_axis
+from ..construct import make_grid_with_labels
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):
@@ -259,15 +261,90 @@ def projectToCoarser_per_point(coords, cortexcoarser):
 
 def calculateModel(null, ROI, cortex, normAngio=None):
     &#34;&#34;&#34;Use only the first dimension
+    Cortex is only needed when using normAngio
     &#34;&#34;&#34;
     for coords in ROI:
         for one_coord in coords:
-            # only the first dimension
-            McM = abs(one_coord[&#39;pint&#39;][:, 0] - coords[0][&#39;trielectrodes&#39;][:, 0])
-            McM = 1 - (McM - McM.min()) / McM.max()
-            one_coord[&#39;McM&#39;] = one_coord[&#39;weights&#39;] = McM
 
-    return ROI</code></pre>
+            # only the first dimension
+            McM = abs(one_coord[&#39;pint&#39;][:, 0] - one_coord[&#39;trielectrodes&#39;][:, 0])
+            McM = 1 - (McM - McM.min()) / McM.max()
+            one_coord[&#39;McM&#39;] = McM
+
+            if normAngio is None:
+                one_coord[&#39;weights&#39;] = one_coord[&#39;McM&#39;]
+
+    if normAngio is not None:
+        f = partial(_calculateVascularModel, cortex=cortex, normAngio=normAngio)
+        with Pool() as p:
+            ROI = p.map(f, ROI)
+
+    return ROI
+
+
+def _calculateVascularModel(coords, cortex, normAngio):
+    for one_coord in coords:
+        v = []
+        for pint in one_coord[&#39;pint&#39;]:
+            dist = norm(pint - cortex[&#39;pos&#39;], axis=1)
+            with errstate(invalid=&#39;ignore&#39;):
+                idx = dist &lt;= 2
+            v.append(mean(normAngio[idx]))
+        one_coord[&#39;MvM&#39;] = array(v)
+
+        one_coord[&#39;weights&#39;] = 0.5 * one_coord[&#39;MvM&#39;] + 0.5 * one_coord[&#39;McM&#39;]
+
+    return coords
+
+
+def indexFuncLegacy(subj_info):
+    &#34;&#34;&#34;Computes the label to assign to the electrode position (so not to the
+    ecog activity, as in matlab function)
+
+    Requires
+      - hemiVect:
+        - hemi: &#39;l&#39; or &#39;r&#39;
+        - side: &#39;u&#39; (up), &#39;d&#39; (down), &#39;l&#39; (left), or &#39;r&#39; (right)
+
+    - dims [n_columns, n_rows]
+    Note that `dims` is first columns, then rows, so for the normal grid it&#39;s
+    [8, 16]
+
+    &#34;&#34;&#34;
+    n_columns, n_rows = subj_info[&#39;dims&#39;]
+
+    if subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;l&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;LRBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;RLTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elif subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;r&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;LRTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;RLBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elec2d = make_grid_with_labels(n_rows, n_columns, direction=direction, chan_pattern=&#39;chan{}&#39;)
+    return elec2d[&#39;label&#39;].flatten(order=&#39;F&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -315,20 +392,31 @@ def calculateModel(null, ROI, cortex, normAngio=None):
 <span>def <span class="ident">calculateModel</span></span>(<span>null, ROI, cortex, normAngio=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Use only the first dimension</p></div>
+<div class="desc"><p>Use only the first dimension
+Cortex is only needed when using normAngio</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def calculateModel(null, ROI, cortex, normAngio=None):
     &#34;&#34;&#34;Use only the first dimension
+    Cortex is only needed when using normAngio
     &#34;&#34;&#34;
     for coords in ROI:
         for one_coord in coords:
+
             # only the first dimension
-            McM = abs(one_coord[&#39;pint&#39;][:, 0] - coords[0][&#39;trielectrodes&#39;][:, 0])
+            McM = abs(one_coord[&#39;pint&#39;][:, 0] - one_coord[&#39;trielectrodes&#39;][:, 0])
             McM = 1 - (McM - McM.min()) / McM.max()
-            one_coord[&#39;McM&#39;] = one_coord[&#39;weights&#39;] = McM
+            one_coord[&#39;McM&#39;] = McM
+
+            if normAngio is None:
+                one_coord[&#39;weights&#39;] = one_coord[&#39;McM&#39;]
+
+    if normAngio is not None:
+        f = partial(_calculateVascularModel, cortex=cortex, normAngio=normAngio)
+        with Pool() as p:
+            ROI = p.map(f, ROI)
 
     return ROI</code></pre>
 </details>
@@ -457,6 +545,75 @@ normal -&gt; normal to the hullcortex</p></div>
         ROI.append(target)
 
     return array(ROI)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.indexFuncLegacy"><code class="name flex">
+<span>def <span class="ident">indexFuncLegacy</span></span>(<span>subj_info)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes the label to assign to the electrode position (so not to the
+ecog activity, as in matlab function)</p>
+<p>Requires
+- hemiVect:
+- hemi: 'l' or 'r'
+- side: 'u' (up), 'd' (down), 'l' (left), or 'r' (right)</p>
+<ul>
+<li>dims [n_columns, n_rows]
+Note that <code>dims</code> is first columns, then rows, so for the normal grid it's
+[8, 16]</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def indexFuncLegacy(subj_info):
+    &#34;&#34;&#34;Computes the label to assign to the electrode position (so not to the
+    ecog activity, as in matlab function)
+
+    Requires
+      - hemiVect:
+        - hemi: &#39;l&#39; or &#39;r&#39;
+        - side: &#39;u&#39; (up), &#39;d&#39; (down), &#39;l&#39; (left), or &#39;r&#39; (right)
+
+    - dims [n_columns, n_rows]
+    Note that `dims` is first columns, then rows, so for the normal grid it&#39;s
+    [8, 16]
+
+    &#34;&#34;&#34;
+    n_columns, n_rows = subj_info[&#39;dims&#39;]
+
+    if subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;l&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;LRBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;RLTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elif subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;r&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;LRTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;RLBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elec2d = make_grid_with_labels(n_rows, n_columns, direction=direction, chan_pattern=&#39;chan{}&#39;)
+    return elec2d[&#39;label&#39;].flatten(order=&#39;F&#39;)</code></pre>
 </details>
 </dd>
 <dt id="gridloc.matlab.compat.normElec"><code class="name flex">
@@ -663,6 +820,7 @@ vertices) and the projection onto the surface.</dd>
 <li><code><a title="gridloc.matlab.compat.createGrid" href="#gridloc.matlab.compat.createGrid">createGrid</a></code></li>
 <li><code><a title="gridloc.matlab.compat.createGrid_per_point" href="#gridloc.matlab.compat.createGrid_per_point">createGrid_per_point</a></code></li>
 <li><code><a title="gridloc.matlab.compat.getROI" href="#gridloc.matlab.compat.getROI">getROI</a></code></li>
+<li><code><a title="gridloc.matlab.compat.indexFuncLegacy" href="#gridloc.matlab.compat.indexFuncLegacy">indexFuncLegacy</a></code></li>
 <li><code><a title="gridloc.matlab.compat.normElec" href="#gridloc.matlab.compat.normElec">normElec</a></code></li>
 <li><code><a title="gridloc.matlab.compat.projectElectrodes" href="#gridloc.matlab.compat.projectElectrodes">projectElectrodes</a></code></li>
 <li><code><a title="gridloc.matlab.compat.projectToCoarser" href="#gridloc.matlab.compat.projectToCoarser">projectToCoarser</a></code></li>
