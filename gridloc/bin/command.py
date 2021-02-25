@@ -114,7 +114,22 @@ def create_arguments():
     fit.set_defaults(function='fit')
 
     mat = list_functions.add_parser(
-        'matlab', help=dedent(""""""))
+        'matlab', help=dedent("""\
+        Compute values based on a conversion of the matlab code and compare the
+        values with those computed by matlab
+
+        Parameters:
+          input :
+            subjectInfo_file : path to subjectInfo.mat
+            gridInfo_file : path to gridInfo.mat
+          comparison :
+            gamma_file : path to gamma values
+            angiomap_file : path to angiomap
+            prediction_file : path to predicted electrodes
+
+        Output:
+          ???
+        """))
     mat.set_defaults(function='matlab')
 
     return parser

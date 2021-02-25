@@ -1,6 +1,7 @@
 """Functions directly useful to compat.py
 """
 
+from os import nice
 from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
@@ -163,3 +164,7 @@ def _sort_closest_triangles(surf, electrode, intersval):
         sorttri.extend(rows.tolist())
 
     return sorttri
+
+
+def be_nice():
+    nice(10)

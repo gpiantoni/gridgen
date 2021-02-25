@@ -37,6 +37,7 @@ from plotly.offline import plot
 
 from ..ecog.plot_ecog import plot_2d
 from ..fitting import fitting
+from ..matlab.pipeline import compare_to_matlab
 from ..io import (
     read_grid2d,
     write_grid2d,
@@ -60,13 +61,13 @@ def create_arguments():
         formatter_class=RawTextHelpFormatter)
     parser.add_argument(&#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
                         help=&#39;Logging level: info (default), debug&#39;)
-    parser.add_argument(&#39;-o&#39;, &#39;--output&#39;,
+    parser.add_argument(&#39;-o&#39;, &#39;--output_dir&#39;,
                         help=dedent(&#34;&#34;&#34;\
                         Output directory. Default is the current directory.
                         You can also specify it in the parameters.
 
                         Parameters:
-                          output :
+                          output_dir :
                              path to output directory
                         &#34;&#34;&#34;))
     parser.add_argument(
@@ -102,11 +103,11 @@ def create_arguments():
 
         Parameters:
           ecog :
-            file : path to ECoG file
+            ecog_file : path to ECoG file
             begtime (optional) : start time in seconds from beginning of the file
             endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
-            bad_chan (optional) : list of str, name of the channels to exclude
+            bad_channels (optional) : list of str, name of the channels to exclude
 
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
@@ -139,6 +140,10 @@ def create_arguments():
         &#34;&#34;&#34;))
     fit.set_defaults(function=&#39;fit&#39;)
 
+    mat = list_functions.add_parser(
+        &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;&#34;&#34;&#34;))
+    mat.set_defaults(function=&#39;matlab&#39;)
+
     return parser
 
 
@@ -168,23 +173,24 @@ def main(arguments=None):
     with p_json.open() as f:
         parameters = load(f)
 
-    if args.output is not None:
-        output = args.output
-    elif &#39;output&#39; in parameters:
-        output = parameters[&#39;output&#39;]
+    if args.output_dir is not None:
+        output = args.output_dir
+    elif &#39;output_dir&#39; in parameters:
+        output = parameters[&#39;output_dir&#39;]
     else:
         output = &#39;.&#39;
 
     lg.debug(dumps(parameters, indent=2))
 
-    parameters[&#39;output&#39;] = Path(output).resolve()
-    parameters[&#39;output&#39;].mkdir(exist_ok=True, parents=True)
+    parameters[&#39;output_dir&#39;] = output
+    parameters = convert_to_path(parameters)
+    parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
 
     # outputs
-    grid2d_tsv = parameters[&#39;output&#39;] / &#39;grid2d_labels.tsv&#39;
-    ecog_tsv = parameters[&#39;output&#39;] / &#39;grid2d_ecog.tsv&#39;
-    ecog_fig = parameters[&#39;output&#39;] / &#39;grid2d_ecog.html&#39;
-    transform_file = parameters[&#39;output&#39;] / &#39;tkras&#39;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    ecog_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.tsv&#39;
+    ecog_fig = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.html&#39;
+    transform_file = parameters[&#39;output_dir&#39;] / &#39;tkras&#39;
 
     if args.function == &#39;grid2d&#39;:
         from ..construct import make_grid_with_labels
@@ -218,8 +224,20 @@ def main(arguments=None):
 
         fitting(
             ecog=ecog2d,
-            output=parameters[&#39;output&#39;],
-            **parameters[&#39;fitting&#39;])</code></pre>
+            output=parameters[&#39;output_dir&#39;],
+            **parameters[&#39;fitting&#39;])
+
+    if args.function == &#39;matlab&#39;:
+        compare_to_matlab(parameters)
+
+
+def convert_to_path(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = convert_to_path(v)
+        elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
+            d[k] = Path(v).resolve()
+    return d</code></pre>
 </details>
 </section>
 <section>
@@ -229,6 +247,24 @@ def main(arguments=None):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridloc.bin.command.convert_to_path"><code class="name flex">
+<span>def <span class="ident">convert_to_path</span></span>(<span>d)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_to_path(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = convert_to_path(v)
+        elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
+            d[k] = Path(v).resolve()
+    return d</code></pre>
+</details>
+</dd>
 <dt id="gridloc.bin.command.create_arguments"><code class="name flex">
 <span>def <span class="ident">create_arguments</span></span>(<span>)</span>
 </code></dt>
@@ -245,13 +281,13 @@ def main(arguments=None):
         formatter_class=RawTextHelpFormatter)
     parser.add_argument(&#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
                         help=&#39;Logging level: info (default), debug&#39;)
-    parser.add_argument(&#39;-o&#39;, &#39;--output&#39;,
+    parser.add_argument(&#39;-o&#39;, &#39;--output_dir&#39;,
                         help=dedent(&#34;&#34;&#34;\
                         Output directory. Default is the current directory.
                         You can also specify it in the parameters.
 
                         Parameters:
-                          output :
+                          output_dir :
                              path to output directory
                         &#34;&#34;&#34;))
     parser.add_argument(
@@ -287,11 +323,11 @@ def main(arguments=None):
 
         Parameters:
           ecog :
-            file : path to ECoG file
+            ecog_file : path to ECoG file
             begtime (optional) : start time in seconds from beginning of the file
             endtime (optional): end time in seconds from beginning of the file
             freq_range : low and high threshold of the frequency range of interest
-            bad_chan (optional) : list of str, name of the channels to exclude
+            bad_channels (optional) : list of str, name of the channels to exclude
 
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
@@ -323,6 +359,10 @@ def main(arguments=None):
 
         &#34;&#34;&#34;))
     fit.set_defaults(function=&#39;fit&#39;)
+
+    mat = list_functions.add_parser(
+        &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;&#34;&#34;&#34;))
+    mat.set_defaults(function=&#39;matlab&#39;)
 
     return parser</code></pre>
 </details>
@@ -362,23 +402,24 @@ def main(arguments=None):
     with p_json.open() as f:
         parameters = load(f)
 
-    if args.output is not None:
-        output = args.output
-    elif &#39;output&#39; in parameters:
-        output = parameters[&#39;output&#39;]
+    if args.output_dir is not None:
+        output = args.output_dir
+    elif &#39;output_dir&#39; in parameters:
+        output = parameters[&#39;output_dir&#39;]
     else:
         output = &#39;.&#39;
 
     lg.debug(dumps(parameters, indent=2))
 
-    parameters[&#39;output&#39;] = Path(output).resolve()
-    parameters[&#39;output&#39;].mkdir(exist_ok=True, parents=True)
+    parameters[&#39;output_dir&#39;] = output
+    parameters = convert_to_path(parameters)
+    parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
 
     # outputs
-    grid2d_tsv = parameters[&#39;output&#39;] / &#39;grid2d_labels.tsv&#39;
-    ecog_tsv = parameters[&#39;output&#39;] / &#39;grid2d_ecog.tsv&#39;
-    ecog_fig = parameters[&#39;output&#39;] / &#39;grid2d_ecog.html&#39;
-    transform_file = parameters[&#39;output&#39;] / &#39;tkras&#39;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    ecog_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.tsv&#39;
+    ecog_fig = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.html&#39;
+    transform_file = parameters[&#39;output_dir&#39;] / &#39;tkras&#39;
 
     if args.function == &#39;grid2d&#39;:
         from ..construct import make_grid_with_labels
@@ -412,8 +453,11 @@ def main(arguments=None):
 
         fitting(
             ecog=ecog2d,
-            output=parameters[&#39;output&#39;],
-            **parameters[&#39;fitting&#39;])</code></pre>
+            output=parameters[&#39;output_dir&#39;],
+            **parameters[&#39;fitting&#39;])
+
+    if args.function == &#39;matlab&#39;:
+        compare_to_matlab(parameters)</code></pre>
 </details>
 </dd>
 </dl>
@@ -434,6 +478,7 @@ def main(arguments=None):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridloc.bin.command.convert_to_path" href="#gridloc.bin.command.convert_to_path">convert_to_path</a></code></li>
 <li><code><a title="gridloc.bin.command.create_arguments" href="#gridloc.bin.command.create_arguments">create_arguments</a></code></li>
 <li><code><a title="gridloc.bin.command.main" href="#gridloc.bin.command.main">main</a></code></li>
 </ul>

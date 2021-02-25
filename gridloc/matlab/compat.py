@@ -7,7 +7,7 @@ from multiprocessing import Pool
 from functools import partial
 
 from .geometry import project_to_cortex
-from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
+from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords, be_nice
 
 from ..geometry import calc_plane_to_axis
 from ..construct import make_grid_with_labels
@@ -171,7 +171,7 @@ def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, 
     hemi = subj_info['hemiVect']['hemi']
     intElec = subj_info['intElec']
     f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
-    with Pool() as p:
+    with Pool(initializer=be_nice) as p:
         ROI = p.map(f, range(sub['electrodes'].shape[0]))
 
     return ROI

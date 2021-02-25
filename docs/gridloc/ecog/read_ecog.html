@@ -35,18 +35,18 @@ from pathlib import Path
 lg = getLogger(__name__)
 
 
-def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95)):
+def read_ecog(ecog_file, begtime=None, endtime=None, bad_channels=None, freq_range=(55, 95)):
     &#34;&#34;&#34;Read ECoG data
 
     Parameters
     ----------
-    file : path to file
+    ecog_file : path to file
         Path to ECoG file
     begtime : float
         if specified, data will be read after this point in time (in s)
     endtime : float
         if specified, data will be read until this point in time (in s)
-    bad_chan : list of str
+    bad_channels : list of str
         list of channels to exclude
     freq_range : two floats
         frequency range to compute the average power spectrum
@@ -61,13 +61,13 @@ def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 9
     ----
     check whether we should use &#39;mean&#39; or &#39;median&#39; across time
     &#34;&#34;&#34;
-    lg.debug(f&#39;Reading {file} between {begtime}s and {endtime}s&#39;)
-    d = Dataset(Path(file).resolve())
+    lg.debug(f&#39;Reading {ecog_file} between {begtime}s and {endtime}s&#39;)
+    d = Dataset(Path(ecog_file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
-    if bad_chan is not None:
-        lg.debug(f&#39;Excluding {len(bad_chan)} channels&#39;)
-        data = select(data, chan=bad_chan, invert=True)
+    if bad_channels is not None:
+        lg.debug(f&#39;Excluding {len(bad_channels)} channels&#39;)
+        data = select(data, chan=bad_channels, invert=True)
 
     lg.debug(&#39;Rereference to average&#39;)
     data = montage(data, ref_to_avg=True)
@@ -199,19 +199,19 @@ location</p>
 </details>
 </dd>
 <dt id="gridloc.ecog.read_ecog.read_ecog"><code class="name flex">
-<span>def <span class="ident">read_ecog</span></span>(<span>file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95))</span>
+<span>def <span class="ident">read_ecog</span></span>(<span>ecog_file, begtime=None, endtime=None, bad_channels=None, freq_range=(55, 95))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read ECoG data</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>file</code></strong> :&ensp;<code>path to file</code></dt>
+<dt><strong><code>ecog_file</code></strong> :&ensp;<code>path to file</code></dt>
 <dd>Path to ECoG file</dd>
 <dt><strong><code>begtime</code></strong> :&ensp;<code>float</code></dt>
 <dd>if specified, data will be read after this point in time (in s)</dd>
 <dt><strong><code>endtime</code></strong> :&ensp;<code>float</code></dt>
 <dd>if specified, data will be read until this point in time (in s)</dd>
-<dt><strong><code>bad_chan</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dt><strong><code>bad_channels</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
 <dd>list of channels to exclude</dd>
 <dt><strong><code>freq_range</code></strong> :&ensp;<code>two floats</code></dt>
 <dd>frequency range to compute the average power spectrum</dd>
@@ -228,18 +228,18 @@ frequency range</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_ecog(file, begtime=None, endtime=None, bad_chan=None, freq_range=(55, 95)):
+<pre><code class="python">def read_ecog(ecog_file, begtime=None, endtime=None, bad_channels=None, freq_range=(55, 95)):
     &#34;&#34;&#34;Read ECoG data
 
     Parameters
     ----------
-    file : path to file
+    ecog_file : path to file
         Path to ECoG file
     begtime : float
         if specified, data will be read after this point in time (in s)
     endtime : float
         if specified, data will be read until this point in time (in s)
-    bad_chan : list of str
+    bad_channels : list of str
         list of channels to exclude
     freq_range : two floats
         frequency range to compute the average power spectrum
@@ -254,13 +254,13 @@ frequency range</dd>
     ----
     check whether we should use &#39;mean&#39; or &#39;median&#39; across time
     &#34;&#34;&#34;
-    lg.debug(f&#39;Reading {file} between {begtime}s and {endtime}s&#39;)
-    d = Dataset(Path(file).resolve())
+    lg.debug(f&#39;Reading {ecog_file} between {begtime}s and {endtime}s&#39;)
+    d = Dataset(Path(ecog_file).resolve())
     data = d.read_data(begtime=begtime, endtime=endtime)
 
-    if bad_chan is not None:
-        lg.debug(f&#39;Excluding {len(bad_chan)} channels&#39;)
-        data = select(data, chan=bad_chan, invert=True)
+    if bad_channels is not None:
+        lg.debug(f&#39;Excluding {len(bad_channels)} channels&#39;)
+        data = select(data, chan=bad_channels, invert=True)
 
     lg.debug(&#39;Rereference to average&#39;)
     data = montage(data, ref_to_avg=True)
