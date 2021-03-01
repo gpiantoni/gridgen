@@ -5,6 +5,8 @@ from os import nice
 from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
+from ..io import read_grid2d
+from .io import read_matlab
 
 EPSILON = 1e-5
 
@@ -168,3 +170,34 @@ def _sort_closest_triangles(surf, electrode, intersval):
 
 def be_nice():
     nice(10)
+
+
+def get_initial_from_matlab(parameters):
+    """get initial values from matlab
+    """
+    grid2d_tsv = parameters['output_dir'] / 'grid2d_labels.tsv'
+    grid2d = read_grid2d(grid2d_tsv)
+    i0 = grid2d.shape[0] // 2
+    i1 = grid2d.shape[1] // 2
+    parameters['fitting']['initial']['label'] = grid2d[i0, i1]['label']
+
+    gridInfo = read_matlab(parameters['matlab']['input']['gridInfo_file'])
+    matlab_center = gridInfo['coords_ROI']['ROI_Tangent'].mean(axis=0)
+    parameters['fitting']['initial']['RAS'] = matlab_center
+
+    subjectInfo = read_matlab(parameters['matlab']['input']['subjectInfo_file'])
+    if subjectInfo['hemiVect']['side'] == 'u':
+        rotation = 180
+    elif subjectInfo['hemiVect']['side'] == 'r':
+        rotation = -90
+    elif subjectInfo['hemiVect']['side'] == 'l':
+        rotation = 90
+    elif subjectInfo['hemiVect']['side'] == 'd':
+        rotation = 0
+
+    parameters['fitting']['initial']['rotation'] = rotation
+
+    print('initial')
+    print(parameters['fitting']['initial'])
+
+    return parameters

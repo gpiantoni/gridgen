@@ -1,16 +1,39 @@
 import scipy.io as spio
 from mat73 import loadmat as load73
+from json import load as json_load
+from numpy import array
 
 
 def read_matlab(mat_file):
+    """Read either matlab or json file with the same info.
 
-    try:
-        out = loadold(mat_file)
-        data_format = 'old'
-        out = {k: v for k, v in out.items() if not k.startswith('__')}
-    except NotImplementedError:
-        out = load73(mat_file)
-        data_format = 'h5py'
+    Json file is useful when subjectInfo.mat was not created. So create a
+    subj_info.json file with the fields:
+        'dims': [8, 16],
+        'intElec': [3, 3],
+        'hemiVect': {
+            'hemi': 'r',
+            'side': 'd',
+            },
+        'gamma_mean': '',
+        'neuralAct': '',
+        'sfile': '',
+        'tfile': '',
+        'Tthreshold': 50,
+        'VoxelDepth': 8,
+    """
+
+    if mat_file.suffix == '.json':
+        with mat_file.open() as f:
+            out = {mat_file.stem: json_load(f)}
+
+    else:
+
+        try:
+            out = loadold(mat_file)
+            out = {k: v for k, v in out.items() if not k.startswith('__')}
+        except NotImplementedError:
+            out = load73(mat_file)
 
     if len(out) == 1:
         k = list(out)[0]
@@ -23,7 +46,7 @@ def read_matlab(mat_file):
         for field in ('sfile', 'tfile', 'gamma_mean', 'neuralAct'):
             val[field] = (mat_file.parents[1] / val[field])
 
-        val['dims'] = val['dims'].astype(int)
+        val['dims'] = array(val['dims']).astype(int)
 
     return val
 

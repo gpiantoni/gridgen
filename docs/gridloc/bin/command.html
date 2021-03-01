@@ -141,7 +141,21 @@ def create_arguments():
     fit.set_defaults(function=&#39;fit&#39;)
 
     mat = list_functions.add_parser(
-        &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;&#34;&#34;&#34;))
+        &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;\
+        Compute values based on a conversion of the matlab code and compare the
+        values with those computed by matlab
+
+        Parameters:
+          input :
+            subjectInfo_file : path to subjectInfo.mat
+            gridInfo_file : path to gridInfo.mat
+          comparison :
+            angiomap_file : path to angiomap
+            prediction_file : path to predicted electrodes
+
+        Output:
+          ???
+        &#34;&#34;&#34;))
     mat.set_defaults(function=&#39;matlab&#39;)
 
     return parser
@@ -233,7 +247,9 @@ def main(arguments=None):
 
 def convert_to_path(d):
     for k, v in d.items():
-        if isinstance(v, dict):
+        if v is None:
+            continue
+        elif isinstance(v, dict):
             v = convert_to_path(v)
         elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
             d[k] = Path(v).resolve()
@@ -258,7 +274,9 @@ def convert_to_path(d):
 </summary>
 <pre><code class="python">def convert_to_path(d):
     for k, v in d.items():
-        if isinstance(v, dict):
+        if v is None:
+            continue
+        elif isinstance(v, dict):
             v = convert_to_path(v)
         elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
             d[k] = Path(v).resolve()
@@ -361,7 +379,21 @@ def convert_to_path(d):
     fit.set_defaults(function=&#39;fit&#39;)
 
     mat = list_functions.add_parser(
-        &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;&#34;&#34;&#34;))
+        &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;\
+        Compute values based on a conversion of the matlab code and compare the
+        values with those computed by matlab
+
+        Parameters:
+          input :
+            subjectInfo_file : path to subjectInfo.mat
+            gridInfo_file : path to gridInfo.mat
+          comparison :
+            angiomap_file : path to angiomap
+            prediction_file : path to predicted electrodes
+
+        Output:
+          ???
+        &#34;&#34;&#34;))
     mat.set_defaults(function=&#39;matlab&#39;)
 
     return parser</code></pre>

@@ -123,7 +123,6 @@ def create_arguments():
             subjectInfo_file : path to subjectInfo.mat
             gridInfo_file : path to gridInfo.mat
           comparison :
-            gamma_file : path to gamma values
             angiomap_file : path to angiomap
             prediction_file : path to predicted electrodes
 
@@ -221,7 +220,9 @@ def main(arguments=None):
 
 def convert_to_path(d):
     for k, v in d.items():
-        if isinstance(v, dict):
+        if v is None:
+            continue
+        elif isinstance(v, dict):
             v = convert_to_path(v)
         elif k.endswith('_file') or k.endswith('_dir'):
             d[k] = Path(v).resolve()

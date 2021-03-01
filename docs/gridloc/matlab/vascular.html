@@ -33,6 +33,8 @@ from scipy.stats import zscore
 from nibabel import load
 from nibabel.affines import apply_affine
 
+from .utils import be_nice
+
 
 def calculateAngioMap(subj_info, Tthreshold, voxelDepth, plotAngio=False, cortex=None):
     &#34;&#34;&#34;cortex is not in matlab, but it&#39;s necessary&#34;&#34;&#34;
@@ -59,7 +61,7 @@ def voxplot_func_gm(sName, tName, cname, Tthreshold, Dthreshold):
     xyz = where_matlab(s == 1)
     xyzs = apply_affine(s_info.affine, xyz)
 
-    with Pool() as p:
+    with Pool(initializer=be_nice) as p:
         tsel = p.map(
             partial(
                 close_to_surface,
@@ -252,7 +254,7 @@ c = max(c_[c[:, None], d[:, None] * weight], axis=1)</p></div>
     xyz = where_matlab(s == 1)
     xyzs = apply_affine(s_info.affine, xyz)
 
-    with Pool() as p:
+    with Pool(initializer=be_nice) as p:
         tsel = p.map(
             partial(
                 close_to_surface,

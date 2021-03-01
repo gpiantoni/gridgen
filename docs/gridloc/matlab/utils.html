@@ -28,9 +28,12 @@
 <pre><code class="python">&#34;&#34;&#34;Functions directly useful to compat.py
 &#34;&#34;&#34;
 
+from os import nice
 from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
+from ..io import read_grid2d
+from .io import read_matlab
 
 EPSILON = 1e-5
 
@@ -189,7 +192,42 @@ def _sort_closest_triangles(surf, electrode, intersval):
         tri[rows, :] = 0
         sorttri.extend(rows.tolist())
 
-    return sorttri</code></pre>
+    return sorttri
+
+
+def be_nice():
+    nice(10)
+
+
+def get_initial_from_matlab(parameters):
+    &#34;&#34;&#34;get initial values from matlab
+    &#34;&#34;&#34;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    grid2d = read_grid2d(grid2d_tsv)
+    i0 = grid2d.shape[0] // 2
+    i1 = grid2d.shape[1] // 2
+    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
+
+    gridInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;gridInfo_file&#39;])
+    matlab_center = gridInfo[&#39;coords_ROI&#39;][&#39;ROI_Tangent&#39;].mean(axis=0)
+    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
+
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    if subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+        rotation = 180
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+        rotation = -90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+        rotation = 90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+        rotation = 0
+
+    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
+
+    print(&#39;initial&#39;)
+    print(parameters[&#39;fitting&#39;][&#39;initial&#39;])
+
+    return parameters</code></pre>
 </details>
 </section>
 <section>
@@ -252,6 +290,19 @@ def _sort_closest_triangles(surf, electrode, intersval):
     return solve(Mshift, Mroto) @ Mshift  # l. 94</code></pre>
 </details>
 </dd>
+<dt id="gridloc.matlab.utils.be_nice"><code class="name flex">
+<span>def <span class="ident">be_nice</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def be_nice():
+    nice(10)</code></pre>
+</details>
+</dd>
 <dt id="gridloc.matlab.utils.calcCoords"><code class="name flex">
 <span>def <span class="ident">calcCoords</span></span>(<span>c, GridSteps, dims)</span>
 </code></dt>
@@ -277,6 +328,46 @@ size, respectively, of the mesh that's being calculated.</p></div>
     diff_mat = c_[zeros(prod(dims)), x_mesh.flatten(&#39;F&#39;), y_mesh.flatten(&#39;F&#39;)]
 
     return c + diff_mat</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.utils.get_initial_from_matlab"><code class="name flex">
+<span>def <span class="ident">get_initial_from_matlab</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>get initial values from matlab</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_initial_from_matlab(parameters):
+    &#34;&#34;&#34;get initial values from matlab
+    &#34;&#34;&#34;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    grid2d = read_grid2d(grid2d_tsv)
+    i0 = grid2d.shape[0] // 2
+    i1 = grid2d.shape[1] // 2
+    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
+
+    gridInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;gridInfo_file&#39;])
+    matlab_center = gridInfo[&#39;coords_ROI&#39;][&#39;ROI_Tangent&#39;].mean(axis=0)
+    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
+
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    if subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+        rotation = 180
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+        rotation = -90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+        rotation = 90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+        rotation = 0
+
+    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
+
+    print(&#39;initial&#39;)
+    print(parameters[&#39;fitting&#39;][&#39;initial&#39;])
+
+    return parameters</code></pre>
 </details>
 </dd>
 <dt id="gridloc.matlab.utils.plane_intersect"><code class="name flex">
@@ -380,7 +471,9 @@ size, respectively, of the mesh that's being calculated.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="gridloc.matlab.utils.AxelRot" href="#gridloc.matlab.utils.AxelRot">AxelRot</a></code></li>
+<li><code><a title="gridloc.matlab.utils.be_nice" href="#gridloc.matlab.utils.be_nice">be_nice</a></code></li>
 <li><code><a title="gridloc.matlab.utils.calcCoords" href="#gridloc.matlab.utils.calcCoords">calcCoords</a></code></li>
+<li><code><a title="gridloc.matlab.utils.get_initial_from_matlab" href="#gridloc.matlab.utils.get_initial_from_matlab">get_initial_from_matlab</a></code></li>
 <li><code><a title="gridloc.matlab.utils.plane_intersect" href="#gridloc.matlab.utils.plane_intersect">plane_intersect</a></code></li>
 </ul>
 </li>
