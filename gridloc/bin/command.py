@@ -105,6 +105,10 @@ def create_arguments():
               label : label for the reference electrode
               RAS : initial location for the reference electrode
               rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
+            correlation : 'parametric' (Pearson) or 'nonparametric' (rank)
+            method : 'simplex', 'hopping', 'brute'
+            range_simplex : list of 3 floats for range (x-direction, y-direction, rotation degrees)
+            range_brute : list of 3 lists (for x-direction, y-direction, rotation degrees)
 
         Output:
           bestfit_vert{}_rot{}.label : electrode locations in freesurfer format

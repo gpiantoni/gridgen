@@ -32,6 +32,7 @@ def compare_fitting(parameters):
     fitting(
         ecog=ecog2d,
         output=parameters['output_dir'],
+        range_simplex=(5, 5, 45),
         **parameters['fitting'])
 
 

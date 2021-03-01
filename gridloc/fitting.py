@@ -26,7 +26,7 @@ lg = getLogger(__name__)
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, intermediate=None, correlation=None,
-            brute_range=(), method='simplex'):
+            range_simplex=(3, 3, 5), range_brute=(), method='simplex'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -52,7 +52,9 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         'parametric' (Pearson) or 'nonparametric' (rank)
     method : str
         'simplex', 'hopping', 'brute'
-    brute_range : list of 3 lists of 3 floats
+    range_simplex : list of 3 floats
+        +- ranges for simplex method (x-direction, y-direction, rotation)
+    range_brute : list of 3 lists of 3 floats
         Only if method == 'bruteforce'. It should give the range to compute the
         brute force analysis. The start position is given by "init".
         As an example:
@@ -99,7 +101,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         )
 
     if method == 'simplex':
-        m = fitting_simplex(minimizer_args, init_rot)
+        m = fitting_simplex(minimizer_args, init_rot, range_simplex)
         best_fit = m.x
 
     elif method == 'hopping':
@@ -107,7 +109,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         best_fit = m.x
 
     elif method == 'brute':
-        m = fitting_brute(minimizer_args, init_rot, brute_range)
+        m = fitting_brute(minimizer_args, init_rot, range_brute)
         best_fit = m[0]
 
     # create grid with best values
@@ -120,7 +122,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     _export_results(grid_file, out["grid"], out["morpho"])
     lg.debug(f'Exported morpho to {grid_file}')
 
-    if out['vasc'] is not None:
+    if False and out['vasc'] is not None:
+        # TODO
         grid_file = output / (grid_file_name + '_vascular')
         _export_results(grid_file, out["grid"], out["vasc"])
         lg.debug(f'Exported vascular to {grid_file}')
@@ -242,13 +245,13 @@ def match_labels(ecog, *args):
     return output
 
 
-def fitting_simplex(minimizer_args, rotation):
+def fitting_simplex(minimizer_args, rotation, ranges):
 
     simplex = array([
-        [-3, -3, rotation - 5],
-        [3, -3, rotation - 5],
-        [-3, 3, rotation - 5],
-        [-3, -3, rotation + 5],
+        [-ranges[0], -ranges[1], rotation - ranges[2]],
+        [ranges[0], -ranges[1], rotation - ranges[2]],
+        [-ranges[0], ranges[1], rotation - ranges[2]],
+        [-ranges[0], -ranges[1], rotation + ranges[2]],
         ])
 
     m = minimize(
