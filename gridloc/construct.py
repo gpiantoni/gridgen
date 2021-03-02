@@ -9,7 +9,7 @@ from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
 lg = getLogger(__name__)
 
 
-def make_grid_with_labels(n_rows, n_columns, direction='TBLR', chan_pattern='{}'):
+def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern='{}'):
     """Create a regular 2D grid, with labels.
 
     Parameters

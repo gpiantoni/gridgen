@@ -179,11 +179,11 @@ def get_initial_from_matlab(parameters):
     grid2d = read_grid2d(grid2d_tsv)
     i0 = grid2d.shape[0] // 2
     i1 = grid2d.shape[1] // 2
-    parameters['fitting']['initial']['label'] = grid2d[i0, i1]['label']
+    parameters['fit']['initial']['label'] = grid2d[i0, i1]['label']
 
     gridInfo = read_matlab(parameters['matlab']['input']['gridInfo_file'])
     matlab_center = gridInfo['coords_ROI']['ROI_Tangent'].mean(axis=0)
-    parameters['fitting']['initial']['RAS'] = matlab_center
+    parameters['fit']['initial']['RAS'] = matlab_center
 
     subjectInfo = read_matlab(parameters['matlab']['input']['subjectInfo_file'])
     if subjectInfo['hemiVect']['side'] == 'u':
@@ -195,9 +195,9 @@ def get_initial_from_matlab(parameters):
     elif subjectInfo['hemiVect']['side'] == 'd':
         rotation = 0
 
-    parameters['fitting']['initial']['rotation'] = rotation
+    parameters['fit']['initial']['rotation'] = rotation
 
     print('initial')
-    print(parameters['fitting']['initial'])
+    print(parameters['fit']['initial'])
 
     return parameters

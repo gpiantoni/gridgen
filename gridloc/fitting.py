@@ -26,7 +26,7 @@ lg = getLogger(__name__)
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, intermediate=None, correlation=None,
-            range_simplex=(3, 3, 5), range_brute=(), method='simplex'):
+            ranges={}, method='simplex'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -52,16 +52,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         'parametric' (Pearson) or 'nonparametric' (rank)
     method : str
         'simplex', 'hopping', 'brute'
-    range_simplex : list of 3 floats
-        +- ranges for simplex method (x-direction, y-direction, rotation)
-    range_brute : list of 3 lists of 3 floats
-        Only if method == 'bruteforce'. It should give the range to compute the
-        brute force analysis. The start position is given by "init".
-        As an example:
-
-            [-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
-            [-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
-            [-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
+    ranges : dict of lists
+        keys are x-direction, y-direction, rotation
     """
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
@@ -101,7 +93,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         )
 
     if method == 'simplex':
-        m = fitting_simplex(minimizer_args, init_rot, range_simplex)
+        m = fitting_simplex(minimizer_args, init_rot, ranges)
         best_fit = m.x
 
     elif method == 'hopping':
@@ -109,7 +101,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         best_fit = m.x
 
     elif method == 'brute':
-        m = fitting_brute(minimizer_args, init_rot, range_brute)
+        m = fitting_brute(minimizer_args, init_rot, ranges)
         best_fit = m[0]
 
     # create grid with best values
@@ -248,10 +240,10 @@ def match_labels(ecog, *args):
 def fitting_simplex(minimizer_args, rotation, ranges):
 
     simplex = array([
-        [-ranges[0], -ranges[1], rotation - ranges[2]],
-        [ranges[0], -ranges[1], rotation - ranges[2]],
-        [-ranges[0], ranges[1], rotation - ranges[2]],
-        [-ranges[0], -ranges[1], rotation + ranges[2]],
+        [-ranges['x'][0], -ranges['y'][0], rotation - ranges['rotation'][0]],
+        [ranges['x'][0], -ranges['y'][0], rotation - ranges['rotation'][0]],
+        [-ranges['x'][0], ranges['y'][0], rotation - ranges['rotation'][0]],
+        [-ranges['x'][0], -ranges['y'][0], rotation + ranges['rotation'][0]],
         ])
 
     m = minimize(

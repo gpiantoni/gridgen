@@ -16,8 +16,10 @@ def compare_to_matlab(parameters):
     cc = compare_ecog(parameters)
     print(f'Correlation of gamma activity between matlab and python: {cc:0.3f}')
 
-    # cc = compare_angio(parameters)
-    # print(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
+    """
+    cc = compare_angio(parameters)
+    print(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
+    """
 
     compare_fitting(parameters)
 
@@ -32,8 +34,12 @@ def compare_fitting(parameters):
     fitting(
         ecog=ecog2d,
         output=parameters['output_dir'],
-        range_simplex=(5, 5, 45),
-        **parameters['fitting'])
+        ranges={
+            'x': [5, ],
+            'y': [5, ],
+            'rotation': [45, ],
+            },
+        **parameters['fit'])
 
 
 def convert_neuralAct_surfaces(parameters):
@@ -54,7 +60,7 @@ def convert_neuralAct_surfaces(parameters):
 
 
 def compare_position_in_space(parameters):
-    ras_shift = read_surface_ras_shift(parameters['fitting']['T1_file'])
+    ras_shift = read_surface_ras_shift(parameters['fit']['T1_file'])
 
     for surf_type in ['cortex', 'hullcortex', 'cortexcoarser']:
         surf = read_surf(parameters['matlab']['surfaces'][surf_type], normals=False)
@@ -62,7 +68,7 @@ def compare_position_in_space(parameters):
         print(f'{surf_type: >20}: [{min(surf["pos"][:, 2]): 7.3f} - {max(surf["pos"][:, 2]): 7.3f}]')
 
     for surf_type in ['dura_file', 'pial_file']:
-        surf = read_surf(parameters['fitting'][surf_type], normals=False)
+        surf = read_surf(parameters['fit'][surf_type], normals=False)
         print(f'{surf_type: >20}: [{min(surf["pos"][:, 2]): 7.3f} - {max(surf["pos"][:, 2]): 7.3f}]')
 
 
