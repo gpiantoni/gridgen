@@ -5,6 +5,8 @@ from scipy.stats import spearmanr
 from numpy.linalg import norm
 from numpy import arange, array, nanmax, nanmin, argmin, intersect1d, corrcoef
 from logging import getLogger
+from datetime import datetime
+from json import dump
 
 try:
     import mkl
@@ -55,6 +57,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     ranges : dict of lists
         keys are x-direction, y-direction, rotation
     """
+    start_time = datetime.now()
+
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file)
     lg.debug(f'Reading positions of {pial_file}')
@@ -104,25 +108,41 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         m = fitting_brute(minimizer_args, init_rot, ranges)
         best_fit = m[0]
 
+    end_time = datetime.now()
+    comp_dur = (end_time - start_time).total_seconds()
+    lg.debug(f'Model fitting took {comp_dur:1.0f}s')
+
     # create grid with best values
     x, y, rotation = best_fit
-    out = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{out["vert"]: 6d}) = {out["cc"]: 8.3f} (vascular contribution: {out["percent_vasc"]:.2f}%')
+    model = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
 
-    grid_file_name = f'bestfit_vert{out["vert"]}_rot{rotation:03.0f}'
-    grid_file = output / (grid_file_name + '_morpho')
-    _export_results(grid_file, out["grid"], out["morpho"])
+    output = output / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S'))
+    output.mkdir(parents=True)
+
+    grid_file = output / 'morphology'
+    _export_results(grid_file, model["grid"], model["morpho"])
     lg.debug(f'Exported morpho to {grid_file}')
 
-    if False and out['vasc'] is not None:
-        # TODO
-        grid_file = output / (grid_file_name + '_vascular')
-        _export_results(grid_file, out["grid"], out["vasc"])
+    if model['vasc'] is not None:
+        grid_file = output / 'vascular'
+        _export_results(grid_file, model["grid"], model["vasc"], 'vasculature')
         lg.debug(f'Exported vascular to {grid_file}')
 
-    # TODO: both models together
-    # TODO: export CC values
-    # TODO: export elec locations
+    out = {
+        'ref_label': ref_label,
+        'surface': str(dura_file),
+        'vertex': int(model['vert']),
+        'pos': list(dura['pos'][model['vert'], :]),
+        'normals': list(dura['pos_norm'][model['vert'], :]),
+        'rotation': rotation,
+        'percent_vasculature': model['percent_vasc'],
+        'r2': model['cc'],
+        'duration': comp_dur,
+        }
+    results_file = output / 'results.json'
+    with results_file.open('w') as f:
+        dump(out, f, indent=2)
 
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
@@ -160,7 +180,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
             'vert': start_vert,
             'grid': grid,
             'morpho': morpho,
-            'vasc': v,
+            'vasc': vasc,
             'percent_vasc': 100 * (1 - i),
             'cc': cc,
             }
@@ -312,9 +332,10 @@ def fitting_brute(minimizer_args, rotation, brute_ranges):
     return res
 
 
-def _export_results(grid_file, grid, morpho):
-    export_grid(grid, grid_file, 'freeview')
+def _export_results(grid_file, grid, morpho, value='morphology'):
+
+    export_grid(grid, grid_file)
 
     image_file = grid_file.with_suffix('.html')
-    fig = plot_2d(morpho, 'morphology')
+    fig = plot_2d(morpho, value)
     plot(fig, filename=str(image_file), auto_open=False, include_plotlyjs='cdn')

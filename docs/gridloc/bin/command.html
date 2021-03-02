@@ -35,6 +35,7 @@ from numpy import set_printoptions
 
 from plotly.offline import plot
 
+from .parameters import convert_to_path, TEMPLATE, prepare_template, help_template, validate_template
 from ..ecog.plot_ecog import plot_2d
 from ..fitting import fitting
 from ..matlab.pipeline import compare_to_matlab
@@ -59,104 +60,88 @@ def create_arguments():
     parser = ArgumentParser(
         description=&#39;Tools to calculate the position of ECoG grid on brain based on the neuronal activity&#39;,
         formatter_class=RawTextHelpFormatter)
-    parser.add_argument(&#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
-                        help=&#39;Logging level: info (default), debug&#39;)
-    parser.add_argument(&#39;-o&#39;, &#39;--output_dir&#39;,
-                        help=dedent(&#34;&#34;&#34;\
-                        Output directory. Default is the current directory.
-                        You can also specify it in the parameters.
-
-                        Parameters:
-                          output_dir :
-                             path to output directory
-                        &#34;&#34;&#34;))
-    parser.add_argument(
-        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
-        Path to file with the parameters for the analysis. The file with parameters
-        should be formatted as a json file.&#34;&#34;&#34;))
     list_functions = parser.add_subparsers(
-        title=&#39;Functions&#39;,
-        help=&#39;Use &#34;all&#34; to run all the steps&#39;)
+        title=&#39;Functions&#39;)
 
     # grid
-    grid_arg = list_functions.add_parser(
+    subparam = list_functions.add_parser(
+        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+        Generate an empty parameters json file. Fields with `null` are optional.
+
+        Output:
+          parameters.json
+
+        &#34;&#34;&#34;),
+        description=&#39;\n&#39;.join(help_template(TEMPLATE)),
+        formatter_class=RawTextHelpFormatter,
+        )
+    subparam.set_defaults(function=&#39;parameters&#39;)
+    subparam.add_argument(
+        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+        Path to file to write with the parameters for the analysis.&#34;&#34;&#34;))
+
+    # grid
+    subfun0 = list_functions.add_parser(
         &#39;grid2d&#39;, help=dedent(&#34;&#34;&#34;\
         Generate the grid, with the correct labels.
-
-        Parameters:
-          grid :
-            n_rows : number of rows
-            n_columns : number of columns
-            direction : &#39;TBLR&#39; (default), &#39;TBRL&#39;, &#39;BTLR&#39;, &#39;BTRL&#39;, &#39;LRTB&#39;, &#39;LRBT&#39;, &#39;RLTB&#39;, &#39;RLBT&#39;
-            chan_pattern : pattern to name the channels (it should match the naming pattern of the data)
 
         Output:
           grid2d_labels.tsv
 
         &#34;&#34;&#34;))
-    grid_arg.set_defaults(function=&#39;grid2d&#39;)
+    subfun0.set_defaults(function=&#39;grid2d&#39;)
 
     # ecog
-    ecog_arg = list_functions.add_parser(
+    subfun1 = list_functions.add_parser(
         &#39;ecog&#39;, help=dedent(&#34;&#34;&#34;\
         Compute values for each electrodes based on ECoG.
-
-        Parameters:
-          ecog :
-            ecog_file : path to ECoG file
-            begtime (optional) : start time in seconds from beginning of the file
-            endtime (optional): end time in seconds from beginning of the file
-            freq_range : low and high threshold of the frequency range of interest
-            bad_channels (optional) : list of str, name of the channels to exclude
 
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
           grid2d_ecog.html : plot of the estimated activity of the power spectrum
 
         &#34;&#34;&#34;))
-    ecog_arg.set_defaults(function=&#39;ecog&#39;)
+    subfun1.set_defaults(function=&#39;ecog&#39;)
 
     # fit
-    fit = list_functions.add_parser(
+    subfun2 = list_functions.add_parser(
         &#39;fit&#39;, help=dedent(&#34;&#34;&#34;\
         Generate the grid, with the correct labels.
-
-        Parameters:
-          fitting :
-            T1_file : path to T1 image (in particular, the T1.mgz from freesurfer)
-            pial_file : path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
-            dura_file : path to dura surface (for example, the smoothed pial surface)
-            angio_file : path to angiogram (in NIfTI format). Optional.
-            angio_threshold : value to threshold the angio_file. Optional.
-            initial : start position for search
-              label : label for the reference electrode
-              RAS : initial location for the reference electrode
-              rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
 
         Output:
           bestfit_vert{}_rot{}.label : electrode locations in freesurfer format
           bestfit_vert{}_rot{}.html : estimated activity of the best fit based on brain surface
 
         &#34;&#34;&#34;))
-    fit.set_defaults(function=&#39;fit&#39;)
+    subfun2.set_defaults(function=&#39;fit&#39;)
 
-    mat = list_functions.add_parser(
+    subfun3 = list_functions.add_parser(
         &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;\
         Compute values based on a conversion of the matlab code and compare the
         values with those computed by matlab
 
-        Parameters:
-          input :
-            subjectInfo_file : path to subjectInfo.mat
-            gridInfo_file : path to gridInfo.mat
-          comparison :
-            angiomap_file : path to angiomap
-            prediction_file : path to predicted electrodes
-
         Output:
           ???
         &#34;&#34;&#34;))
-    mat.set_defaults(function=&#39;matlab&#39;)
+    subfun3.set_defaults(function=&#39;matlab&#39;)
+
+    for subfun in (subfun0, subfun1, subfun2, subfun3):
+        subfun.add_argument(
+            &#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
+            help=&#39;Logging level: info (default), debug&#39;)
+        subfun.add_argument(
+            &#39;-o&#39;, &#39;--output_dir&#39;,
+            help=dedent(&#34;&#34;&#34;\
+            Output directory. Default is the current directory.
+            You can also specify it in the parameters.
+
+            Parameters:
+              output_dir :
+            &#34;&#34;&#34;))
+        subfun.add_argument(
+            &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+            Path to file with the parameters for the analysis. The file with parameters
+            should be formatted as a json file.&#34;&#34;&#34;))
 
     return parser
 
@@ -165,6 +150,13 @@ def main(arguments=None):
     &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
+
+    if args.function == &#39;parameters&#39;:
+        parameters = prepare_template(TEMPLATE)
+        p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
+        with p_json.open(&#39;w&#39;) as f:
+            f.write(dumps(parameters, indent=2))
+        return
 
     # log can be info or debug
     DATE_FORMAT = &#39;%H:%M:%S&#39;
@@ -186,6 +178,7 @@ def main(arguments=None):
     p_json = Path(args.parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
+    parameters = validate_template(TEMPLATE, parameters)
 
     if args.output_dir is not None:
         output = args.output_dir
@@ -197,7 +190,7 @@ def main(arguments=None):
     lg.debug(dumps(parameters, indent=2))
 
     parameters[&#39;output_dir&#39;] = output
-    parameters = convert_to_path(parameters)
+    parameters = convert_to_path(parameters, p_json.parent)
     parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
 
     # outputs
@@ -206,14 +199,14 @@ def main(arguments=None):
     ecog_fig = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.html&#39;
     transform_file = parameters[&#39;output_dir&#39;] / &#39;tkras&#39;
 
-    if args.function == &#39;grid2d&#39;:
+    if args.function in (&#39;grid2d&#39;, ):
         from ..construct import make_grid_with_labels
 
-        grid2d = make_grid_with_labels(**parameters[&#39;grid&#39;])
+        grid2d = make_grid_with_labels(**parameters[&#39;grid2d&#39;])
         lg.info(f&#39;Writing labels to {grid2d_tsv}&#39;)
         write_grid2d(grid2d_tsv, grid2d)
 
-    if args.function == &#39;ecog&#39;:
+    if args.function in (&#39;ecog&#39;, ):
         from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
 
         lg.info(f&#39;Reading 2d grid from {grid2d_tsv}&#39;)
@@ -229,7 +222,7 @@ def main(arguments=None):
         fig = plot_2d(ecog2d, &#39;ecog&#39;)
         plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs=&#39;cdn&#39;)
 
-    if args.function == &#39;fit&#39;:
+    if args.function in (&#39;fit&#39;, ):
 
         offset = read_surface_ras_shift(parameters[&#39;fitting&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
@@ -239,21 +232,10 @@ def main(arguments=None):
         fitting(
             ecog=ecog2d,
             output=parameters[&#39;output_dir&#39;],
-            **parameters[&#39;fitting&#39;])
+            **parameters[&#39;fit&#39;])
 
     if args.function == &#39;matlab&#39;:
-        compare_to_matlab(parameters)
-
-
-def convert_to_path(d):
-    for k, v in d.items():
-        if v is None:
-            continue
-        elif isinstance(v, dict):
-            v = convert_to_path(v)
-        elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
-            d[k] = Path(v).resolve()
-    return d</code></pre>
+        compare_to_matlab(parameters)</code></pre>
 </details>
 </section>
 <section>
@@ -263,26 +245,6 @@ def convert_to_path(d):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridloc.bin.command.convert_to_path"><code class="name flex">
-<span>def <span class="ident">convert_to_path</span></span>(<span>d)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def convert_to_path(d):
-    for k, v in d.items():
-        if v is None:
-            continue
-        elif isinstance(v, dict):
-            v = convert_to_path(v)
-        elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
-            d[k] = Path(v).resolve()
-    return d</code></pre>
-</details>
-</dd>
 <dt id="gridloc.bin.command.create_arguments"><code class="name flex">
 <span>def <span class="ident">create_arguments</span></span>(<span>)</span>
 </code></dt>
@@ -297,104 +259,88 @@ def convert_to_path(d):
     parser = ArgumentParser(
         description=&#39;Tools to calculate the position of ECoG grid on brain based on the neuronal activity&#39;,
         formatter_class=RawTextHelpFormatter)
-    parser.add_argument(&#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
-                        help=&#39;Logging level: info (default), debug&#39;)
-    parser.add_argument(&#39;-o&#39;, &#39;--output_dir&#39;,
-                        help=dedent(&#34;&#34;&#34;\
-                        Output directory. Default is the current directory.
-                        You can also specify it in the parameters.
-
-                        Parameters:
-                          output_dir :
-                             path to output directory
-                        &#34;&#34;&#34;))
-    parser.add_argument(
-        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
-        Path to file with the parameters for the analysis. The file with parameters
-        should be formatted as a json file.&#34;&#34;&#34;))
     list_functions = parser.add_subparsers(
-        title=&#39;Functions&#39;,
-        help=&#39;Use &#34;all&#34; to run all the steps&#39;)
+        title=&#39;Functions&#39;)
 
     # grid
-    grid_arg = list_functions.add_parser(
+    subparam = list_functions.add_parser(
+        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+        Generate an empty parameters json file. Fields with `null` are optional.
+
+        Output:
+          parameters.json
+
+        &#34;&#34;&#34;),
+        description=&#39;\n&#39;.join(help_template(TEMPLATE)),
+        formatter_class=RawTextHelpFormatter,
+        )
+    subparam.set_defaults(function=&#39;parameters&#39;)
+    subparam.add_argument(
+        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+        Path to file to write with the parameters for the analysis.&#34;&#34;&#34;))
+
+    # grid
+    subfun0 = list_functions.add_parser(
         &#39;grid2d&#39;, help=dedent(&#34;&#34;&#34;\
         Generate the grid, with the correct labels.
-
-        Parameters:
-          grid :
-            n_rows : number of rows
-            n_columns : number of columns
-            direction : &#39;TBLR&#39; (default), &#39;TBRL&#39;, &#39;BTLR&#39;, &#39;BTRL&#39;, &#39;LRTB&#39;, &#39;LRBT&#39;, &#39;RLTB&#39;, &#39;RLBT&#39;
-            chan_pattern : pattern to name the channels (it should match the naming pattern of the data)
 
         Output:
           grid2d_labels.tsv
 
         &#34;&#34;&#34;))
-    grid_arg.set_defaults(function=&#39;grid2d&#39;)
+    subfun0.set_defaults(function=&#39;grid2d&#39;)
 
     # ecog
-    ecog_arg = list_functions.add_parser(
+    subfun1 = list_functions.add_parser(
         &#39;ecog&#39;, help=dedent(&#34;&#34;&#34;\
         Compute values for each electrodes based on ECoG.
-
-        Parameters:
-          ecog :
-            ecog_file : path to ECoG file
-            begtime (optional) : start time in seconds from beginning of the file
-            endtime (optional): end time in seconds from beginning of the file
-            freq_range : low and high threshold of the frequency range of interest
-            bad_channels (optional) : list of str, name of the channels to exclude
 
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
           grid2d_ecog.html : plot of the estimated activity of the power spectrum
 
         &#34;&#34;&#34;))
-    ecog_arg.set_defaults(function=&#39;ecog&#39;)
+    subfun1.set_defaults(function=&#39;ecog&#39;)
 
     # fit
-    fit = list_functions.add_parser(
+    subfun2 = list_functions.add_parser(
         &#39;fit&#39;, help=dedent(&#34;&#34;&#34;\
         Generate the grid, with the correct labels.
-
-        Parameters:
-          fitting :
-            T1_file : path to T1 image (in particular, the T1.mgz from freesurfer)
-            pial_file : path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
-            dura_file : path to dura surface (for example, the smoothed pial surface)
-            angio_file : path to angiogram (in NIfTI format). Optional.
-            angio_threshold : value to threshold the angio_file. Optional.
-            initial : start position for search
-              label : label for the reference electrode
-              RAS : initial location for the reference electrode
-              rotation : degree of rotation of the grid (in degrees, 0° is roughly pointing up)
 
         Output:
           bestfit_vert{}_rot{}.label : electrode locations in freesurfer format
           bestfit_vert{}_rot{}.html : estimated activity of the best fit based on brain surface
 
         &#34;&#34;&#34;))
-    fit.set_defaults(function=&#39;fit&#39;)
+    subfun2.set_defaults(function=&#39;fit&#39;)
 
-    mat = list_functions.add_parser(
+    subfun3 = list_functions.add_parser(
         &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;\
         Compute values based on a conversion of the matlab code and compare the
         values with those computed by matlab
 
-        Parameters:
-          input :
-            subjectInfo_file : path to subjectInfo.mat
-            gridInfo_file : path to gridInfo.mat
-          comparison :
-            angiomap_file : path to angiomap
-            prediction_file : path to predicted electrodes
-
         Output:
           ???
         &#34;&#34;&#34;))
-    mat.set_defaults(function=&#39;matlab&#39;)
+    subfun3.set_defaults(function=&#39;matlab&#39;)
+
+    for subfun in (subfun0, subfun1, subfun2, subfun3):
+        subfun.add_argument(
+            &#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
+            help=&#39;Logging level: info (default), debug&#39;)
+        subfun.add_argument(
+            &#39;-o&#39;, &#39;--output_dir&#39;,
+            help=dedent(&#34;&#34;&#34;\
+            Output directory. Default is the current directory.
+            You can also specify it in the parameters.
+
+            Parameters:
+              output_dir :
+            &#34;&#34;&#34;))
+        subfun.add_argument(
+            &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+            Path to file with the parameters for the analysis. The file with parameters
+            should be formatted as a json file.&#34;&#34;&#34;))
 
     return parser</code></pre>
 </details>
@@ -413,6 +359,13 @@ def convert_to_path(d):
     parser = create_arguments()
     args = parser.parse_args(arguments)
 
+    if args.function == &#39;parameters&#39;:
+        parameters = prepare_template(TEMPLATE)
+        p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
+        with p_json.open(&#39;w&#39;) as f:
+            f.write(dumps(parameters, indent=2))
+        return
+
     # log can be info or debug
     DATE_FORMAT = &#39;%H:%M:%S&#39;
     if args.log[:1].lower() == &#39;i&#39;:
@@ -433,6 +386,7 @@ def convert_to_path(d):
     p_json = Path(args.parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
+    parameters = validate_template(TEMPLATE, parameters)
 
     if args.output_dir is not None:
         output = args.output_dir
@@ -444,7 +398,7 @@ def convert_to_path(d):
     lg.debug(dumps(parameters, indent=2))
 
     parameters[&#39;output_dir&#39;] = output
-    parameters = convert_to_path(parameters)
+    parameters = convert_to_path(parameters, p_json.parent)
     parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
 
     # outputs
@@ -453,14 +407,14 @@ def convert_to_path(d):
     ecog_fig = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.html&#39;
     transform_file = parameters[&#39;output_dir&#39;] / &#39;tkras&#39;
 
-    if args.function == &#39;grid2d&#39;:
+    if args.function in (&#39;grid2d&#39;, ):
         from ..construct import make_grid_with_labels
 
-        grid2d = make_grid_with_labels(**parameters[&#39;grid&#39;])
+        grid2d = make_grid_with_labels(**parameters[&#39;grid2d&#39;])
         lg.info(f&#39;Writing labels to {grid2d_tsv}&#39;)
         write_grid2d(grid2d_tsv, grid2d)
 
-    if args.function == &#39;ecog&#39;:
+    if args.function in (&#39;ecog&#39;, ):
         from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
 
         lg.info(f&#39;Reading 2d grid from {grid2d_tsv}&#39;)
@@ -476,7 +430,7 @@ def convert_to_path(d):
         fig = plot_2d(ecog2d, &#39;ecog&#39;)
         plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs=&#39;cdn&#39;)
 
-    if args.function == &#39;fit&#39;:
+    if args.function in (&#39;fit&#39;, ):
 
         offset = read_surface_ras_shift(parameters[&#39;fitting&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
@@ -486,7 +440,7 @@ def convert_to_path(d):
         fitting(
             ecog=ecog2d,
             output=parameters[&#39;output_dir&#39;],
-            **parameters[&#39;fitting&#39;])
+            **parameters[&#39;fit&#39;])
 
     if args.function == &#39;matlab&#39;:
         compare_to_matlab(parameters)</code></pre>
@@ -510,7 +464,6 @@ def convert_to_path(d):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridloc.bin.command.convert_to_path" href="#gridloc.bin.command.convert_to_path">convert_to_path</a></code></li>
 <li><code><a title="gridloc.bin.command.create_arguments" href="#gridloc.bin.command.create_arguments">create_arguments</a></code></li>
 <li><code><a title="gridloc.bin.command.main" href="#gridloc.bin.command.main">main</a></code></li>
 </ul>

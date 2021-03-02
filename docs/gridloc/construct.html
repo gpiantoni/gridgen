@@ -36,7 +36,7 @@ from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
 lg = getLogger(__name__)
 
 
-def make_grid_with_labels(n_rows, n_columns, direction=&#39;TBLR&#39;, chan_pattern=&#39;{}&#39;):
+def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39;):
     &#34;&#34;&#34;Create a regular 2D grid, with labels.
 
     Parameters
@@ -524,7 +524,7 @@ I don't see the need at this moment.</p></div>
 </details>
 </dd>
 <dt id="gridloc.construct.make_grid_with_labels"><code class="name flex">
-<span>def <span class="ident">make_grid_with_labels</span></span>(<span>n_rows, n_columns, direction='TBLR', chan_pattern='{}')</span>
+<span>def <span class="ident">make_grid_with_labels</span></span>(<span>n_rows, n_columns, direction, chan_pattern='{}')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a regular 2D grid, with labels.</p>
@@ -561,7 +561,7 @@ I don't see the need at this moment.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def make_grid_with_labels(n_rows, n_columns, direction=&#39;TBLR&#39;, chan_pattern=&#39;{}&#39;):
+<pre><code class="python">def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39;):
     &#34;&#34;&#34;Create a regular 2D grid, with labels.
 
     Parameters

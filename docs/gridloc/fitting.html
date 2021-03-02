@@ -53,7 +53,7 @@ lg = getLogger(__name__)
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, intermediate=None, correlation=None,
-            brute_range=(), method=&#39;simplex&#39;):
+            ranges={}, method=&#39;simplex&#39;):
     &#34;&#34;&#34;Fit the brain activity onto the surface
 
     Parameters
@@ -79,14 +79,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         &#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)
     method : str
         &#39;simplex&#39;, &#39;hopping&#39;, &#39;brute&#39;
-    brute_range : list of 3 lists of 3 floats
-        Only if method == &#39;bruteforce&#39;. It should give the range to compute the
-        brute force analysis. The start position is given by &#34;init&#34;.
-        As an example:
-
-            [-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
-            [-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
-            [-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
+    ranges : dict of lists
+        keys are x-direction, y-direction, rotation
     &#34;&#34;&#34;
     lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
     dura = read_surf(dura_file)
@@ -126,7 +120,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         )
 
     if method == &#39;simplex&#39;:
-        m = fitting_simplex(minimizer_args, init_rot)
+        m = fitting_simplex(minimizer_args, init_rot, ranges)
         best_fit = m.x
 
     elif method == &#39;hopping&#39;:
@@ -134,7 +128,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         best_fit = m.x
 
     elif method == &#39;brute&#39;:
-        m = fitting_brute(minimizer_args, init_rot, brute_range)
+        m = fitting_brute(minimizer_args, init_rot, ranges)
         best_fit = m[0]
 
     # create grid with best values
@@ -147,7 +141,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     _export_results(grid_file, out[&#34;grid&#34;], out[&#34;morpho&#34;])
     lg.debug(f&#39;Exported morpho to {grid_file}&#39;)
 
-    if out[&#39;vasc&#39;] is not None:
+    if False and out[&#39;vasc&#39;] is not None:
+        # TODO
         grid_file = output / (grid_file_name + &#39;_vascular&#39;)
         _export_results(grid_file, out[&#34;grid&#34;], out[&#34;vasc&#34;])
         lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
@@ -269,13 +264,13 @@ def match_labels(ecog, *args):
     return output
 
 
-def fitting_simplex(minimizer_args, rotation):
+def fitting_simplex(minimizer_args, rotation, ranges):
 
     simplex = array([
-        [-3, -3, rotation - 5],
-        [3, -3, rotation - 5],
-        [-3, 3, rotation - 5],
-        [-3, -3, rotation + 5],
+        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
+        [ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
+        [-ranges[&#39;x&#39;][0], ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
+        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation + ranges[&#39;rotation&#39;][0]],
         ])
 
     m = minimize(
@@ -473,7 +468,7 @@ def _export_results(grid_file, grid, morpho):
 </details>
 </dd>
 <dt id="gridloc.fitting.fitting"><code class="name flex">
-<span>def <span class="ident">fitting</span></span>(<span>T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None, angio_threshold=None, intermediate=None, correlation=None, brute_range=(), method='simplex')</span>
+<span>def <span class="ident">fitting</span></span>(<span>T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None, angio_threshold=None, intermediate=None, correlation=None, ranges={}, method='simplex')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fit the brain activity onto the surface</p>
@@ -500,14 +495,8 @@ def _export_results(grid_file, grid, morpho):
 <dd>'parametric' (Pearson) or 'nonparametric' (rank)</dd>
 <dt><strong><code>method</code></strong> :&ensp;<code>str</code></dt>
 <dd>'simplex', 'hopping', 'brute'</dd>
-<dt><strong><code>brute_range</code></strong> :&ensp;<code>list</code> of <code>3 lists</code> of <code>3 floats</code></dt>
-<dd>Only if method == 'bruteforce'. It should give the range to compute the
-brute force analysis. The start position is given by "init".
-As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
-[-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
-[-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
-</code></pre>
-</dd>
+<dt><strong><code>ranges</code></strong> :&ensp;<code>dict</code> of <code>lists</code></dt>
+<dd>keys are x-direction, y-direction, rotation</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -515,7 +504,7 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
 </summary>
 <pre><code class="python">def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, intermediate=None, correlation=None,
-            brute_range=(), method=&#39;simplex&#39;):
+            ranges={}, method=&#39;simplex&#39;):
     &#34;&#34;&#34;Fit the brain activity onto the surface
 
     Parameters
@@ -541,14 +530,8 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
         &#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)
     method : str
         &#39;simplex&#39;, &#39;hopping&#39;, &#39;brute&#39;
-    brute_range : list of 3 lists of 3 floats
-        Only if method == &#39;bruteforce&#39;. It should give the range to compute the
-        brute force analysis. The start position is given by &#34;init&#34;.
-        As an example:
-
-            [-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, on the x-direction
-            [-5, 5, 2],  # ranges from -5mm to 5mm, every 2mm, on the y-direction
-            [-30, 30, 5],  # rotation ranges from -30° to 30°, every 5°
+    ranges : dict of lists
+        keys are x-direction, y-direction, rotation
     &#34;&#34;&#34;
     lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
     dura = read_surf(dura_file)
@@ -588,7 +571,7 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
         )
 
     if method == &#39;simplex&#39;:
-        m = fitting_simplex(minimizer_args, init_rot)
+        m = fitting_simplex(minimizer_args, init_rot, ranges)
         best_fit = m.x
 
     elif method == &#39;hopping&#39;:
@@ -596,7 +579,7 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
         best_fit = m.x
 
     elif method == &#39;brute&#39;:
-        m = fitting_brute(minimizer_args, init_rot, brute_range)
+        m = fitting_brute(minimizer_args, init_rot, ranges)
         best_fit = m[0]
 
     # create grid with best values
@@ -609,7 +592,8 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
     _export_results(grid_file, out[&#34;grid&#34;], out[&#34;morpho&#34;])
     lg.debug(f&#39;Exported morpho to {grid_file}&#39;)
 
-    if out[&#39;vasc&#39;] is not None:
+    if False and out[&#39;vasc&#39;] is not None:
+        # TODO
         grid_file = output / (grid_file_name + &#39;_vascular&#39;)
         _export_results(grid_file, out[&#34;grid&#34;], out[&#34;vasc&#34;])
         lg.debug(f&#39;Exported vascular to {grid_file}&#39;)</code></pre>
@@ -684,7 +668,7 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
 </details>
 </dd>
 <dt id="gridloc.fitting.fitting_simplex"><code class="name flex">
-<span>def <span class="ident">fitting_simplex</span></span>(<span>minimizer_args, rotation)</span>
+<span>def <span class="ident">fitting_simplex</span></span>(<span>minimizer_args, rotation, ranges)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -692,13 +676,13 @@ As an example:<pre><code>[-10, 10, 1],  # ranges from -10mm to 10mm, every 1mm, 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fitting_simplex(minimizer_args, rotation):
+<pre><code class="python">def fitting_simplex(minimizer_args, rotation, ranges):
 
     simplex = array([
-        [-3, -3, rotation - 5],
-        [3, -3, rotation - 5],
-        [-3, 3, rotation - 5],
-        [-3, -3, rotation + 5],
+        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
+        [ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
+        [-ranges[&#39;x&#39;][0], ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
+        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation + ranges[&#39;rotation&#39;][0]],
         ])
 
     m = minimize(

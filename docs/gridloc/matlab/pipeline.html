@@ -42,8 +42,8 @@ def compare_to_matlab(parameters):
     cc = compare_ecog(parameters)
     print(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
 
-    # cc = compare_angio(parameters)
-    # print(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+    cc = compare_angio(parameters)
+    print(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
 
     compare_fitting(parameters)
 
@@ -55,10 +55,15 @@ def compare_fitting(parameters):
     ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
     parameters = get_initial_from_matlab(parameters)
+    parameters[&#39;fit&#39;][&#39;ranges&#39;] = {
+        &#39;x&#39;: [5, ],
+        &#39;y&#39;: [5, ],
+        &#39;rotation&#39;: [45, ],
+        }
     fitting(
         ecog=ecog2d,
         output=parameters[&#39;output_dir&#39;],
-        **parameters[&#39;fitting&#39;])
+        **parameters[&#39;fit&#39;])
 
 
 def convert_neuralAct_surfaces(parameters):
@@ -79,7 +84,7 @@ def convert_neuralAct_surfaces(parameters):
 
 
 def compare_position_in_space(parameters):
-    ras_shift = read_surface_ras_shift(parameters[&#39;fitting&#39;][&#39;T1_file&#39;])
+    ras_shift = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
 
     for surf_type in [&#39;cortex&#39;, &#39;hullcortex&#39;, &#39;cortexcoarser&#39;]:
         surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], normals=False)
@@ -87,7 +92,7 @@ def compare_position_in_space(parameters):
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
 
     for surf_type in [&#39;dura_file&#39;, &#39;pial_file&#39;]:
-        surf = read_surf(parameters[&#39;fitting&#39;][surf_type], normals=False)
+        surf = read_surf(parameters[&#39;fit&#39;][surf_type], normals=False)
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
 
 
@@ -198,10 +203,15 @@ def compare_angio(parameters):
     ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
     parameters = get_initial_from_matlab(parameters)
+    parameters[&#39;fit&#39;][&#39;ranges&#39;] = {
+        &#39;x&#39;: [5, ],
+        &#39;y&#39;: [5, ],
+        &#39;rotation&#39;: [45, ],
+        }
     fitting(
         ecog=ecog2d,
         output=parameters[&#39;output_dir&#39;],
-        **parameters[&#39;fitting&#39;])</code></pre>
+        **parameters[&#39;fit&#39;])</code></pre>
 </details>
 </dd>
 <dt id="gridloc.matlab.pipeline.compare_position_in_space"><code class="name flex">
@@ -214,7 +224,7 @@ def compare_angio(parameters):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compare_position_in_space(parameters):
-    ras_shift = read_surface_ras_shift(parameters[&#39;fitting&#39;][&#39;T1_file&#39;])
+    ras_shift = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
 
     for surf_type in [&#39;cortex&#39;, &#39;hullcortex&#39;, &#39;cortexcoarser&#39;]:
         surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], normals=False)
@@ -222,7 +232,7 @@ def compare_angio(parameters):
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
 
     for surf_type in [&#39;dura_file&#39;, &#39;pial_file&#39;]:
-        surf = read_surf(parameters[&#39;fitting&#39;][surf_type], normals=False)
+        surf = read_surf(parameters[&#39;fit&#39;][surf_type], normals=False)
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)</code></pre>
 </details>
 </dd>
@@ -243,8 +253,8 @@ def compare_angio(parameters):
     cc = compare_ecog(parameters)
     print(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
 
-    # cc = compare_angio(parameters)
-    # print(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+    cc = compare_angio(parameters)
+    print(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
 
     compare_fitting(parameters)</code></pre>
 </details>

@@ -197,7 +197,7 @@ def main(arguments=None):
 
     if args.function in ('fit', ):
 
-        offset = read_surface_ras_shift(parameters['fitting']['T1_file'])
+        offset = read_surface_ras_shift(parameters['fit']['T1_file'])
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)

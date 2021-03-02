@@ -163,7 +163,7 @@ def _average_normal_per_vertex(i, tri_norm, tri):
     return tri_norm[(tri == i).any(axis=1)].mean(axis=0)
 
 
-def export_grid(grid, grid_file, format='slicer'):
+def export_grid(grid, grid_file, format=None):
     """
     Parameters
     ----------
@@ -172,13 +172,18 @@ def export_grid(grid, grid_file, format='slicer'):
     grid_file : str
         file name to export to (extension is based on format)
     format : str
-        'slicer' or 'freeview'
+        'tsv', 'slicer' or 'freeview'. If not specified, all of them
 
     TODO
     ----
     There is something wrong with normals (I guess it depends on how Slicer
     imports them)
     """
+    if format is None:
+        for one_format in ('tsv', 'freeview', 'slicer'):
+            export_grid(grid, grid_file, one_format)
+        return
+
     labels = grid['label'].reshape(-1)
     positions = grid['pos'].reshape(-1, 3)
     normals = grid['norm'].reshape(-1, 3)
@@ -202,6 +207,13 @@ def export_grid(grid, grid_file, format='slicer'):
             for i in range(positions.shape[0]):
                 f.write(f'{-1:d}  {positions[i, 0]:.3f}  {positions[i, 1]:.3f}  { positions[i, 2]:.3f} 1.000\n')
         warn('make sure that you select the correct volume (.mgz file) associated with the pial surface in freeview when loading the points')
+
+    elif format == 'tsv':
+        grid_file = grid_file.with_suffix('.tsv')
+        with grid_file.open('w') as f:
+            f.write('name\tx\ty\tz\n')
+            for i in range(positions.shape[0]):
+                f.write(f'{labels[i]}\t{positions[i, 0]:.3f}\t{positions[i, 1]:.3f}\t{positions[i, 2]:.3f}\n')
 
 
 def read_surface_ras_shift(T1_path):

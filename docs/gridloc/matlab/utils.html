@@ -206,11 +206,11 @@ def get_initial_from_matlab(parameters):
     grid2d = read_grid2d(grid2d_tsv)
     i0 = grid2d.shape[0] // 2
     i1 = grid2d.shape[1] // 2
-    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
 
     gridInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;gridInfo_file&#39;])
     matlab_center = gridInfo[&#39;coords_ROI&#39;][&#39;ROI_Tangent&#39;].mean(axis=0)
-    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
 
     subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
     if subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
@@ -222,10 +222,10 @@ def get_initial_from_matlab(parameters):
     elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
         rotation = 0
 
-    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
 
     print(&#39;initial&#39;)
-    print(parameters[&#39;fitting&#39;][&#39;initial&#39;])
+    print(parameters[&#39;fit&#39;][&#39;initial&#39;])
 
     return parameters</code></pre>
 </details>
@@ -346,11 +346,11 @@ size, respectively, of the mesh that's being calculated.</p></div>
     grid2d = read_grid2d(grid2d_tsv)
     i0 = grid2d.shape[0] // 2
     i1 = grid2d.shape[1] // 2
-    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
 
     gridInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;gridInfo_file&#39;])
     matlab_center = gridInfo[&#39;coords_ROI&#39;][&#39;ROI_Tangent&#39;].mean(axis=0)
-    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
 
     subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
     if subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
@@ -362,10 +362,10 @@ size, respectively, of the mesh that's being calculated.</p></div>
     elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
         rotation = 0
 
-    parameters[&#39;fitting&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
 
     print(&#39;initial&#39;)
-    print(parameters[&#39;fitting&#39;][&#39;initial&#39;])
+    print(parameters[&#39;fit&#39;][&#39;initial&#39;])
 
     return parameters</code></pre>
 </details>

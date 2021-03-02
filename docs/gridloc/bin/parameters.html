@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gridloc.bin.parameters API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gridloc.bin.parameters</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from pathlib import Path
+
+TEMPLATE = {
+    &#34;output_dir&#34;: {
+        &#39;type&#39;: &#39;str&#39;,
+        &#39;necessary&#39;: False,
+        &#39;help&#39;: &#39;path to output directory&#39;,
+        },
+    &#34;grid2d&#34;: {
+        &#34;n_rows&#34;: {
+            &#39;type&#39;: &#39;int&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;number of rows&#39;,
+            },
+        &#34;n_columns&#34;: {
+            &#39;type&#39;: &#39;int&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;number of columns&#39;,
+            },
+        &#34;direction&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;values&#39;: [&#39;TBLR&#39;, &#39;TBRL&#39;, &#39;BTLR&#39;, &#39;BTRL&#39;, &#39;LRTB&#39;, &#39;LRBT&#39;, &#39;RLTB&#39;, &#39;RLBT&#39;],
+            &#39;help&#39;: &#39;direction of the grid&#39;,
+            },
+        &#34;chan_pattern&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;pattern to name the channels (it should match the naming pattern of the data)&#39;,
+            },
+        },
+    &#34;ecog&#34;: {
+        &#34;ecog_file&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;path to ECoG file&#39;,
+            },
+        &#34;freq_range&#34;: {
+            &#39;type&#39;: &#39;list&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;low and high threshold of the frequency range of interest&#39;,
+            },
+        &#34;begtime&#34;: {
+            &#39;type&#39;: &#39;float&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;start time in seconds from beginning of the file&#39;,
+            },
+        &#34;endtime&#34;: {
+            &#39;type&#39;: &#39;float&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;end time in seconds from beginning of the file&#39;,
+            },
+        &#34;bad_channels&#34;: {
+            &#39;type&#39;: &#39;list&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;list of str, name of the channels to exclude&#39;,
+            },
+        },
+    &#34;fit&#34;: {
+        &#34;T1_file&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;path to T1 image (in particular, the T1.mgz from freesurfer)&#39;,
+            },
+        &#34;pial_file&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)&#39;,
+            },
+        &#34;dura_file&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;path to dura surface (for example, the smoothed pial surface)&#39;,
+            },
+        &#34;angio_file&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;path to angiogram (in NIfTI format)&#39;,
+            },
+        &#34;angio_threshold&#34;: {
+            &#39;type&#39;: &#39;float&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;value to threshold the angio_file&#39;,
+            },
+        &#34;initial&#34;: {
+            &#34;label&#34;: {
+                &#39;type&#39;: &#39;str&#39;,
+                &#39;necessary&#39;: True,
+                &#39;help&#39;: &#39;label for the reference electrode&#39;,
+                },
+            &#34;RAS&#34;: {
+                &#39;type&#39;: &#39;list&#39;,
+                &#39;necessary&#39;: True,
+                &#39;help&#39;: &#39;initial location for the reference electrode (coordinates in MRI space)&#39;,
+                },
+            &#34;rotation&#34;: {
+                &#39;type&#39;: &#39;float&#39;,
+                &#39;necessary&#39;: True,
+                &#39;help&#39;: &#39;degree of rotation of the grid (in degrees, 0° is roughly pointing up)&#39;,
+                },
+            },
+        &#34;method&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;simplex&#39;, &#39;brute&#39;, &#39;hopping&#39;],
+            &#34;help&#34;: &#34;method to use&#34;,
+        },
+        &#34;correlation&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparameteric&#39;],
+            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)&#34;,
+        },
+        &#34;ranges&#34;: {
+            &#34;x&#34;: {
+                &#34;type&#34;: &#34;list&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Range in mm for x-direction. For simplex, it&#39;s a list of one float. For brute, it&#39;s [low, high] or [low, step, high]&#34;,
+            },
+            &#34;y&#34;: {
+                &#34;type&#34;: &#34;list&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Range in mm for y-direction. For simplex, it&#39;s a list of one float. For brute, it&#39;s [low, high] or [low, step, high]&#34;,
+            },
+            &#34;rotation&#34;: {
+                &#34;type&#34;: &#34;list&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Range in degrees for rotation. For simplex, it&#39;s a list of one float. For brute, it&#39;s [low, high] or [low, step, high]&#34;,
+            },
+        },
+    },
+    &#34;matlab&#34;: {
+        &#34;input&#34;: {
+            &#34;subjectInfo_file&#34;: {
+                &#39;type&#39;: &#39;str&#39;,
+                &#39;necessary&#39;: True,
+                &#39;help&#39;: &#39;path to subjectInfo.mat (can also be subj_info.json if subjectInfo.mat is not available)&#39;
+                },
+            &#34;gridInfo_file&#34;: {
+                &#39;type&#39;: &#39;str&#39;,
+                &#39;necessary&#39;: True,
+                &#39;help&#39;: &#39;path to gridInfo.mat&#39;,
+                },
+            },
+        &#34;comparison&#34;: {
+            &#34;angiomap_file&#34;: {
+                &#39;type&#39;: &#39;str&#39;,
+                &#39;necessary&#39;: False,
+                &#39;help&#39;: &#39;path to _angiomap.mat&#39;,
+                },
+            &#34;prediction_file&#34;: {
+                &#39;type&#39;: &#39;str&#39;,
+                &#39;necessary&#39;: False,
+                &#39;help&#39;: &#39;path to coordinates with the best fit&#39;,
+                },
+            }
+        }
+    }
+
+
+def convert_to_path(d, parent):
+    &#34;&#34;&#34;Convert strings to paths. If the path is relative, then this script makes
+    it absolute in reference to &#34;parent&#34;
+
+    Parameters
+    ----------
+    d : dict
+        if a key ends in _file or _dir, it gets converted to path
+    parent : path
+        absolute path to use to make relative paths absolute
+
+    Returns
+    -------
+    dict
+        where keys ending in _file and _dir are all absolute paths
+    &#34;&#34;&#34;
+    for k, v in d.items():
+        if v is None:
+            continue
+        elif isinstance(v, dict):
+            v = convert_to_path(v, parent)
+        elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
+            v = Path(v)
+            if not v.is_absolute():
+                v = (parent / v).resolve()
+            d[k] = v
+    return d
+
+
+def prepare_template(temp):
+    out = {}
+    for k, v in temp.items():
+        if &#39;type&#39; in v:
+            if not v[&#39;necessary&#39;]:
+                out[k] = None
+
+            elif v[&#39;type&#39;] == &#39;int&#39;:
+                out[k] = 0
+
+            elif v[&#39;type&#39;] == &#39;float&#39;:
+                out[k] = 0.0
+
+            elif v[&#39;type&#39;] == &#39;str&#39;:
+                out[k] = &#39;&#39;
+
+            elif v[&#39;type&#39;] == &#39;list&#39;:
+                out[k] = []
+
+        else:
+            out[k] = prepare_template(v)
+    return out
+
+
+def help_template(temp):
+    out = []
+    for k, v in temp.items():
+        if &#39;type&#39; in v:
+            out_ = k
+
+            if v[&#39;type&#39;] == &#39;int&#39;:
+                out_ += &#39;\t(int&#39;
+
+            elif v[&#39;type&#39;] == &#39;float&#39;:
+                out_ += &#39;\t(float&#39;
+
+            elif v[&#39;type&#39;] == &#39;str&#39;:
+                out_ += &#39;\t(str&#39;
+
+            elif v[&#39;type&#39;] == &#39;list&#39;:
+                out_ += &#39;\t(list&#39;
+
+            if v[&#39;necessary&#39;]:
+                out_ += &#39;) &#39;
+            else:
+                out_ += &#39;, optional) &#39;
+
+            out_ += v[&#39;help&#39;]
+
+            if &#39;values&#39; in v:
+                out_ += &#39; [&#39; + &#39;, &#39;.join(v[&#39;values&#39;]) + &#39;]&#39;
+            out.append(out_)
+
+        else:
+            out_ = help_template(v)
+            out.append(k)
+            out.extend([f&#39;\t{x}&#39; for x in out_])
+
+    return out
+
+
+def validate_template(temp, d):
+    out = {}
+    for k, v in temp.items():
+        if k not in d or d[k] is None:
+            continue
+
+        if &#39;type&#39; in v:
+            if v[&#39;necessary&#39;] and k not in d:
+                raise ValueError(f&#39;{k} should be defined&#39;)
+
+            if &#39;values&#39; in v and d[k] not in v[&#39;values&#39;]:
+                values = &#39;, &#39;.join(f&#39;{x}&#39; for x in v[&#39;values&#39;])
+                raise ValueError(f&#39;{k} should be one of these values: {values}&#39;)
+
+            out[k] = d[k]
+
+        elif k in d:
+            out[k] = validate_template(v, d[k])
+
+    return out</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridloc.bin.parameters.convert_to_path"><code class="name flex">
+<span>def <span class="ident">convert_to_path</span></span>(<span>d, parent)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert strings to paths. If the path is relative, then this script makes
+it absolute in reference to "parent"</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>d</code></strong> :&ensp;<code>dict</code></dt>
+<dd>if a key ends in _file or _dir, it gets converted to path</dd>
+<dt><strong><code>parent</code></strong> :&ensp;<code>path</code></dt>
+<dd>absolute path to use to make relative paths absolute</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>where keys ending in _file and _dir are all absolute paths</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_to_path(d, parent):
+    &#34;&#34;&#34;Convert strings to paths. If the path is relative, then this script makes
+    it absolute in reference to &#34;parent&#34;
+
+    Parameters
+    ----------
+    d : dict
+        if a key ends in _file or _dir, it gets converted to path
+    parent : path
+        absolute path to use to make relative paths absolute
+
+    Returns
+    -------
+    dict
+        where keys ending in _file and _dir are all absolute paths
+    &#34;&#34;&#34;
+    for k, v in d.items():
+        if v is None:
+            continue
+        elif isinstance(v, dict):
+            v = convert_to_path(v, parent)
+        elif k.endswith(&#39;_file&#39;) or k.endswith(&#39;_dir&#39;):
+            v = Path(v)
+            if not v.is_absolute():
+                v = (parent / v).resolve()
+            d[k] = v
+    return d</code></pre>
+</details>
+</dd>
+<dt id="gridloc.bin.parameters.help_template"><code class="name flex">
+<span>def <span class="ident">help_template</span></span>(<span>temp)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def help_template(temp):
+    out = []
+    for k, v in temp.items():
+        if &#39;type&#39; in v:
+            out_ = k
+
+            if v[&#39;type&#39;] == &#39;int&#39;:
+                out_ += &#39;\t(int&#39;
+
+            elif v[&#39;type&#39;] == &#39;float&#39;:
+                out_ += &#39;\t(float&#39;
+
+            elif v[&#39;type&#39;] == &#39;str&#39;:
+                out_ += &#39;\t(str&#39;
+
+            elif v[&#39;type&#39;] == &#39;list&#39;:
+                out_ += &#39;\t(list&#39;
+
+            if v[&#39;necessary&#39;]:
+                out_ += &#39;) &#39;
+            else:
+                out_ += &#39;, optional) &#39;
+
+            out_ += v[&#39;help&#39;]
+
+            if &#39;values&#39; in v:
+                out_ += &#39; [&#39; + &#39;, &#39;.join(v[&#39;values&#39;]) + &#39;]&#39;
+            out.append(out_)
+
+        else:
+            out_ = help_template(v)
+            out.append(k)
+            out.extend([f&#39;\t{x}&#39; for x in out_])
+
+    return out</code></pre>
+</details>
+</dd>
+<dt id="gridloc.bin.parameters.prepare_template"><code class="name flex">
+<span>def <span class="ident">prepare_template</span></span>(<span>temp)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prepare_template(temp):
+    out = {}
+    for k, v in temp.items():
+        if &#39;type&#39; in v:
+            if not v[&#39;necessary&#39;]:
+                out[k] = None
+
+            elif v[&#39;type&#39;] == &#39;int&#39;:
+                out[k] = 0
+
+            elif v[&#39;type&#39;] == &#39;float&#39;:
+                out[k] = 0.0
+
+            elif v[&#39;type&#39;] == &#39;str&#39;:
+                out[k] = &#39;&#39;
+
+            elif v[&#39;type&#39;] == &#39;list&#39;:
+                out[k] = []
+
+        else:
+            out[k] = prepare_template(v)
+    return out</code></pre>
+</details>
+</dd>
+<dt id="gridloc.bin.parameters.validate_template"><code class="name flex">
+<span>def <span class="ident">validate_template</span></span>(<span>temp, d)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_template(temp, d):
+    out = {}
+    for k, v in temp.items():
+        if k not in d or d[k] is None:
+            continue
+
+        if &#39;type&#39; in v:
+            if v[&#39;necessary&#39;] and k not in d:
+                raise ValueError(f&#39;{k} should be defined&#39;)
+
+            if &#39;values&#39; in v and d[k] not in v[&#39;values&#39;]:
+                values = &#39;, &#39;.join(f&#39;{x}&#39; for x in v[&#39;values&#39;])
+                raise ValueError(f&#39;{k} should be one of these values: {values}&#39;)
+
+            out[k] = d[k]
+
+        elif k in d:
+            out[k] = validate_template(v, d[k])
+
+    return out</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc.bin" href="index.html">gridloc.bin</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridloc.bin.parameters.convert_to_path" href="#gridloc.bin.parameters.convert_to_path">convert_to_path</a></code></li>
+<li><code><a title="gridloc.bin.parameters.help_template" href="#gridloc.bin.parameters.help_template">help_template</a></code></li>
+<li><code><a title="gridloc.bin.parameters.prepare_template" href="#gridloc.bin.parameters.prepare_template">prepare_template</a></code></li>
+<li><code><a title="gridloc.bin.parameters.validate_template" href="#gridloc.bin.parameters.validate_template">validate_template</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
