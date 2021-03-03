@@ -172,7 +172,12 @@ def export_grid(grid, grid_file, format=None):
     grid_file : str
         file name to export to (extension is based on format)
     format : str
-        'tsv', 'slicer' or 'freeview'. If not specified, all of them
+        'slicer' or 'freeview'. If not specified, both of them
+
+    NOTES
+    -----
+    Note that the positions are in the coordinate system of the meshes (not
+    the coordinate system of the volume MRI)
 
     TODO
     ----
@@ -180,7 +185,7 @@ def export_grid(grid, grid_file, format=None):
     imports them)
     """
     if format is None:
-        for one_format in ('tsv', 'freeview', 'slicer'):
+        for one_format in ('freeview', 'slicer'):
             export_grid(grid, grid_file, one_format)
         return
 
@@ -208,12 +213,28 @@ def export_grid(grid, grid_file, format=None):
                 f.write(f'{-1:d}  {positions[i, 0]:.3f}  {positions[i, 1]:.3f}  { positions[i, 2]:.3f} 1.000\n')
         warn('make sure that you select the correct volume (.mgz file) associated with the pial surface in freeview when loading the points')
 
-    elif format == 'tsv':
-        grid_file = grid_file.with_suffix('.tsv')
-        with grid_file.open('w') as f:
-            f.write('name\tx\ty\tz\n')
-            for i in range(positions.shape[0]):
-                f.write(f'{labels[i]}\t{positions[i, 0]:.3f}\t{positions[i, 1]:.3f}\t{positions[i, 2]:.3f}\n')
+
+def write_tsv(labels, positions, elec_file):
+    """Write electrode position to tsv
+
+    Parameters
+    ----------
+    labels : list of str
+        electrode labels
+    positions : NxNx3 or Nx3 array
+        electrode position. Make sure to including ras_shift or not if it's in
+        MRI space or in mesh space.
+    elec_file : Path
+        path to write to
+    """
+    labels = labels.reshape(-1)
+    positions = positions.reshape(-1, 3)
+
+    elec_file = elec_file.with_suffix('.tsv')
+    with elec_file.open('w') as f:
+        f.write('name\tx\ty\tz\n')
+        for i in range(labels.shape[0]):
+            f.write(f'{labels[i]}\t{positions[i, 0]:.3f}\t{positions[i, 1]:.3f}\t{positions[i, 2]:.3f}\n')
 
 
 def read_surface_ras_shift(T1_path):

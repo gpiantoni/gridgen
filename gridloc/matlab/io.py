@@ -44,7 +44,9 @@ def read_matlab(mat_file):
 
     if k == 'subj_info':
         for field in ('sfile', 'tfile', 'gamma_mean', 'neuralAct'):
-            val[field] = (mat_file.parents[1] / val[field])
+            if val[field].startswith('.'):
+                val[field] = '.' + val[field]
+            val[field] = (mat_file.parent / val[field])
 
         val['dims'] = array(val['dims']).astype(int)
 

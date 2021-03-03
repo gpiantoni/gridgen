@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gridloc.viz API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gridloc.viz</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from logging import getLogger
+from numpy import mean, sign, nanmin, nanmax
+from plotly.offline import plot
+from textwrap import dedent
+import plotly.graph_objects as go
+
+
+AXIS = dict(
+    title=&#34;&#34;,
+    visible=False,
+    zeroline=False,
+    showline=False,
+    showticklabels=False,
+    showgrid=False,
+    )
+
+lg = getLogger(__name__)
+
+
+def plot_electrodes(pial, grid, values=None):
+    right_or_left = sign(mean(pial[&#39;pos&#39;][:, 0]))
+    pos = grid[&#39;pos&#39;].reshape(-1, 3)
+    labels = grid[&#39;label&#39;].reshape(-1)
+
+    if values is None:
+        marker = dict(
+            size=1,
+            color=&#39;black&#39;,
+            )
+
+    else:
+        values = values.reshape(-1)
+        marker = dict(
+            size=1,
+            color=values,
+            colorscale=&#39;Hot&#39;,
+            showscale=True,
+            cmin=nanmin(values),
+            cmax=nanmax(values),
+            )
+
+    traces = [
+        go.Mesh3d(
+            x=pial[&#39;pos&#39;][:, 0],
+            y=pial[&#39;pos&#39;][:, 1],
+            z=pial[&#39;pos&#39;][:, 2],
+            i=pial[&#39;tri&#39;][:, 0],
+            j=pial[&#39;tri&#39;][:, 1],
+            k=pial[&#39;tri&#39;][:, 2],
+            color=&#39;pink&#39;,
+            hoverinfo=&#39;skip&#39;,
+            flatshading=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        go.Scatter3d(
+            x=pos[:, 0],
+            y=pos[:, 1],
+            z=pos[:, 2],
+            text=labels,
+            mode=&#39;markers&#39;,
+            hoverinfo=&#39;text&#39;,
+            marker=marker,
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=0.5,
+                    ),
+                    projection=dict(
+                        type=&#39;orthographic&#39;,
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig
+
+
+def to_div(fig):
+    &#34;&#34;&#34;Convert plotly FIG into an HTML div
+
+    Parameters
+    ----------
+    fig : instance of plotly.Figure
+        figure to convert
+
+    Returns
+    -------
+    str
+        html div, containing the figure as dynamic javascript plot
+    &#34;&#34;&#34;
+    return plot(fig, output_type=&#39;div&#39;, show_link=False, include_plotlyjs=False)
+
+
+def to_html(divs, filename):
+    &#34;&#34;&#34;Convert DIVs, obtained from &#39;to_div&#39;, into one HTML file
+
+    Parameters
+    ----------
+    divs : list of divs
+        list of the output of &#39;to_div&#39;
+    filename : path
+        path of the file to write (extension should be .html). It overwrites if
+        it exists
+    &#34;&#34;&#34;
+    filename.parent.mkdir(exist_ok=True, parents=True)
+    lg.debug(f&#39;Saving {len(divs)} plots to {filename}&#39;)
+
+    html = dedent(&#39;&#39;&#39;\
+        &lt;html&gt;
+          &lt;head&gt;
+            &lt;meta charset=&#34;utf-8&#34; /&gt;
+          &lt;/head&gt;
+          &lt;body&gt;
+            &lt;div&gt;
+              &lt;script type=&#34;text/javascript&#34;&gt;window.PlotlyConfig = {MathJaxConfig: &#39;local&#39;};&lt;/script&gt;
+              &lt;script src=&#34;https://cdn.plot.ly/plotly-latest.min.js&#34;&gt;&lt;/script&gt;
+        &#39;&#39;&#39;) + &#39;\n&#39;.join(divs) + dedent(&#39;&#39;&#39;\
+            &lt;/div&gt;
+          &lt;/body&gt;
+        &lt;/html&gt;
+        &#39;&#39;&#39;)
+
+    with filename.with_suffix(&#39;.html&#39;).open(&#39;w&#39;) as f:
+        f.write(html)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridloc.viz.plot_electrodes"><code class="name flex">
+<span>def <span class="ident">plot_electrodes</span></span>(<span>pial, grid, values=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_electrodes(pial, grid, values=None):
+    right_or_left = sign(mean(pial[&#39;pos&#39;][:, 0]))
+    pos = grid[&#39;pos&#39;].reshape(-1, 3)
+    labels = grid[&#39;label&#39;].reshape(-1)
+
+    if values is None:
+        marker = dict(
+            size=1,
+            color=&#39;black&#39;,
+            )
+
+    else:
+        values = values.reshape(-1)
+        marker = dict(
+            size=1,
+            color=values,
+            colorscale=&#39;Hot&#39;,
+            showscale=True,
+            cmin=nanmin(values),
+            cmax=nanmax(values),
+            )
+
+    traces = [
+        go.Mesh3d(
+            x=pial[&#39;pos&#39;][:, 0],
+            y=pial[&#39;pos&#39;][:, 1],
+            z=pial[&#39;pos&#39;][:, 2],
+            i=pial[&#39;tri&#39;][:, 0],
+            j=pial[&#39;tri&#39;][:, 1],
+            k=pial[&#39;tri&#39;][:, 2],
+            color=&#39;pink&#39;,
+            hoverinfo=&#39;skip&#39;,
+            flatshading=False,
+            lighting=dict(
+                ambient=0.18,
+                diffuse=1,
+                fresnel=0.1,
+                specular=1,
+                roughness=0.1,
+                ),
+            lightposition=dict(
+                x=0,
+                y=0,
+                z=-1,
+                ),
+            ),
+        go.Scatter3d(
+            x=pos[:, 0],
+            y=pos[:, 1],
+            z=pos[:, 2],
+            text=labels,
+            mode=&#39;markers&#39;,
+            hoverinfo=&#39;text&#39;,
+            marker=marker,
+            ),
+        ]
+
+    fig = go.Figure(
+        data=traces,
+        layout=go.Layout(
+            scene=dict(
+                xaxis=AXIS,
+                yaxis=AXIS,
+                zaxis=AXIS,
+                camera=dict(
+                    eye=dict(
+                        x=right_or_left,
+                        y=0,
+                        z=0.5,
+                    ),
+                    projection=dict(
+                        type=&#39;orthographic&#39;,
+                    ),
+                    ),
+                ),
+            ),
+        )
+
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="gridloc.viz.to_div"><code class="name flex">
+<span>def <span class="ident">to_div</span></span>(<span>fig)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert plotly FIG into an HTML div</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>fig</code></strong> :&ensp;<code>instance</code> of <code>plotly.Figure</code></dt>
+<dd>figure to convert</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>html div, containing the figure as dynamic javascript plot</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_div(fig):
+    &#34;&#34;&#34;Convert plotly FIG into an HTML div
+
+    Parameters
+    ----------
+    fig : instance of plotly.Figure
+        figure to convert
+
+    Returns
+    -------
+    str
+        html div, containing the figure as dynamic javascript plot
+    &#34;&#34;&#34;
+    return plot(fig, output_type=&#39;div&#39;, show_link=False, include_plotlyjs=False)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.viz.to_html"><code class="name flex">
+<span>def <span class="ident">to_html</span></span>(<span>divs, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert DIVs, obtained from 'to_div', into one HTML file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>divs</code></strong> :&ensp;<code>list</code> of <code>divs</code></dt>
+<dd>list of the output of 'to_div'</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>path</code></dt>
+<dd>path of the file to write (extension should be .html). It overwrites if
+it exists</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_html(divs, filename):
+    &#34;&#34;&#34;Convert DIVs, obtained from &#39;to_div&#39;, into one HTML file
+
+    Parameters
+    ----------
+    divs : list of divs
+        list of the output of &#39;to_div&#39;
+    filename : path
+        path of the file to write (extension should be .html). It overwrites if
+        it exists
+    &#34;&#34;&#34;
+    filename.parent.mkdir(exist_ok=True, parents=True)
+    lg.debug(f&#39;Saving {len(divs)} plots to {filename}&#39;)
+
+    html = dedent(&#39;&#39;&#39;\
+        &lt;html&gt;
+          &lt;head&gt;
+            &lt;meta charset=&#34;utf-8&#34; /&gt;
+          &lt;/head&gt;
+          &lt;body&gt;
+            &lt;div&gt;
+              &lt;script type=&#34;text/javascript&#34;&gt;window.PlotlyConfig = {MathJaxConfig: &#39;local&#39;};&lt;/script&gt;
+              &lt;script src=&#34;https://cdn.plot.ly/plotly-latest.min.js&#34;&gt;&lt;/script&gt;
+        &#39;&#39;&#39;) + &#39;\n&#39;.join(divs) + dedent(&#39;&#39;&#39;\
+            &lt;/div&gt;
+          &lt;/body&gt;
+        &lt;/html&gt;
+        &#39;&#39;&#39;)
+
+    with filename.with_suffix(&#39;.html&#39;).open(&#39;w&#39;) as f:
+        f.write(html)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc" href="index.html">gridloc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridloc.viz.plot_electrodes" href="#gridloc.viz.plot_electrodes">plot_electrodes</a></code></li>
+<li><code><a title="gridloc.viz.to_div" href="#gridloc.viz.to_div">to_div</a></code></li>
+<li><code><a title="gridloc.viz.to_html" href="#gridloc.viz.to_html">to_html</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

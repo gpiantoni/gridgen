@@ -1,5 +1,6 @@
 from nibabel.freesurfer.io import write_geometry
 from numpy import reshape, corrcoef, isnan
+from logging import getLogger
 
 from .vascular import calculateAngioMap
 from ..io import read_ecog2d, read_surf, read_surface_ras_shift
@@ -8,16 +9,19 @@ from .utils import get_initial_from_matlab
 from ..fitting import fitting
 
 
+lg = getLogger(__name__)
+
+
 def compare_to_matlab(parameters):
     convert_neuralAct_surfaces(parameters)
 
     compare_position_in_space(parameters)
 
     cc = compare_ecog(parameters)
-    print(f'Correlation of gamma activity between matlab and python: {cc:0.3f}')
+    lg.info(f'Correlation of gamma activity between matlab and python: {cc:0.3f}')
 
     cc = compare_angio(parameters)
-    print(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
+    lg.info(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
 
     compare_fitting(parameters)
 

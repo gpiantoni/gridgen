@@ -17,10 +17,8 @@ from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
 from .construct import construct_grid
-from .io import read_surf, read_surface_ras_shift, export_grid, read_volume
-
-from plotly.offline import plot
-
+from .io import read_surf, read_surface_ras_shift, export_grid, read_volume, write_tsv
+from .viz import to_html, to_div, plot_electrodes
 from .ecog.plot_ecog import plot_2d
 
 lg = getLogger(__name__)
@@ -63,20 +61,20 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     dura = read_surf(dura_file)
     lg.debug(f'Reading positions of {pial_file}')
     pial = read_surf(pial_file, normals=False)
-    offset = read_surface_ras_shift(T1_file)
+    ras_shift = read_surface_ras_shift(T1_file)
 
     if angio_file is not None and angio_file:
         lg.debug(f'Reading angiogram from {angio_file} and thresholding at {angio_threshold}')
         angio = read_volume(angio_file, angio_threshold)
-        angio['pos'] -= offset
+        angio['pos'] -= ras_shift
     else:
         angio = None
 
     ref_label = initial['label']
     init_rot = initial['rotation']
     init_ras = array(initial['RAS'])
-    init_vert = argmin(norm(dura['pos'] + offset - init_ras, axis=1))
-    vert_dist = norm(init_ras - offset - dura['pos'][init_vert])
+    init_vert = argmin(norm(dura['pos'] + ras_shift - init_ras, axis=1))
+    vert_dist = norm(init_ras - ras_shift - dura['pos'][init_vert])
 
     lg.debug(f'Target RAS: {init_ras}, vertex #{init_vert} RAS: {dura["pos"][init_vert]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {ref_label} is vertex #{init_vert} with orientation {initial["rotation"]}')
@@ -120,20 +118,38 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     output = output / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S'))
     output.mkdir(parents=True)
 
+    grid_file = output / 'ecog'
+    fig = plot_electrodes(pial, model['grid'], ecog['ecog'])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f'Exported merged model to {grid_file}')
+
+    grid_file = output / 'electrodes'
+    write_tsv(model['grid']['label'], model['grid']['pos'] + ras_shift, grid_file)
+    lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
+
     grid_file = output / 'morphology'
-    _export_results(grid_file, model["grid"], model["morpho"])
-    lg.debug(f'Exported morpho to {grid_file}')
+    fig0 = plot_2d(model['morpho'], 'morphology')
+    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'])
+    to_html([to_div(fig0), to_div(fig1)], grid_file)
 
     if model['vasc'] is not None:
         grid_file = output / 'vascular'
-        _export_results(grid_file, model["grid"], model["vasc"], 'vasculature')
+        fig0 = plot_2d(model['vasc'], 'vasculature')
+        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'])
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported vascular to {grid_file}')
+
+        merged = (model['percent_vasc'] * normalize(model['vasc']['vasculature']) + (100 - model['percent_vasc']) * normalize(model['morpho']['morphology'])) / 100
+        grid_file = output / 'merged'
+        fig = plot_electrodes(pial, model['grid'], merged)
+        to_html([to_div(fig), ], grid_file)
+        lg.debug(f'Exported merged model to {grid_file}')
 
     out = {
         'ref_label': ref_label,
         'surface': str(dura_file),
         'vertex': int(model['vert']),
-        'pos': list(dura['pos'][model['vert'], :]),
+        'pos': list(dura['pos'][model['vert'], :] + ras_shift),
         'normals': list(dura['pos_norm'][model['vert'], :]),
         'rotation': rotation,
         'percent_vasculature': model['percent_vasc'],
@@ -308,6 +324,8 @@ def fitting_brute(minimizer_args, rotation, brute_ranges):
 
     # make sure that the last point is included
     for k, v in brute_ranges.items():
+        if len(brute_ranges[k]) == 2:
+            brute_ranges[k].append(1)
         brute_ranges[k][1] += brute_ranges[k][2]
 
     ranges = (
@@ -332,10 +350,10 @@ def fitting_brute(minimizer_args, rotation, brute_ranges):
     return res
 
 
-def _export_results(grid_file, grid, morpho, value='morphology'):
+def _export_results(grid_file, grid, morpho):
 
-    export_grid(grid, grid_file)
+    export_grid(grid['grid'], grid_file)
 
     image_file = grid_file.with_suffix('.html')
-    fig = plot_2d(morpho, value)
-    plot(fig, filename=str(image_file), auto_open=False, include_plotlyjs='cdn')
+    fig = plot_2d(morpho, 'morphology')
+    to_html([to_div(fig), ], image_file)

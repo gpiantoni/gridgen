@@ -70,7 +70,9 @@ def read_matlab(mat_file):
 
     if k == &#39;subj_info&#39;:
         for field in (&#39;sfile&#39;, &#39;tfile&#39;, &#39;gamma_mean&#39;, &#39;neuralAct&#39;):
-            val[field] = (mat_file.parents[1] / val[field])
+            if val[field].startswith(&#39;.&#39;):
+                val[field] = &#39;.&#39; + val[field]
+            val[field] = (mat_file.parent / val[field])
 
         val[&#39;dims&#39;] = array(val[&#39;dims&#39;]).astype(int)
 
@@ -209,7 +211,9 @@ subj_info.json file with the fields:
 
     if k == &#39;subj_info&#39;:
         for field in (&#39;sfile&#39;, &#39;tfile&#39;, &#39;gamma_mean&#39;, &#39;neuralAct&#39;):
-            val[field] = (mat_file.parents[1] / val[field])
+            if val[field].startswith(&#39;.&#39;):
+                val[field] = &#39;.&#39; + val[field]
+            val[field] = (mat_file.parent / val[field])
 
         val[&#39;dims&#39;] = array(val[&#39;dims&#39;]).astype(int)
 
