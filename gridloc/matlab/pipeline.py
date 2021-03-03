@@ -21,7 +21,8 @@ def compare_to_matlab(parameters):
     lg.info(f'Correlation of gamma activity between matlab and python: {cc:0.3f}')
 
     cc = compare_angio(parameters)
-    lg.info(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
+    if cc is not None:
+        lg.info(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
 
     compare_fitting(parameters)
 
@@ -98,6 +99,10 @@ def compare_ecog(parameters):
 
 def compare_angio(parameters):
     subjectInfo = read_matlab(parameters['matlab']['input']['subjectInfo_file'])
+    if 'angiomap_file' not in parameters['matlab']['comparison'] or parameters['matlab']['comparison']['angiomap_file'] is None:
+        lg.warning('No angiomap to compare to. Skipping')
+        return
+
     cortex = read_surf(parameters['matlab']['surfaces']['cortex'], normals=True)
 
     [angioMap, normAngio] = calculateAngioMap(subjectInfo, subjectInfo['Tthreshold'], subjectInfo['VoxelDepth'], plotAngio=False, cortex=cortex)

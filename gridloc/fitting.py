@@ -127,6 +127,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     write_tsv(model['grid']['label'], model['grid']['pos'] + ras_shift, grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
 
+    export_grid(model['grid'], grid_file)
+
     grid_file = output / 'morphology'
     fig0 = plot_2d(model['morpho'], 'morphology')
     fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'])

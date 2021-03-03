@@ -227,8 +227,8 @@ def write_tsv(labels, positions, elec_file):
     elec_file : Path
         path to write to
     """
-    labels = labels.reshape(-1)
-    positions = positions.reshape(-1, 3)
+    labels = labels.reshape(-1, order='F')
+    positions = positions.reshape(-1, 3, order='F')
 
     elec_file = elec_file.with_suffix('.tsv')
     with elec_file.open('w') as f:
