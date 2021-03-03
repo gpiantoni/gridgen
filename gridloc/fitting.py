@@ -20,6 +20,7 @@ from .construct import construct_grid
 from .io import read_surf, read_surface_ras_shift, export_grid, read_volume, write_tsv
 from .viz import to_html, to_div, plot_electrodes
 from .ecog.plot_ecog import plot_2d
+from .examine import measure_distances, measure_angles
 
 lg = getLogger(__name__)
 
@@ -123,6 +124,9 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     to_html([to_div(fig), ], grid_file)
     lg.debug(f'Exported merged model to {grid_file}')
 
+    measure_distances(model['grid'])
+    measure_angles(model['grid'])
+
     grid_file = output / 'electrodes'
     write_tsv(model['grid']['label'], model['grid']['pos'] + ras_shift, grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
@@ -183,7 +187,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
 
     else:
         e, m = match_labels(ecog, morpho)
-        v = None
+        v = vasc = None
 
     i, cc = compare_models(e, m, v, correlation=correlation)
     if not final:
