@@ -7,22 +7,28 @@ from numpy import array
 def read_matlab(mat_file):
     """Read either matlab or json file with the same info.
 
-    Json file is useful when subjectInfo.mat was not created. So create a
-    subj_info.json file with the fields:
-        'dims': [8, 16],
-        'intElec': [3, 3],
-        'hemiVect': {
-            'hemi': 'r',
-            'side': 'd',
-            },
-        'gamma_mean': '',
-        'neuralAct': '',
-        'sfile': '',
-        'tfile': '',
-        'Tthreshold': 50,
-        'VoxelDepth': 8,
-    """
+    Notes
+    -----
+    1) If it's mat file with coordsPred, it returns only this variable and
+    discards the other ones.
 
+    2) it can also reas json files. This is useful when subjectInfo.mat was not
+    created or has an error. So create a subj_info.json file with the fields:
+    {
+        "dims": [8, 16],
+        "intElec": [3, 3],
+        "hemiVect": {
+            "hemi": "r",
+            "side": "d"
+            },
+        "gamma_mean": "",
+        "neuralAct": "",
+        "sfile": "",
+        "tfile": "",
+        "Tthreshold": 50,
+        "VoxelDepth": 8
+    }
+    """
     if mat_file.suffix == '.json':
         with mat_file.open() as f:
             out = {mat_file.stem: json_load(f)}
@@ -38,6 +44,9 @@ def read_matlab(mat_file):
     if len(out) == 1:
         k = list(out)[0]
         val = out[k]
+
+    elif 'coordsPred' in out:
+        return out['coordsPred']
 
     else:
         return out

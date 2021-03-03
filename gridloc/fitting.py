@@ -26,8 +26,7 @@ lg = getLogger(__name__)
 
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
-            angio_threshold=None, intermediate=None, correlation=None,
-            ranges={}, method='simplex'):
+            angio_threshold=None, correlation=None, ranges={}, method='simplex'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -47,42 +46,40 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         path to angiogram (in NIfTI format). Optional.
     angio_threshold : float
         value to threshold the angio_file. Optional.
-    intermediate : bool
-        whether to save the intermediate steps of the fitting procedure
     correlation : str
         'parametric' (Pearson) or 'nonparametric' (rank)
     method : str
         'simplex', 'hopping', 'brute'
     ranges : dict of lists
         keys are x-direction, y-direction, rotation
+
+    Returns
+    -------
+    instance of grid2d
+        grid2d with best positions
     """
     start_time = datetime.now()
 
-    lg.debug(f'Reading positions and computing normals of {dura_file}')
-    dura = read_surf(dura_file)
-    lg.debug(f'Reading positions of {pial_file}')
-    pial = read_surf(pial_file, normals=False)
     ras_shift = read_surface_ras_shift(T1_file)
+    lg.debug(f'Reading positions and computing normals of {dura_file}')
+    dura = read_surf(dura_file, ras_shift=ras_shift)
+    lg.debug(f'Reading positions of {pial_file}')
+    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
 
     if angio_file is not None and angio_file:
         lg.debug(f'Reading angiogram from {angio_file} and thresholding at {angio_threshold}')
         angio = read_volume(angio_file, angio_threshold)
-        angio['pos'] -= ras_shift
     else:
         angio = None
 
     ref_label = initial['label']
     init_rot = initial['rotation']
     init_ras = array(initial['RAS'])
-    init_vert = argmin(norm(dura['pos'] + ras_shift - init_ras, axis=1))
-    vert_dist = norm(init_ras - ras_shift - dura['pos'][init_vert])
+    init_vert = argmin(norm(dura['pos'] - init_ras, axis=1))
+    vert_dist = norm(init_ras - dura['pos'][init_vert])
 
     lg.debug(f'Target RAS: {init_ras}, vertex #{init_vert} RAS: {dura["pos"][init_vert]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {ref_label} is vertex #{init_vert} with orientation {initial["rotation"]}')
-
-    if intermediate is not None and intermediate:
-        intermediate = output / 'steps'
-        intermediate.mkdir(exist_ok=True)
 
     minimizer_args = (
         dura,
@@ -91,7 +88,6 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         ecog,
         pial,
         angio,
-        intermediate,
         correlation,
         )
 
@@ -116,7 +112,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
     lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
 
-    output = output / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S'))
+    output = output / ('bestfit_' + method + '_' + correlation + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
     output.mkdir(parents=True)
 
     grid_file = output / 'ecog'
@@ -128,7 +124,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     measure_angles(model['grid'])
 
     grid_file = output / 'electrodes'
-    write_tsv(model['grid']['label'], model['grid']['pos'] + ras_shift, grid_file)
+    write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
 
     export_grid(model['grid'], grid_file)
@@ -155,7 +151,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         'ref_label': ref_label,
         'surface': str(dura_file),
         'vertex': int(model['vert']),
-        'pos': list(dura['pos'][model['vert'], :] + ras_shift),
+        'pos': list(dura['pos'][model['vert'], :]),
         'normals': list(dura['pos_norm'][model['vert'], :]),
         'rotation': rotation,
         'percent_vasculature': model['percent_vasc'],
@@ -166,9 +162,11 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     with results_file.open('w') as f:
         dump(out, f, indent=2)
 
+    return model['grid']
+
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    intermediate=None, correlation=None, final=False):
+                    correlation=None, final=False):
     """Main model to minimize
 
     """
@@ -192,10 +190,6 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
     i, cc = compare_models(e, m, v, correlation=correlation)
     if not final:
         lg.debug(' ' * 45 + f'{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
-
-    if not final and intermediate is not None and intermediate:
-        grid_file = intermediate / f'vert{start_vert}_rot{rotation:06.3f}'
-        _export_results(grid_file, grid, morpho)
 
     if final:
         return {
@@ -354,12 +348,3 @@ def fitting_brute(minimizer_args, rotation, brute_ranges):
         )
 
     return res
-
-
-def _export_results(grid_file, grid, morpho):
-
-    export_grid(grid['grid'], grid_file)
-
-    image_file = grid_file.with_suffix('.html')
-    fig = plot_2d(morpho, 'morphology')
-    to_html([to_div(fig), ], image_file)

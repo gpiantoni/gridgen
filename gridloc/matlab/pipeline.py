@@ -1,12 +1,14 @@
 from nibabel.freesurfer.io import write_geometry
-from numpy import reshape, corrcoef, isnan
+from numpy import reshape, corrcoef, isnan, mean, std
+from numpy.linalg import norm
 from logging import getLogger
 
 from .vascular import calculateAngioMap
-from ..io import read_ecog2d, read_surf, read_surface_ras_shift
+from ..io import read_ecog2d, read_surf, read_surface_ras_shift, read_elec
 from .io import read_matlab
 from .utils import get_initial_from_matlab
 from ..fitting import fitting
+from ..examine import measure_distances, measure_angles
 
 
 lg = getLogger(__name__)
@@ -39,10 +41,21 @@ def compare_fitting(parameters):
         'y': [5, ],
         'rotation': [45, ],
         }
-    fitting(
+    gridv2 = fitting(
         ecog=ecog2d,
         output=parameters['output_dir'],
         **parameters['fit'])
+
+    if parameters['matlab']['comparison']['prediction_file'] is not None:
+        lg.info('Gridloc(matlab) best fit')
+        gridv1 = read_elec(
+            gridv2,
+            parameters['matlab']['comparison']['prediction_file'])
+        measure_distances(gridv1)
+        measure_angles(gridv1)
+
+        distances = norm(gridv2['pos'] - gridv1['pos'], axis=2)
+        lg.info(f'Distance between best fit in v1 and best fit in v2: {mean(distances):0.3f}mm (sd {std(distances):0.3f})')
 
 
 def convert_neuralAct_surfaces(parameters):

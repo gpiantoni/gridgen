@@ -1,6 +1,23 @@
 """Functions to input and output data
 """
-from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where, Inf, empty, NaN, unique
+from numpy import (
+    array,
+    c_,
+    cross,
+    dtype,
+    empty,
+    genfromtxt,
+    Inf,
+    intersect1d,
+    isnan,
+    loadtxt,
+    NaN,
+    savetxt,
+    unique,
+    unravel_index,
+    where,
+    zeros,
+    )
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -19,6 +36,13 @@ SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
 # columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
 """
+
+DTYPE = [
+    ('name', 'U256'),
+    ('x', 'double'),
+    ('y', 'double'),
+    ('z', 'double'),
+    ]
 
 lg = getLogger(__name__)
 
@@ -102,13 +126,15 @@ def read_ecog2d(ecog_file, grid_file):
     return ecog_on_grid
 
 
-def read_surf(surf_file, normals=True):
+def read_surf(surf_file, ras_shift=None, normals=True):
     """Read surface file from freesurfer and compute normals.
 
     Parameters
     ----------
     surf_file : path
         path to Freesurfer pial file (like lh.pial or rh_smooth.pial)
+    ras_shift : (3, ) array
+        difference in coordinate system between meshes and MRI volume
     normals : bool
         whether to compute normals (it takes one minute roughly)
 
@@ -127,8 +153,16 @@ def read_surf(surf_file, normals=True):
 
     It can handle meshes which have vertices that do not belong to a triangle.
     The normal for a vertex without triangle is NaN
+
+    It's strongly adviced to use `ras_shift`, so that all the coordinates are
+    consistent in MRI volume space.
     """
     pos, tri = read_geometry(surf_file)
+    if ras_shift is None:
+        lg.warning('`ras_shift` was not passed. Coordinates in the original mesh coordinate systems, not in the MRI volume space')
+    else:
+        pos += ras_shift
+
     surf = {
         'tri': tri,
         'pos': pos,
@@ -325,3 +359,37 @@ def read_volume(volume_file, threshold=-Inf):
     output['value'] = data[i]
 
     return output
+
+
+def read_elec(grid2d, elec_file):
+    """Read electrode locations and match them to a grid2d
+
+    Parameters
+    ----------
+    grid2d : instance of grid2d
+        grid2d with labels
+    elec_file : path to .mat or .tsv
+
+    Returns
+    -------
+    instance of grid2d
+        where 'pos' are taken from elec_file
+    """
+    grid2d = grid2d.copy()  # prevents changing the input file
+
+    if elec_file.suffix == '.mat':
+        from .matlab.io import read_matlab
+
+        xyz = read_matlab(elec_file)
+        labels = array([f'chan{x + 1}' for x in range(xyz.shape[0])])
+
+    elif elec_file.suffix == '.tsv':
+        elec = genfromtxt(elec_file, skip_header=1, dtype=DTYPE)
+        labels = elec['name']
+        xyz = c_[elec['x'], elec['y'], elec['z']]
+
+    i_grid, i_mat = intersect1d(grid2d['label'], labels, return_indices=True)[1:]
+    i = unravel_index(i_grid, grid2d.shape)
+    grid2d['pos'][i] = xyz[i_mat]
+
+    return grid2d
