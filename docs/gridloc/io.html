@@ -27,7 +27,24 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Functions to input and output data
 &#34;&#34;&#34;
-from numpy import cross, array, savetxt, isnan, zeros, dtype, loadtxt, where, Inf, empty, NaN, unique
+from numpy import (
+    array,
+    c_,
+    cross,
+    dtype,
+    empty,
+    genfromtxt,
+    Inf,
+    intersect1d,
+    isnan,
+    loadtxt,
+    NaN,
+    savetxt,
+    unique,
+    unravel_index,
+    where,
+    zeros,
+    )
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
@@ -46,6 +63,13 @@ SLICER_HEADER = &#34;&#34;&#34;# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
 # columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
 &#34;&#34;&#34;
+
+DTYPE = [
+    (&#39;name&#39;, &#39;U256&#39;),
+    (&#39;x&#39;, &#39;double&#39;),
+    (&#39;y&#39;, &#39;double&#39;),
+    (&#39;z&#39;, &#39;double&#39;),
+    ]
 
 lg = getLogger(__name__)
 
@@ -129,13 +153,15 @@ def read_ecog2d(ecog_file, grid_file):
     return ecog_on_grid
 
 
-def read_surf(surf_file, normals=True):
+def read_surf(surf_file, ras_shift=None, normals=True):
     &#34;&#34;&#34;Read surface file from freesurfer and compute normals.
 
     Parameters
     ----------
     surf_file : path
         path to Freesurfer pial file (like lh.pial or rh_smooth.pial)
+    ras_shift : (3, ) array
+        difference in coordinate system between meshes and MRI volume
     normals : bool
         whether to compute normals (it takes one minute roughly)
 
@@ -154,8 +180,16 @@ def read_surf(surf_file, normals=True):
 
     It can handle meshes which have vertices that do not belong to a triangle.
     The normal for a vertex without triangle is NaN
+
+    It&#39;s strongly adviced to use `ras_shift`, so that all the coordinates are
+    consistent in MRI volume space.
     &#34;&#34;&#34;
     pos, tri = read_geometry(surf_file)
+    if ras_shift is None:
+        lg.warning(&#39;`ras_shift` was not passed. Coordinates in the original mesh coordinate systems, not in the MRI volume space&#39;)
+    else:
+        pos += ras_shift
+
     surf = {
         &#39;tri&#39;: tri,
         &#39;pos&#39;: pos,
@@ -190,12 +224,14 @@ def _average_normal_per_vertex(i, tri_norm, tri):
     return tri_norm[(tri == i).any(axis=1)].mean(axis=0)
 
 
-def export_grid(grid, grid_file, format=None):
+def export_grid(grid, ras_shift, grid_file, format=None):
     &#34;&#34;&#34;
     Parameters
     ----------
     grid : NxNx2x3 array
         grid with positions and normals
+    ras_shift : (3, ) array
+        shift between MRI volume and meshes
     grid_file : str
         file name to export to (extension is based on format)
     format : str
@@ -203,7 +239,7 @@ def export_grid(grid, grid_file, format=None):
 
     NOTES
     -----
-    Note that the positions are in the coordinate system of the meshes (not
+    Note that the positions should be in the coordinate system of the meshes (not
     the coordinate system of the volume MRI)
 
     TODO
@@ -213,11 +249,11 @@ def export_grid(grid, grid_file, format=None):
     &#34;&#34;&#34;
     if format is None:
         for one_format in (&#39;freeview&#39;, &#39;slicer&#39;):
-            export_grid(grid, grid_file, one_format)
+            export_grid(grid, ras_shift, grid_file, one_format)
         return
 
     labels = grid[&#39;label&#39;].reshape(-1)
-    positions = grid[&#39;pos&#39;].reshape(-1, 3)
+    positions = grid[&#39;pos&#39;].reshape(-1, 3) - ras_shift
     normals = grid[&#39;norm&#39;].reshape(-1, 3)
 
     grid_file = Path(grid_file)
@@ -254,8 +290,8 @@ def write_tsv(labels, positions, elec_file):
     elec_file : Path
         path to write to
     &#34;&#34;&#34;
-    labels = labels.reshape(-1)
-    positions = positions.reshape(-1, 3)
+    labels = labels.reshape(-1, order=&#39;F&#39;)
+    positions = positions.reshape(-1, 3, order=&#39;F&#39;)
 
     elec_file = elec_file.with_suffix(&#39;.tsv&#39;)
     with elec_file.open(&#39;w&#39;) as f:
@@ -351,7 +387,41 @@ def read_volume(volume_file, threshold=-Inf):
     output[&#39;pos&#39;] = apply_affine(volume.affine, array(where(i)).T)
     output[&#39;value&#39;] = data[i]
 
-    return output</code></pre>
+    return output
+
+
+def read_elec(grid2d, elec_file):
+    &#34;&#34;&#34;Read electrode locations and match them to a grid2d
+
+    Parameters
+    ----------
+    grid2d : instance of grid2d
+        grid2d with labels
+    elec_file : path to .mat or .tsv
+
+    Returns
+    -------
+    instance of grid2d
+        where &#39;pos&#39; are taken from elec_file
+    &#34;&#34;&#34;
+    grid2d = grid2d.copy()  # prevents changing the input file
+
+    if elec_file.suffix == &#39;.mat&#39;:
+        from .matlab.io import read_matlab
+
+        xyz = read_matlab(elec_file)
+        labels = array([f&#39;chan{x + 1}&#39; for x in range(xyz.shape[0])])
+
+    elif elec_file.suffix == &#39;.tsv&#39;:
+        elec = genfromtxt(elec_file, skip_header=1, dtype=DTYPE)
+        labels = elec[&#39;name&#39;]
+        xyz = c_[elec[&#39;x&#39;], elec[&#39;y&#39;], elec[&#39;z&#39;]]
+
+    i_grid, i_mat = intersect1d(grid2d[&#39;label&#39;], labels, return_indices=True)[1:]
+    i = unravel_index(i_grid, grid2d.shape)
+    grid2d[&#39;pos&#39;][i] = xyz[i_mat]
+
+    return grid2d</code></pre>
 </details>
 </section>
 <section>
@@ -362,20 +432,22 @@ def read_volume(volume_file, threshold=-Inf):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridloc.io.export_grid"><code class="name flex">
-<span>def <span class="ident">export_grid</span></span>(<span>grid, grid_file, format=None)</span>
+<span>def <span class="ident">export_grid</span></span>(<span>grid, ras_shift, grid_file, format=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>grid</code></strong> :&ensp;<code>NxNx2x3 array</code></dt>
 <dd>grid with positions and normals</dd>
+<dt><strong><code>ras_shift</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>shift between MRI volume and meshes</dd>
 <dt><strong><code>grid_file</code></strong> :&ensp;<code>str</code></dt>
 <dd>file name to export to (extension is based on format)</dd>
 <dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
 <dd>'slicer' or 'freeview'. If not specified, both of them</dd>
 </dl>
 <h2 id="notes">Notes</h2>
-<p>Note that the positions are in the coordinate system of the meshes (not
+<p>Note that the positions should be in the coordinate system of the meshes (not
 the coordinate system of the volume MRI)</p>
 <h2 id="todo">Todo</h2>
 <p>There is something wrong with normals (I guess it depends on how Slicer
@@ -384,12 +456,14 @@ imports them)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def export_grid(grid, grid_file, format=None):
+<pre><code class="python">def export_grid(grid, ras_shift, grid_file, format=None):
     &#34;&#34;&#34;
     Parameters
     ----------
     grid : NxNx2x3 array
         grid with positions and normals
+    ras_shift : (3, ) array
+        shift between MRI volume and meshes
     grid_file : str
         file name to export to (extension is based on format)
     format : str
@@ -397,7 +471,7 @@ imports them)</p></div>
 
     NOTES
     -----
-    Note that the positions are in the coordinate system of the meshes (not
+    Note that the positions should be in the coordinate system of the meshes (not
     the coordinate system of the volume MRI)
 
     TODO
@@ -407,11 +481,11 @@ imports them)</p></div>
     &#34;&#34;&#34;
     if format is None:
         for one_format in (&#39;freeview&#39;, &#39;slicer&#39;):
-            export_grid(grid, grid_file, one_format)
+            export_grid(grid, ras_shift, grid_file, one_format)
         return
 
     labels = grid[&#39;label&#39;].reshape(-1)
-    positions = grid[&#39;pos&#39;].reshape(-1, 3)
+    positions = grid[&#39;pos&#39;].reshape(-1, 3) - ras_shift
     normals = grid[&#39;norm&#39;].reshape(-1, 3)
 
     grid_file = Path(grid_file)
@@ -533,6 +607,61 @@ imports them)</p></div>
     return ecog_on_grid</code></pre>
 </details>
 </dd>
+<dt id="gridloc.io.read_elec"><code class="name flex">
+<span>def <span class="ident">read_elec</span></span>(<span>grid2d, elec_file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read electrode locations and match them to a grid2d</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>instance</code> of <code>grid2d</code></dt>
+<dd>grid2d with labels</dd>
+<dt><strong><code>elec_file</code></strong> :&ensp;<code>path to .mat</code> or <code>.tsv</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>instance</code> of <code>grid2d</code></dt>
+<dd>where 'pos' are taken from elec_file</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_elec(grid2d, elec_file):
+    &#34;&#34;&#34;Read electrode locations and match them to a grid2d
+
+    Parameters
+    ----------
+    grid2d : instance of grid2d
+        grid2d with labels
+    elec_file : path to .mat or .tsv
+
+    Returns
+    -------
+    instance of grid2d
+        where &#39;pos&#39; are taken from elec_file
+    &#34;&#34;&#34;
+    grid2d = grid2d.copy()  # prevents changing the input file
+
+    if elec_file.suffix == &#39;.mat&#39;:
+        from .matlab.io import read_matlab
+
+        xyz = read_matlab(elec_file)
+        labels = array([f&#39;chan{x + 1}&#39; for x in range(xyz.shape[0])])
+
+    elif elec_file.suffix == &#39;.tsv&#39;:
+        elec = genfromtxt(elec_file, skip_header=1, dtype=DTYPE)
+        labels = elec[&#39;name&#39;]
+        xyz = c_[elec[&#39;x&#39;], elec[&#39;y&#39;], elec[&#39;z&#39;]]
+
+    i_grid, i_mat = intersect1d(grid2d[&#39;label&#39;], labels, return_indices=True)[1:]
+    i = unravel_index(i_grid, grid2d.shape)
+    grid2d[&#39;pos&#39;][i] = xyz[i_mat]
+
+    return grid2d</code></pre>
+</details>
+</dd>
 <dt id="gridloc.io.read_grid2d"><code class="name flex">
 <span>def <span class="ident">read_grid2d</span></span>(<span>grid_file)</span>
 </code></dt>
@@ -577,7 +706,7 @@ imports them)</p></div>
 </details>
 </dd>
 <dt id="gridloc.io.read_surf"><code class="name flex">
-<span>def <span class="ident">read_surf</span></span>(<span>surf_file, normals=True)</span>
+<span>def <span class="ident">read_surf</span></span>(<span>surf_file, ras_shift=None, normals=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read surface file from freesurfer and compute normals.</p>
@@ -585,6 +714,8 @@ imports them)</p></div>
 <dl>
 <dt><strong><code>surf_file</code></strong> :&ensp;<code>path</code></dt>
 <dd>path to Freesurfer pial file (like lh.pial or rh_smooth.pial)</dd>
+<dt><strong><code>ras_shift</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>difference in coordinate system between meshes and MRI volume</dd>
 <dt><strong><code>normals</code></strong> :&ensp;<code>bool</code></dt>
 <dd>whether to compute normals (it takes one minute roughly)</dd>
 </dl>
@@ -600,18 +731,22 @@ tri_norm : normal for each triangle (face)</dd>
 <p>All the normals are set to 1, by definition. This is necessary when computing
 the cross-product in later stages.</p>
 <p>It can handle meshes which have vertices that do not belong to a triangle.
-The normal for a vertex without triangle is NaN</p></div>
+The normal for a vertex without triangle is NaN</p>
+<p>It's strongly adviced to use <code>ras_shift</code>, so that all the coordinates are
+consistent in MRI volume space.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_surf(surf_file, normals=True):
+<pre><code class="python">def read_surf(surf_file, ras_shift=None, normals=True):
     &#34;&#34;&#34;Read surface file from freesurfer and compute normals.
 
     Parameters
     ----------
     surf_file : path
         path to Freesurfer pial file (like lh.pial or rh_smooth.pial)
+    ras_shift : (3, ) array
+        difference in coordinate system between meshes and MRI volume
     normals : bool
         whether to compute normals (it takes one minute roughly)
 
@@ -630,8 +765,16 @@ The normal for a vertex without triangle is NaN</p></div>
 
     It can handle meshes which have vertices that do not belong to a triangle.
     The normal for a vertex without triangle is NaN
+
+    It&#39;s strongly adviced to use `ras_shift`, so that all the coordinates are
+    consistent in MRI volume space.
     &#34;&#34;&#34;
     pos, tri = read_geometry(surf_file)
+    if ras_shift is None:
+        lg.warning(&#39;`ras_shift` was not passed. Coordinates in the original mesh coordinate systems, not in the MRI volume space&#39;)
+    else:
+        pos += ras_shift
+
     surf = {
         &#39;tri&#39;: tri,
         &#39;pos&#39;: pos,
@@ -861,8 +1004,8 @@ MRI space or in mesh space.</dd>
     elec_file : Path
         path to write to
     &#34;&#34;&#34;
-    labels = labels.reshape(-1)
-    positions = positions.reshape(-1, 3)
+    labels = labels.reshape(-1, order=&#39;F&#39;)
+    positions = positions.reshape(-1, 3, order=&#39;F&#39;)
 
     elec_file = elec_file.with_suffix(&#39;.tsv&#39;)
     with elec_file.open(&#39;w&#39;) as f:
@@ -892,6 +1035,7 @@ MRI space or in mesh space.</dd>
 <li><code><a title="gridloc.io.export_grid" href="#gridloc.io.export_grid">export_grid</a></code></li>
 <li><code><a title="gridloc.io.export_transform" href="#gridloc.io.export_transform">export_transform</a></code></li>
 <li><code><a title="gridloc.io.read_ecog2d" href="#gridloc.io.read_ecog2d">read_ecog2d</a></code></li>
+<li><code><a title="gridloc.io.read_elec" href="#gridloc.io.read_elec">read_elec</a></code></li>
 <li><code><a title="gridloc.io.read_grid2d" href="#gridloc.io.read_grid2d">read_grid2d</a></code></li>
 <li><code><a title="gridloc.io.read_surf" href="#gridloc.io.read_surf">read_surf</a></code></li>
 <li><code><a title="gridloc.io.read_surface_ras_shift" href="#gridloc.io.read_surface_ras_shift">read_surface_ras_shift</a></code></li>

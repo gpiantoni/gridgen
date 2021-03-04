@@ -128,30 +128,30 @@ TEMPLATE = {
         &#34;method&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
-            &#34;values&#34;: [&#39;simplex&#39;, &#39;brute&#39;, &#39;hopping&#39;],
-            &#34;help&#34;: &#34;method to use&#34;,
+            &#34;values&#34;: [&#39;brute&#39;, &#39;simplex&#39;],
+            &#34;help&#34;: &#34;method to use (brute includes simplex as a second step)&#34;,
         },
         &#34;correlation&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
-            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparameteric&#39;],
+            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
             &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)&#34;,
         },
         &#34;ranges&#34;: {
             &#34;x&#34;: {
                 &#34;type&#34;: &#34;list&#34;,
-                &#34;necessary&#34;: False,
-                &#34;help&#34;: &#34;Range in mm for x-direction. For simplex, it&#39;s a list of one float. For brute, it&#39;s [low, high] or [low, step, high]&#34;,
+                &#34;necessary&#34;: True,
+                &#34;help&#34;: &#34;Range in mm for x-direction, in format [low, step, high]&#34;,
             },
             &#34;y&#34;: {
                 &#34;type&#34;: &#34;list&#34;,
-                &#34;necessary&#34;: False,
-                &#34;help&#34;: &#34;Range in mm for y-direction. For simplex, it&#39;s a list of one float. For brute, it&#39;s [low, high] or [low, step, high]&#34;,
+                &#34;necessary&#34;: True,
+                &#34;help&#34;: &#34;Range in mm for y-direction, in format [low, step, high]&#34;,
             },
             &#34;rotation&#34;: {
                 &#34;type&#34;: &#34;list&#34;,
-                &#34;necessary&#34;: False,
-                &#34;help&#34;: &#34;Range in degrees for rotation. For simplex, it&#39;s a list of one float. For brute, it&#39;s [low, high] or [low, step, high]&#34;,
+                &#34;necessary&#34;: True,
+                &#34;help&#34;: &#34;Range in degrees for rotation, in format [low, step, high]&#34;,
             },
         },
     },
@@ -173,6 +173,11 @@ TEMPLATE = {
                 &#39;type&#39;: &#39;str&#39;,
                 &#39;necessary&#39;: False,
                 &#39;help&#39;: &#39;path to _angiomap.mat&#39;,
+                },
+            &#34;model_file&#34;: {
+                &#39;type&#39;: &#39;str&#39;,
+                &#39;necessary&#39;: False,
+                &#39;help&#39;: &#39;path to full models (&#34;ROI&#34;)&#39;,
                 },
             &#34;prediction_file&#34;: {
                 &#39;type&#39;: &#39;str&#39;,

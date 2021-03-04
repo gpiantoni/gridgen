@@ -37,10 +37,10 @@ def compare_fitting(parameters):
     ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
     parameters = get_initial_from_matlab(parameters)
-    parameters['fit']['method'] = 'brute'
+    parameters['fit']['method'] = 'simplex'
     parameters['fit']['ranges'] = {
-        'x': [-10, 2, 10],
-        'y': [-10, 2, 10],
+        'x': [-10, 5, 10],
+        'y': [-10, 5, 10],
         'rotation': [-45, 5, 45],
         }
     gridv2 = fitting(

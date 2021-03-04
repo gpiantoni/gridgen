@@ -6,12 +6,10 @@ from json import load, dumps
 from textwrap import dedent
 from numpy import set_printoptions
 
-from plotly.offline import plot
-
 from .parameters import convert_to_path, TEMPLATE, prepare_template, help_template, validate_template
-from ..ecog.plot_ecog import plot_2d
 from ..fitting import fitting
 from ..matlab.pipeline import compare_to_matlab
+from ..viz import to_html, to_div, plot_2d
 from ..io import (
     read_grid2d,
     write_grid2d,
@@ -193,7 +191,7 @@ def main(arguments=None):
 
         lg.info(f'Writing ECoG image to {ecog_fig}')
         fig = plot_2d(ecog2d, 'ecog')
-        plot(fig, filename=str(ecog_fig), auto_open=False, include_plotlyjs='cdn')
+        to_html([to_div(fig), ], ecog_fig)
 
     if args.function in ('fit', ):
 

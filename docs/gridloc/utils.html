@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>gridloc.ecog.plot_ecog API documentation</title>
-<meta name="description" content="Use plotly to plot ECoG activity" />
+<title>gridloc.utils API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,61 +17,41 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>gridloc.ecog.plot_ecog</code></h1>
+<h1 class="title">Module <code>gridloc.utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Use plotly to plot ECoG activity</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Use plotly to plot ECoG activity&#34;&#34;&#34;
-import plotly.graph_objs as go
+<pre><code class="python">from os import nice
+from numpy import nanmax, nanmin, intersect1d
 
 
-def plot_2d(grid2d, value=&#39;ecog&#39;):
-    &#34;&#34;&#34;Plot the 2D grid to a plotly html
+def be_nice():
+    nice(10)
 
-    Parameters
-    ----------
-    grid2d :
-    &#34;&#34;&#34;
-    if not value == &#39;ecog&#39;:
-        reversescale = True
-    else:
-        reversescale = False
 
-    n_rows, n_cols = grid2d.shape
-    traces = [
-        go.Heatmap(
-            z=grid2d[value],
-            text=grid2d[&#39;label&#39;],
-            hoverinfo=&#39;text+z&#39;,
-            colorscale=&#39;Hot&#39;,
-            reversescale=reversescale,
-            colorbar=dict(
-                title=dict(
-                    text=&#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;,
-                    )
-                ),
-            ),
-        ]
-    layout = go.Layout(
-        width=n_cols * 60,
-        height=n_rows * 60,
-        autosize=False,
-        xaxis=dict(
-            visible=False,
-            ),
-        yaxis=dict(
-            autorange=&#39;reversed&#39;,
-            visible=False,
-            ),
-        )
+def normalize(x):
+    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
 
-    fig = go.Figure(traces, layout=layout)
 
-    return fig</code></pre>
+def match_labels(ecog, *args):
+    &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
+    ecog, also getting rid of bad channels&#34;&#34;&#34;
+
+    good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
+    ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
+    a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
+    output = [a, ]
+
+    for estimate in args:
+        field = (set(estimate.dtype.names) - {&#39;label&#39;, }).pop()
+        estimate_id = intersect1d(estimate[&#39;label&#39;], good, return_indices=True)[1]
+        b = estimate[field].flatten(&#39;C&#39;)[estimate_id]
+        output.append(b)
+
+    return output</code></pre>
 </details>
 </section>
 <section>
@@ -81,60 +61,58 @@ def plot_2d(grid2d, value=&#39;ecog&#39;):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridloc.ecog.plot_ecog.plot_2d"><code class="name flex">
-<span>def <span class="ident">plot_2d</span></span>(<span>grid2d, value='ecog')</span>
+<dt id="gridloc.utils.be_nice"><code class="name flex">
+<span>def <span class="ident">be_nice</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Plot the 2D grid to a plotly html</p>
-<h2 id="parameters">Parameters</h2>
-<p>grid2d :</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_2d(grid2d, value=&#39;ecog&#39;):
-    &#34;&#34;&#34;Plot the 2D grid to a plotly html
+<pre><code class="python">def be_nice():
+    nice(10)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.utils.match_labels"><code class="name flex">
+<span>def <span class="ident">match_labels</span></span>(<span>ecog, *args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>make sure that that the values are in the same order as the labels in
+ecog, also getting rid of bad channels</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match_labels(ecog, *args):
+    &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
+    ecog, also getting rid of bad channels&#34;&#34;&#34;
 
-    Parameters
-    ----------
-    grid2d :
-    &#34;&#34;&#34;
-    if not value == &#39;ecog&#39;:
-        reversescale = True
-    else:
-        reversescale = False
+    good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
+    ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
+    a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
+    output = [a, ]
 
-    n_rows, n_cols = grid2d.shape
-    traces = [
-        go.Heatmap(
-            z=grid2d[value],
-            text=grid2d[&#39;label&#39;],
-            hoverinfo=&#39;text+z&#39;,
-            colorscale=&#39;Hot&#39;,
-            reversescale=reversescale,
-            colorbar=dict(
-                title=dict(
-                    text=&#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;,
-                    )
-                ),
-            ),
-        ]
-    layout = go.Layout(
-        width=n_cols * 60,
-        height=n_rows * 60,
-        autosize=False,
-        xaxis=dict(
-            visible=False,
-            ),
-        yaxis=dict(
-            autorange=&#39;reversed&#39;,
-            visible=False,
-            ),
-        )
+    for estimate in args:
+        field = (set(estimate.dtype.names) - {&#39;label&#39;, }).pop()
+        estimate_id = intersect1d(estimate[&#39;label&#39;], good, return_indices=True)[1]
+        b = estimate[field].flatten(&#39;C&#39;)[estimate_id]
+        output.append(b)
 
-    fig = go.Figure(traces, layout=layout)
-
-    return fig</code></pre>
+    return output</code></pre>
+</details>
+</dd>
+<dt id="gridloc.utils.normalize"><code class="name flex">
+<span>def <span class="ident">normalize</span></span>(<span>x)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def normalize(x):
+    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))</code></pre>
 </details>
 </dd>
 </dl>
@@ -150,12 +128,14 @@ def plot_2d(grid2d, value=&#39;ecog&#39;):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="gridloc.ecog" href="index.html">gridloc.ecog</a></code></li>
+<li><code><a title="gridloc" href="index.html">gridloc</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridloc.ecog.plot_ecog.plot_2d" href="#gridloc.ecog.plot_ecog.plot_2d">plot_2d</a></code></li>
+<li><code><a title="gridloc.utils.be_nice" href="#gridloc.utils.be_nice">be_nice</a></code></li>
+<li><code><a title="gridloc.utils.match_labels" href="#gridloc.utils.match_labels">match_labels</a></code></li>
+<li><code><a title="gridloc.utils.normalize" href="#gridloc.utils.normalize">normalize</a></code></li>
 </ul>
 </li>
 </ul>

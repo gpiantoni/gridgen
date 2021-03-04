@@ -33,22 +33,28 @@ from numpy import array
 def read_matlab(mat_file):
     &#34;&#34;&#34;Read either matlab or json file with the same info.
 
-    Json file is useful when subjectInfo.mat was not created. So create a
-    subj_info.json file with the fields:
-        &#39;dims&#39;: [8, 16],
-        &#39;intElec&#39;: [3, 3],
-        &#39;hemiVect&#39;: {
-            &#39;hemi&#39;: &#39;r&#39;,
-            &#39;side&#39;: &#39;d&#39;,
-            },
-        &#39;gamma_mean&#39;: &#39;&#39;,
-        &#39;neuralAct&#39;: &#39;&#39;,
-        &#39;sfile&#39;: &#39;&#39;,
-        &#39;tfile&#39;: &#39;&#39;,
-        &#39;Tthreshold&#39;: 50,
-        &#39;VoxelDepth&#39;: 8,
-    &#34;&#34;&#34;
+    Notes
+    -----
+    1) If it&#39;s mat file with coordsPred, it returns only this variable and
+    discards the other ones.
 
+    2) it can also reas json files. This is useful when subjectInfo.mat was not
+    created or has an error. So create a subj_info.json file with the fields:
+    {
+        &#34;dims&#34;: [8, 16],
+        &#34;intElec&#34;: [3, 3],
+        &#34;hemiVect&#34;: {
+            &#34;hemi&#34;: &#34;r&#34;,
+            &#34;side&#34;: &#34;d&#34;
+            },
+        &#34;gamma_mean&#34;: &#34;&#34;,
+        &#34;neuralAct&#34;: &#34;&#34;,
+        &#34;sfile&#34;: &#34;&#34;,
+        &#34;tfile&#34;: &#34;&#34;,
+        &#34;Tthreshold&#34;: 50,
+        &#34;VoxelDepth&#34;: 8
+    }
+    &#34;&#34;&#34;
     if mat_file.suffix == &#39;.json&#39;:
         with mat_file.open() as f:
             out = {mat_file.stem: json_load(f)}
@@ -65,14 +71,20 @@ def read_matlab(mat_file):
         k = list(out)[0]
         val = out[k]
 
+    elif &#39;coordsPred&#39; in out:
+        return out[&#39;coordsPred&#39;]
+
     else:
         return out
 
     if k == &#39;subj_info&#39;:
         for field in (&#39;sfile&#39;, &#39;tfile&#39;, &#39;gamma_mean&#39;, &#39;neuralAct&#39;):
-            if val[field].startswith(&#39;.&#39;):
-                val[field] = &#39;.&#39; + val[field]
-            val[field] = (mat_file.parent / val[field])
+            if val[field] is None or val[field] == &#39;&#39;:
+                val[field] = None
+            else:
+                if val[field].startswith(&#39;.&#39;):
+                    val[field] = &#39;.&#39; + val[field]
+                val[field] = (mat_file.parent / val[field])
 
         val[&#39;dims&#39;] = array(val[&#39;dims&#39;]).astype(int)
 
@@ -153,20 +165,25 @@ which are still mat-objects</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Read either matlab or json file with the same info.</p>
-<p>Json file is useful when subjectInfo.mat was not created. So create a
-subj_info.json file with the fields:
-'dims': [8, 16],
-'intElec': [3, 3],
-'hemiVect': {
-'hemi': 'r',
-'side': 'd',
+<h2 id="notes">Notes</h2>
+<p>1) If it's mat file with coordsPred, it returns only this variable and
+discards the other ones.</p>
+<p>2) it can also reas json files. This is useful when subjectInfo.mat was not
+created or has an error. So create a subj_info.json file with the fields:
+{
+"dims": [8, 16],
+"intElec": [3, 3],
+"hemiVect": {
+"hemi": "r",
+"side": "d"
 },
-'gamma_mean': '',
-'neuralAct': '',
-'sfile': '',
-'tfile': '',
-'Tthreshold': 50,
-'VoxelDepth': 8,</p></div>
+"gamma_mean": "",
+"neuralAct": "",
+"sfile": "",
+"tfile": "",
+"Tthreshold": 50,
+"VoxelDepth": 8
+}</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -174,22 +191,28 @@ subj_info.json file with the fields:
 <pre><code class="python">def read_matlab(mat_file):
     &#34;&#34;&#34;Read either matlab or json file with the same info.
 
-    Json file is useful when subjectInfo.mat was not created. So create a
-    subj_info.json file with the fields:
-        &#39;dims&#39;: [8, 16],
-        &#39;intElec&#39;: [3, 3],
-        &#39;hemiVect&#39;: {
-            &#39;hemi&#39;: &#39;r&#39;,
-            &#39;side&#39;: &#39;d&#39;,
-            },
-        &#39;gamma_mean&#39;: &#39;&#39;,
-        &#39;neuralAct&#39;: &#39;&#39;,
-        &#39;sfile&#39;: &#39;&#39;,
-        &#39;tfile&#39;: &#39;&#39;,
-        &#39;Tthreshold&#39;: 50,
-        &#39;VoxelDepth&#39;: 8,
-    &#34;&#34;&#34;
+    Notes
+    -----
+    1) If it&#39;s mat file with coordsPred, it returns only this variable and
+    discards the other ones.
 
+    2) it can also reas json files. This is useful when subjectInfo.mat was not
+    created or has an error. So create a subj_info.json file with the fields:
+    {
+        &#34;dims&#34;: [8, 16],
+        &#34;intElec&#34;: [3, 3],
+        &#34;hemiVect&#34;: {
+            &#34;hemi&#34;: &#34;r&#34;,
+            &#34;side&#34;: &#34;d&#34;
+            },
+        &#34;gamma_mean&#34;: &#34;&#34;,
+        &#34;neuralAct&#34;: &#34;&#34;,
+        &#34;sfile&#34;: &#34;&#34;,
+        &#34;tfile&#34;: &#34;&#34;,
+        &#34;Tthreshold&#34;: 50,
+        &#34;VoxelDepth&#34;: 8
+    }
+    &#34;&#34;&#34;
     if mat_file.suffix == &#39;.json&#39;:
         with mat_file.open() as f:
             out = {mat_file.stem: json_load(f)}
@@ -206,14 +229,20 @@ subj_info.json file with the fields:
         k = list(out)[0]
         val = out[k]
 
+    elif &#39;coordsPred&#39; in out:
+        return out[&#39;coordsPred&#39;]
+
     else:
         return out
 
     if k == &#39;subj_info&#39;:
         for field in (&#39;sfile&#39;, &#39;tfile&#39;, &#39;gamma_mean&#39;, &#39;neuralAct&#39;):
-            if val[field].startswith(&#39;.&#39;):
-                val[field] = &#39;.&#39; + val[field]
-            val[field] = (mat_file.parent / val[field])
+            if val[field] is None or val[field] == &#39;&#39;:
+                val[field] = None
+            else:
+                if val[field].startswith(&#39;.&#39;):
+                    val[field] = &#39;.&#39; + val[field]
+                val[field] = (mat_file.parent / val[field])
 
         val[&#39;dims&#39;] = array(val[&#39;dims&#39;]).astype(int)
 

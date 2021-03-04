@@ -4,6 +4,9 @@ from plotly.offline import plot
 from textwrap import dedent
 import plotly.graph_objects as go
 
+from .io import export_grid
+from .utils import normalize
+
 
 AXIS = dict(
     title="",
@@ -13,8 +16,38 @@ AXIS = dict(
     showticklabels=False,
     showgrid=False,
     )
+MARKER_SIZE = 3
+
 
 lg = getLogger(__name__)
+
+
+def plot_results(model, pial, ras_shift, output):
+
+    grid_file = output / 'ecog'
+    fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f'Exported merged model to {grid_file}')
+
+    export_grid(model['grid'], ras_shift, grid_file)
+
+    grid_file = output / 'morphology'
+    fig0 = plot_2d(model['morpho'], 'morphology')
+    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'])
+    to_html([to_div(fig0), to_div(fig1)], grid_file)
+
+    if model['vasc'] is not None:
+        grid_file = output / 'vascular'
+        fig0 = plot_2d(model['vasc'], 'vasculature')
+        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'])
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f'Exported vascular to {grid_file}')
+
+        merged = (model['percent_vasc'] * normalize(model['vasc']['vasculature']) + (100 - model['percent_vasc']) * normalize(model['morpho']['morphology'])) / 100
+        grid_file = output / 'merged'
+        fig = plot_electrodes(pial, model['grid'], merged)
+        to_html([to_div(fig), ], grid_file)
+        lg.debug(f'Exported merged model to {grid_file}')
 
 
 def plot_electrodes(pial, grid, values=None):
@@ -24,14 +57,14 @@ def plot_electrodes(pial, grid, values=None):
 
     if values is None:
         marker = dict(
-            size=1,
+            size=MARKER_SIZE,
             color='black',
             )
 
     else:
         values = values.reshape(-1)
         marker = dict(
-            size=1,
+            size=MARKER_SIZE,
             color=values,
             colorscale='Hot',
             showscale=True,
@@ -94,6 +127,51 @@ def plot_electrodes(pial, grid, values=None):
                 ),
             ),
         )
+
+    return fig
+
+
+def plot_2d(grid2d, value='ecog'):
+    """Plot the 2D grid to a plotly html
+
+    Parameters
+    ----------
+    grid2d :
+    """
+    if not value == 'ecog':
+        reversescale = True
+    else:
+        reversescale = False
+
+    n_rows, n_cols = grid2d.shape
+    traces = [
+        go.Heatmap(
+            z=grid2d[value],
+            text=grid2d['label'],
+            hoverinfo='text+z',
+            colorscale='Hot',
+            reversescale=reversescale,
+            colorbar=dict(
+                title=dict(
+                    text='PSD (Hz<sup>-1</sup>)',
+                    )
+                ),
+            ),
+        ]
+    layout = go.Layout(
+        width=n_cols * 60,
+        height=n_rows * 60,
+        autosize=False,
+        xaxis=dict(
+            visible=False,
+            ),
+        yaxis=dict(
+            autorange='reversed',
+            visible=False,
+            ),
+        )
+
+    fig = go.Figure(traces, layout=layout)
 
     return fig
 

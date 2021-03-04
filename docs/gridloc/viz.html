@@ -30,6 +30,9 @@ from plotly.offline import plot
 from textwrap import dedent
 import plotly.graph_objects as go
 
+from .io import export_grid
+from .utils import normalize
+
 
 AXIS = dict(
     title=&#34;&#34;,
@@ -39,8 +42,38 @@ AXIS = dict(
     showticklabels=False,
     showgrid=False,
     )
+MARKER_SIZE = 3
+
 
 lg = getLogger(__name__)
+
+
+def plot_results(model, pial, ras_shift, output):
+
+    grid_file = output / &#39;ecog&#39;
+    fig = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;ecog&#39;][&#39;ecog&#39;])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
+
+    export_grid(model[&#39;grid&#39;], ras_shift, grid_file)
+
+    grid_file = output / &#39;morphology&#39;
+    fig0 = plot_2d(model[&#39;morpho&#39;], &#39;morphology&#39;)
+    fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;morpho&#39;][&#39;morphology&#39;])
+    to_html([to_div(fig0), to_div(fig1)], grid_file)
+
+    if model[&#39;vasc&#39;] is not None:
+        grid_file = output / &#39;vascular&#39;
+        fig0 = plot_2d(model[&#39;vasc&#39;], &#39;vasculature&#39;)
+        fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;vasc&#39;][&#39;vasculature&#39;])
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
+
+        merged = (model[&#39;percent_vasc&#39;] * normalize(model[&#39;vasc&#39;][&#39;vasculature&#39;]) + (100 - model[&#39;percent_vasc&#39;]) * normalize(model[&#39;morpho&#39;][&#39;morphology&#39;])) / 100
+        grid_file = output / &#39;merged&#39;
+        fig = plot_electrodes(pial, model[&#39;grid&#39;], merged)
+        to_html([to_div(fig), ], grid_file)
+        lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
 
 
 def plot_electrodes(pial, grid, values=None):
@@ -50,14 +83,14 @@ def plot_electrodes(pial, grid, values=None):
 
     if values is None:
         marker = dict(
-            size=1,
+            size=MARKER_SIZE,
             color=&#39;black&#39;,
             )
 
     else:
         values = values.reshape(-1)
         marker = dict(
-            size=1,
+            size=MARKER_SIZE,
             color=values,
             colorscale=&#39;Hot&#39;,
             showscale=True,
@@ -124,6 +157,51 @@ def plot_electrodes(pial, grid, values=None):
     return fig
 
 
+def plot_2d(grid2d, value=&#39;ecog&#39;):
+    &#34;&#34;&#34;Plot the 2D grid to a plotly html
+
+    Parameters
+    ----------
+    grid2d :
+    &#34;&#34;&#34;
+    if not value == &#39;ecog&#39;:
+        reversescale = True
+    else:
+        reversescale = False
+
+    n_rows, n_cols = grid2d.shape
+    traces = [
+        go.Heatmap(
+            z=grid2d[value],
+            text=grid2d[&#39;label&#39;],
+            hoverinfo=&#39;text+z&#39;,
+            colorscale=&#39;Hot&#39;,
+            reversescale=reversescale,
+            colorbar=dict(
+                title=dict(
+                    text=&#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;,
+                    )
+                ),
+            ),
+        ]
+    layout = go.Layout(
+        width=n_cols * 60,
+        height=n_rows * 60,
+        autosize=False,
+        xaxis=dict(
+            visible=False,
+            ),
+        yaxis=dict(
+            autorange=&#39;reversed&#39;,
+            visible=False,
+            ),
+        )
+
+    fig = go.Figure(traces, layout=layout)
+
+    return fig
+
+
 def to_div(fig):
     &#34;&#34;&#34;Convert plotly FIG into an HTML div
 
@@ -180,6 +258,62 @@ def to_html(divs, filename):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridloc.viz.plot_2d"><code class="name flex">
+<span>def <span class="ident">plot_2d</span></span>(<span>grid2d, value='ecog')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plot the 2D grid to a plotly html</p>
+<h2 id="parameters">Parameters</h2>
+<p>grid2d :</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_2d(grid2d, value=&#39;ecog&#39;):
+    &#34;&#34;&#34;Plot the 2D grid to a plotly html
+
+    Parameters
+    ----------
+    grid2d :
+    &#34;&#34;&#34;
+    if not value == &#39;ecog&#39;:
+        reversescale = True
+    else:
+        reversescale = False
+
+    n_rows, n_cols = grid2d.shape
+    traces = [
+        go.Heatmap(
+            z=grid2d[value],
+            text=grid2d[&#39;label&#39;],
+            hoverinfo=&#39;text+z&#39;,
+            colorscale=&#39;Hot&#39;,
+            reversescale=reversescale,
+            colorbar=dict(
+                title=dict(
+                    text=&#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;,
+                    )
+                ),
+            ),
+        ]
+    layout = go.Layout(
+        width=n_cols * 60,
+        height=n_rows * 60,
+        autosize=False,
+        xaxis=dict(
+            visible=False,
+            ),
+        yaxis=dict(
+            autorange=&#39;reversed&#39;,
+            visible=False,
+            ),
+        )
+
+    fig = go.Figure(traces, layout=layout)
+
+    return fig</code></pre>
+</details>
+</dd>
 <dt id="gridloc.viz.plot_electrodes"><code class="name flex">
 <span>def <span class="ident">plot_electrodes</span></span>(<span>pial, grid, values=None)</span>
 </code></dt>
@@ -196,14 +330,14 @@ def to_html(divs, filename):
 
     if values is None:
         marker = dict(
-            size=1,
+            size=MARKER_SIZE,
             color=&#39;black&#39;,
             )
 
     else:
         values = values.reshape(-1)
         marker = dict(
-            size=1,
+            size=MARKER_SIZE,
             color=values,
             colorscale=&#39;Hot&#39;,
             showscale=True,
@@ -268,6 +402,43 @@ def to_html(divs, filename):
         )
 
     return fig</code></pre>
+</details>
+</dd>
+<dt id="gridloc.viz.plot_results"><code class="name flex">
+<span>def <span class="ident">plot_results</span></span>(<span>model, pial, ras_shift, output)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_results(model, pial, ras_shift, output):
+
+    grid_file = output / &#39;ecog&#39;
+    fig = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;ecog&#39;][&#39;ecog&#39;])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
+
+    export_grid(model[&#39;grid&#39;], ras_shift, grid_file)
+
+    grid_file = output / &#39;morphology&#39;
+    fig0 = plot_2d(model[&#39;morpho&#39;], &#39;morphology&#39;)
+    fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;morpho&#39;][&#39;morphology&#39;])
+    to_html([to_div(fig0), to_div(fig1)], grid_file)
+
+    if model[&#39;vasc&#39;] is not None:
+        grid_file = output / &#39;vascular&#39;
+        fig0 = plot_2d(model[&#39;vasc&#39;], &#39;vasculature&#39;)
+        fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;vasc&#39;][&#39;vasculature&#39;])
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
+
+        merged = (model[&#39;percent_vasc&#39;] * normalize(model[&#39;vasc&#39;][&#39;vasculature&#39;]) + (100 - model[&#39;percent_vasc&#39;]) * normalize(model[&#39;morpho&#39;][&#39;morphology&#39;])) / 100
+        grid_file = output / &#39;merged&#39;
+        fig = plot_electrodes(pial, model[&#39;grid&#39;], merged)
+        to_html([to_div(fig), ], grid_file)
+        lg.debug(f&#39;Exported merged model to {grid_file}&#39;)</code></pre>
 </details>
 </dd>
 <dt id="gridloc.viz.to_div"><code class="name flex">
@@ -373,7 +544,9 @@ it exists</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridloc.viz.plot_2d" href="#gridloc.viz.plot_2d">plot_2d</a></code></li>
 <li><code><a title="gridloc.viz.plot_electrodes" href="#gridloc.viz.plot_electrodes">plot_electrodes</a></code></li>
+<li><code><a title="gridloc.viz.plot_results" href="#gridloc.viz.plot_results">plot_results</a></code></li>
 <li><code><a title="gridloc.viz.to_div" href="#gridloc.viz.to_div">to_div</a></code></li>
 <li><code><a title="gridloc.viz.to_html" href="#gridloc.viz.to_html">to_html</a></code></li>
 </ul>

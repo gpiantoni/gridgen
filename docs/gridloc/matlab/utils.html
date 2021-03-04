@@ -32,10 +32,14 @@ from os import nice
 from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
 from numpy.linalg import norm, solve
 from scipy.spatial.transform import Rotation
-from ..io import read_grid2d
+from logging import getLogger
+
 from .io import read_matlab
+from ..io import read_grid2d
 
 EPSILON = 1e-5
+
+lg = getLogger(__name__)
 
 
 def calcCoords(c, GridSteps, dims):
@@ -224,8 +228,8 @@ def get_initial_from_matlab(parameters):
 
     parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
 
-    print(&#39;initial&#39;)
-    print(parameters[&#39;fit&#39;][&#39;initial&#39;])
+    lg.info(&#39;initial location based on matlab gridInfo&#39;)
+    lg.info(parameters[&#39;fit&#39;][&#39;initial&#39;])
 
     return parameters</code></pre>
 </details>
@@ -364,8 +368,8 @@ size, respectively, of the mesh that's being calculated.</p></div>
 
     parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
 
-    print(&#39;initial&#39;)
-    print(parameters[&#39;fit&#39;][&#39;initial&#39;])
+    lg.info(&#39;initial location based on matlab gridInfo&#39;)
+    lg.info(parameters[&#39;fit&#39;][&#39;initial&#39;])
 
     return parameters</code></pre>
 </details>

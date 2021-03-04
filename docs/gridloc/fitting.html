@@ -27,10 +27,11 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Functions to compute the actual fitting of the grid onto the brain surface
 &#34;&#34;&#34;
-from scipy.optimize import basinhopping, brute, minimize
+from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
+from multiprocessing import Pool
 from numpy.linalg import norm
-from numpy import arange, array, nanmax, nanmin, argmin, intersect1d, corrcoef
+from numpy import arange, array, argmin, intersect1d, corrcoef
 from logging import getLogger
 from datetime import datetime
 from json import dump
@@ -44,16 +45,16 @@ from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
 from .construct import construct_grid
-from .io import read_surf, read_surface_ras_shift, export_grid, read_volume, write_tsv
-from .viz import to_html, to_div, plot_electrodes
-from .ecog.plot_ecog import plot_2d
+from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv
+from .viz import plot_results
+from .examine import measure_distances, measure_angles
+from .utils import be_nice, match_labels, normalize
 
 lg = getLogger(__name__)
 
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
-            angio_threshold=None, intermediate=None, correlation=None,
-            ranges={}, method=&#39;simplex&#39;):
+            angio_threshold=None, correlation=&#39;parametric&#39;, ranges={}, method=&#39;brute&#39;):
     &#34;&#34;&#34;Fit the brain activity onto the surface
 
     Parameters
@@ -73,64 +74,67 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         path to angiogram (in NIfTI format). Optional.
     angio_threshold : float
         value to threshold the angio_file. Optional.
-    intermediate : bool
-        whether to save the intermediate steps of the fitting procedure
     correlation : str
         &#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)
     method : str
-        &#39;simplex&#39;, &#39;hopping&#39;, &#39;brute&#39;
+        &#39;simplex&#39;, &#39;brute&#39;
     ranges : dict of lists
         keys are x-direction, y-direction, rotation
+
+    Returns
+    -------
+    instance of grid2d
+        grid2d with best positions
     &#34;&#34;&#34;
     start_time = datetime.now()
 
-    lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
-    dura = read_surf(dura_file)
-    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
-    pial = read_surf(pial_file, normals=False)
     ras_shift = read_surface_ras_shift(T1_file)
+    lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
+    dura = read_surf(dura_file, ras_shift=ras_shift)
+    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
+    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
 
     if angio_file is not None and angio_file:
         lg.debug(f&#39;Reading angiogram from {angio_file} and thresholding at {angio_threshold}&#39;)
         angio = read_volume(angio_file, angio_threshold)
-        angio[&#39;pos&#39;] -= ras_shift
     else:
         angio = None
 
     ref_label = initial[&#39;label&#39;]
     init_rot = initial[&#39;rotation&#39;]
     init_ras = array(initial[&#39;RAS&#39;])
-    init_vert = argmin(norm(dura[&#39;pos&#39;] + ras_shift - init_ras, axis=1))
-    vert_dist = norm(init_ras - ras_shift - dura[&#39;pos&#39;][init_vert])
+    init_vert = argmin(norm(dura[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - dura[&#39;pos&#39;][init_vert])
 
     lg.debug(f&#39;Target RAS: {init_ras}, vertex #{init_vert} RAS: {dura[&#34;pos&#34;][init_vert]} (distance = {vert_dist:0.3}mm)&#39;)
     lg.info(f&#39;Starting position for {ref_label} is vertex #{init_vert} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
-    if intermediate is not None and intermediate:
-        intermediate = output / &#39;steps&#39;
-        intermediate.mkdir(exist_ok=True)
+    # start position is init_vert, plus some rotation
+    init = array([0, 0, init_rot])
 
+    # make sure that the last point is included in the range
+    for k, v in ranges.items():
+        ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
+        ranges[k][1] += ranges[k][2]
+
+    # has to be a tuple
     minimizer_args = (
-        dura,
-        init_vert,
-        ref_label,
-        ecog,
-        pial,
-        angio,
-        intermediate,
-        correlation,
+        dura,  # 0
+        init_vert,  # 1
+        ref_label,  # 2
+        ecog,  # 3
+        pial,  # 4
+        angio,  # 5
+        correlation,  # 6
+        ranges,  # 7
         )
 
     if method == &#39;simplex&#39;:
-        m = fitting_simplex(minimizer_args, init_rot, ranges)
-        best_fit = m.x
-
-    elif method == &#39;hopping&#39;:
-        m = fitting_hopping(minimizer_args, init_rot)
+        m = fitting_simplex(corr_ecog_model, init, minimizer_args)
         best_fit = m.x
 
     elif method == &#39;brute&#39;:
-        m = fitting_brute(minimizer_args, init_rot, ranges)
+        m = fitting_brute(corr_ecog_model, init, minimizer_args)
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -139,44 +143,20 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     # create grid with best values
     x, y, rotation = best_fit
-    model = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    model = corr_ecog_model(best_fit, *minimizer_args[:-1], final=True)
     lg.info(f&#39;Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model[&#34;vert&#34;]: 6d}) = {model[&#34;cc&#34;]: 8.3f} (vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
 
-    output = output / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+    measure_distances(model[&#39;grid&#39;])
+    measure_angles(model[&#39;grid&#39;])
+
+    output = output / (&#39;bestfit_&#39; + method + &#39;_&#39; + correlation + &#39;_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
     output.mkdir(parents=True)
-
-    grid_file = output / &#39;ecog&#39;
-    fig = plot_electrodes(pial, model[&#39;grid&#39;], ecog[&#39;ecog&#39;])
-    to_html([to_div(fig), ], grid_file)
-    lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
-
-    grid_file = output / &#39;electrodes&#39;
-    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;] + ras_shift, grid_file)
-    lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)
-
-    grid_file = output / &#39;morphology&#39;
-    fig0 = plot_2d(model[&#39;morpho&#39;], &#39;morphology&#39;)
-    fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;morpho&#39;][&#39;morphology&#39;])
-    to_html([to_div(fig0), to_div(fig1)], grid_file)
-
-    if model[&#39;vasc&#39;] is not None:
-        grid_file = output / &#39;vascular&#39;
-        fig0 = plot_2d(model[&#39;vasc&#39;], &#39;vasculature&#39;)
-        fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;vasc&#39;][&#39;vasculature&#39;])
-        to_html([to_div(fig0), to_div(fig1)], grid_file)
-        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
-
-        merged = (model[&#39;percent_vasc&#39;] * normalize(model[&#39;vasc&#39;][&#39;vasculature&#39;]) + (100 - model[&#39;percent_vasc&#39;]) * normalize(model[&#39;morpho&#39;][&#39;morphology&#39;])) / 100
-        grid_file = output / &#39;merged&#39;
-        fig = plot_electrodes(pial, model[&#39;grid&#39;], merged)
-        to_html([to_div(fig), ], grid_file)
-        lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
 
     out = {
         &#39;ref_label&#39;: ref_label,
         &#39;surface&#39;: str(dura_file),
         &#39;vertex&#39;: int(model[&#39;vert&#39;]),
-        &#39;pos&#39;: list(dura[&#39;pos&#39;][model[&#39;vert&#39;], :] + ras_shift),
+        &#39;pos&#39;: list(dura[&#39;pos&#39;][model[&#39;vert&#39;], :]),
         &#39;normals&#39;: list(dura[&#39;pos_norm&#39;][model[&#39;vert&#39;], :]),
         &#39;rotation&#39;: rotation,
         &#39;percent_vasculature&#39;: model[&#39;percent_vasc&#39;],
@@ -187,17 +167,26 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     with results_file.open(&#39;w&#39;) as f:
         dump(out, f, indent=2)
 
+    grid_file = output / &#39;electrodes&#39;
+    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
+    lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)
+
+    plot_results(model, pial, ras_shift, output)
+    return model[&#39;grid&#39;]
+
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    intermediate=None, correlation=None, final=False):
+                    correlation=None, ranges=None, final=False):
     &#34;&#34;&#34;Main model to minimize
+
+    Parameters
+    ----------
+    ranges : None
+        ignored, but easier to pass when working with arguments
 
     &#34;&#34;&#34;
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    if not final:
-        lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = &#39;)
-
     grid = construct_grid(dura, start_vert, ref_label, ecog[&#39;label&#39;], rotation=rotation)
 
     morpho = compute_distance(grid, pial)
@@ -208,18 +197,15 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
 
     else:
         e, m = match_labels(ecog, morpho)
-        v = None
+        v = vasc = None
 
     i, cc = compare_models(e, m, v, correlation=correlation)
     if not final:
-        lg.debug(&#39; &#39; * 45 + f&#39;{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
-
-    if not final and intermediate is not None and intermediate:
-        grid_file = intermediate / f&#39;vert{start_vert}_rot{rotation:06.3f}&#39;
-        _export_results(grid_file, grid, morpho)
+        lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = {cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
     if final:
         return {
+            &#39;ecog&#39;: ecog,
             &#39;vert&#39;: start_vert,
             &#39;grid&#39;: grid,
             &#39;morpho&#39;: morpho,
@@ -274,46 +260,55 @@ def corrcoef_match(ecog, estimate, field=&#39;morphology&#39;):
     return corrcoef(a, b)[0, 1]
 
 
-def normalize(x):
-    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
+def fitting_brute(func, init, args):
+
+    # shift rotation by initial value
+    # for x and y, the default value MUST be zero, because we start at
+    # the reference vertex
+    rotation = args[7][&#39;rotation&#39;]
+    rotation[0] += init[2]
+    rotation[1] += init[2]
+
+    ranges = (
+        slice(*args[7][&#39;x&#39;]),
+        slice(*args[7][&#39;y&#39;]),
+        slice(*rotation),
+        )
+
+    if mkl is not None:
+        mkl.set_num_threads(2)
+
+    with Pool(initializer=be_nice) as p:
+        res = brute(
+            corr_ecog_model,
+            ranges,
+            args=args,
+            disp=True,
+            workers=p.map,
+            full_output=True,
+            finish=fitting_simplex,
+            )
+
+    return res
 
 
-def print_results(x0, res, accept):
-    lg.info(f&#39;Done: {x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}&#39;)
+def fitting_simplex(func, init, args):
+    lg.info(f&#39;Brute force results: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now refininig&#39;)
 
-
-def match_labels(ecog, *args):
-    &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
-    ecog, also getting rid of bad channels&#34;&#34;&#34;
-
-    good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
-    ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
-    a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
-    output = [a, ]
-
-    for estimate in args:
-        field = (set(estimate.dtype.names) - {&#39;label&#39;, }).pop()
-        estimate_id = intersect1d(estimate[&#39;label&#39;], good, return_indices=True)[1]
-        b = estimate[field].flatten(&#39;C&#39;)[estimate_id]
-        output.append(b)
-
-    return output
-
-
-def fitting_simplex(minimizer_args, rotation, ranges):
-
+    x, y, rotation = init
+    ranges = args[7]
     simplex = array([
-        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
-        [ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
-        [-ranges[&#39;x&#39;][0], ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
-        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation + ranges[&#39;rotation&#39;][0]],
+        [x - ranges[&#39;x&#39;][2] / 2, y - ranges[&#39;y&#39;][2] / 2, rotation - ranges[&#39;rotation&#39;][2] / 2],
+        [x + ranges[&#39;x&#39;][2] / 2, y - ranges[&#39;y&#39;][2] / 2, rotation - ranges[&#39;rotation&#39;][2] / 2],
+        [x - ranges[&#39;x&#39;][2] / 2, y + ranges[&#39;y&#39;][2] / 2, rotation - ranges[&#39;rotation&#39;][2] / 2],
+        [x - ranges[&#39;x&#39;][2] / 2, y - ranges[&#39;y&#39;][2] / 2, rotation + ranges[&#39;rotation&#39;][2] / 2],
         ])
 
     m = minimize(
-        corr_ecog_model,
-        array([0, 0, 0]),
+        func,
+        array([0, 0, 0]),  # ignored
         method=&#39;Nelder-Mead&#39;,
-        args=minimizer_args,
+        args=args,
         options=dict(
             maxiter=100,
             initial_simplex=simplex,
@@ -322,68 +317,7 @@ def fitting_simplex(minimizer_args, rotation, ranges):
             ),
         )
 
-    return m
-
-
-def fitting_hopping(minimizer_args, rotation):
-
-    res = basinhopping(
-        corr_ecog_model,
-        array([0, 0, rotation]),
-        niter=100,
-        T=0.5,
-        stepsize=5,
-        interval=10,
-        callback=print_results,
-        minimizer_kwargs=dict(
-            method=&#39;Nelder-Mead&#39;,
-            args=minimizer_args,
-            options=dict(
-                maxiter=10,
-                maxfev=10,
-                ),
-        )
-    )
-    return res
-
-
-def fitting_brute(minimizer_args, rotation, brute_ranges):
-
-    # make sure that the last point is included
-    for k, v in brute_ranges.items():
-        if len(brute_ranges[k]) == 2:
-            brute_ranges[k].append(1)
-        brute_ranges[k][1] += brute_ranges[k][2]
-
-    ranges = (
-        slice(*brute_ranges[&#39;x&#39;]),
-        slice(*brute_ranges[&#39;y&#39;]),
-        slice(*brute_ranges[&#39;rotation&#39;]),
-        )
-
-    if mkl is not None:
-        mkl.set_num_threads(2)
-
-    res = brute(
-        corr_ecog_model,
-        ranges,
-        args=minimizer_args,
-        disp=True,
-        workers=-1,
-        full_output=True,
-        finish=None,
-        )
-
-    return res
-
-
-def _export_results(grid_file, grid, morpho):
-
-    export_grid(grid[&#39;grid&#39;], grid_file)
-
-    image_file = grid_file.with_suffix(&#39;.html&#39;)
-    fig = plot_2d(morpho, &#39;morphology&#39;)
-    to_html([to_div(fig), ], image_file)</code></pre>
+    return m</code></pre>
 </details>
 </section>
 <section>
@@ -432,24 +366,31 @@ def _export_results(grid_file, grid, morpho):
 </details>
 </dd>
 <dt id="gridloc.fitting.corr_ecog_model"><code class="name flex">
-<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, dura, ref_vert, ref_label, ecog, pial, angio=None, intermediate=None, correlation=None, final=False)</span>
+<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, dura, ref_vert, ref_label, ecog, pial, angio=None, correlation=None, ranges=None, final=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Main model to minimize</p></div>
+<div class="desc"><p>Main model to minimize</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ranges</code></strong> :&ensp;<code>None</code></dt>
+<dd>ignored, but easier to pass when working with arguments</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    intermediate=None, correlation=None, final=False):
+                    correlation=None, ranges=None, final=False):
     &#34;&#34;&#34;Main model to minimize
+
+    Parameters
+    ----------
+    ranges : None
+        ignored, but easier to pass when working with arguments
 
     &#34;&#34;&#34;
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    if not final:
-        lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = &#39;)
-
     grid = construct_grid(dura, start_vert, ref_label, ecog[&#39;label&#39;], rotation=rotation)
 
     morpho = compute_distance(grid, pial)
@@ -460,18 +401,15 @@ def _export_results(grid_file, grid, morpho):
 
     else:
         e, m = match_labels(ecog, morpho)
-        v = None
+        v = vasc = None
 
     i, cc = compare_models(e, m, v, correlation=correlation)
     if not final:
-        lg.debug(&#39; &#39; * 45 + f&#39;{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
-
-    if not final and intermediate is not None and intermediate:
-        grid_file = intermediate / f&#39;vert{start_vert}_rot{rotation:06.3f}&#39;
-        _export_results(grid_file, grid, morpho)
+        lg.debug(f&#39;{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = {cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
     if final:
         return {
+            &#39;ecog&#39;: ecog,
             &#39;vert&#39;: start_vert,
             &#39;grid&#39;: grid,
             &#39;morpho&#39;: morpho,
@@ -507,7 +445,7 @@ def _export_results(grid_file, grid, morpho):
 </details>
 </dd>
 <dt id="gridloc.fitting.fitting"><code class="name flex">
-<span>def <span class="ident">fitting</span></span>(<span>T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None, angio_threshold=None, intermediate=None, correlation=None, ranges={}, method='simplex')</span>
+<span>def <span class="ident">fitting</span></span>(<span>T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None, angio_threshold=None, correlation='parametric', ranges={}, method='brute')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fit the brain activity onto the surface</p>
@@ -528,22 +466,24 @@ def _export_results(grid_file, grid, morpho):
 <dd>path to angiogram (in NIfTI format). Optional.</dd>
 <dt><strong><code>angio_threshold</code></strong> :&ensp;<code>float</code></dt>
 <dd>value to threshold the angio_file. Optional.</dd>
-<dt><strong><code>intermediate</code></strong> :&ensp;<code>bool</code></dt>
-<dd>whether to save the intermediate steps of the fitting procedure</dd>
 <dt><strong><code>correlation</code></strong> :&ensp;<code>str</code></dt>
 <dd>'parametric' (Pearson) or 'nonparametric' (rank)</dd>
 <dt><strong><code>method</code></strong> :&ensp;<code>str</code></dt>
-<dd>'simplex', 'hopping', 'brute'</dd>
+<dd>'simplex', 'brute'</dd>
 <dt><strong><code>ranges</code></strong> :&ensp;<code>dict</code> of <code>lists</code></dt>
 <dd>keys are x-direction, y-direction, rotation</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>instance</code> of <code>grid2d</code></dt>
+<dd>grid2d with best positions</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
-            angio_threshold=None, intermediate=None, correlation=None,
-            ranges={}, method=&#39;simplex&#39;):
+            angio_threshold=None, correlation=&#39;parametric&#39;, ranges={}, method=&#39;brute&#39;):
     &#34;&#34;&#34;Fit the brain activity onto the surface
 
     Parameters
@@ -563,64 +503,67 @@ def _export_results(grid_file, grid, morpho):
         path to angiogram (in NIfTI format). Optional.
     angio_threshold : float
         value to threshold the angio_file. Optional.
-    intermediate : bool
-        whether to save the intermediate steps of the fitting procedure
     correlation : str
         &#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)
     method : str
-        &#39;simplex&#39;, &#39;hopping&#39;, &#39;brute&#39;
+        &#39;simplex&#39;, &#39;brute&#39;
     ranges : dict of lists
         keys are x-direction, y-direction, rotation
+
+    Returns
+    -------
+    instance of grid2d
+        grid2d with best positions
     &#34;&#34;&#34;
     start_time = datetime.now()
 
-    lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
-    dura = read_surf(dura_file)
-    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
-    pial = read_surf(pial_file, normals=False)
     ras_shift = read_surface_ras_shift(T1_file)
+    lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
+    dura = read_surf(dura_file, ras_shift=ras_shift)
+    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
+    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
 
     if angio_file is not None and angio_file:
         lg.debug(f&#39;Reading angiogram from {angio_file} and thresholding at {angio_threshold}&#39;)
         angio = read_volume(angio_file, angio_threshold)
-        angio[&#39;pos&#39;] -= ras_shift
     else:
         angio = None
 
     ref_label = initial[&#39;label&#39;]
     init_rot = initial[&#39;rotation&#39;]
     init_ras = array(initial[&#39;RAS&#39;])
-    init_vert = argmin(norm(dura[&#39;pos&#39;] + ras_shift - init_ras, axis=1))
-    vert_dist = norm(init_ras - ras_shift - dura[&#39;pos&#39;][init_vert])
+    init_vert = argmin(norm(dura[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - dura[&#39;pos&#39;][init_vert])
 
     lg.debug(f&#39;Target RAS: {init_ras}, vertex #{init_vert} RAS: {dura[&#34;pos&#34;][init_vert]} (distance = {vert_dist:0.3}mm)&#39;)
     lg.info(f&#39;Starting position for {ref_label} is vertex #{init_vert} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
-    if intermediate is not None and intermediate:
-        intermediate = output / &#39;steps&#39;
-        intermediate.mkdir(exist_ok=True)
+    # start position is init_vert, plus some rotation
+    init = array([0, 0, init_rot])
 
+    # make sure that the last point is included in the range
+    for k, v in ranges.items():
+        ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
+        ranges[k][1] += ranges[k][2]
+
+    # has to be a tuple
     minimizer_args = (
-        dura,
-        init_vert,
-        ref_label,
-        ecog,
-        pial,
-        angio,
-        intermediate,
-        correlation,
+        dura,  # 0
+        init_vert,  # 1
+        ref_label,  # 2
+        ecog,  # 3
+        pial,  # 4
+        angio,  # 5
+        correlation,  # 6
+        ranges,  # 7
         )
 
     if method == &#39;simplex&#39;:
-        m = fitting_simplex(minimizer_args, init_rot, ranges)
-        best_fit = m.x
-
-    elif method == &#39;hopping&#39;:
-        m = fitting_hopping(minimizer_args, init_rot)
+        m = fitting_simplex(corr_ecog_model, init, minimizer_args)
         best_fit = m.x
 
     elif method == &#39;brute&#39;:
-        m = fitting_brute(minimizer_args, init_rot, ranges)
+        m = fitting_brute(corr_ecog_model, init, minimizer_args)
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -629,44 +572,20 @@ def _export_results(grid_file, grid, morpho):
 
     # create grid with best values
     x, y, rotation = best_fit
-    model = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    model = corr_ecog_model(best_fit, *minimizer_args[:-1], final=True)
     lg.info(f&#39;Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model[&#34;vert&#34;]: 6d}) = {model[&#34;cc&#34;]: 8.3f} (vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
 
-    output = output / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+    measure_distances(model[&#39;grid&#39;])
+    measure_angles(model[&#39;grid&#39;])
+
+    output = output / (&#39;bestfit_&#39; + method + &#39;_&#39; + correlation + &#39;_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
     output.mkdir(parents=True)
-
-    grid_file = output / &#39;ecog&#39;
-    fig = plot_electrodes(pial, model[&#39;grid&#39;], ecog[&#39;ecog&#39;])
-    to_html([to_div(fig), ], grid_file)
-    lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
-
-    grid_file = output / &#39;electrodes&#39;
-    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;] + ras_shift, grid_file)
-    lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)
-
-    grid_file = output / &#39;morphology&#39;
-    fig0 = plot_2d(model[&#39;morpho&#39;], &#39;morphology&#39;)
-    fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;morpho&#39;][&#39;morphology&#39;])
-    to_html([to_div(fig0), to_div(fig1)], grid_file)
-
-    if model[&#39;vasc&#39;] is not None:
-        grid_file = output / &#39;vascular&#39;
-        fig0 = plot_2d(model[&#39;vasc&#39;], &#39;vasculature&#39;)
-        fig1 = plot_electrodes(pial, model[&#39;grid&#39;], model[&#39;vasc&#39;][&#39;vasculature&#39;])
-        to_html([to_div(fig0), to_div(fig1)], grid_file)
-        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
-
-        merged = (model[&#39;percent_vasc&#39;] * normalize(model[&#39;vasc&#39;][&#39;vasculature&#39;]) + (100 - model[&#39;percent_vasc&#39;]) * normalize(model[&#39;morpho&#39;][&#39;morphology&#39;])) / 100
-        grid_file = output / &#39;merged&#39;
-        fig = plot_electrodes(pial, model[&#39;grid&#39;], merged)
-        to_html([to_div(fig), ], grid_file)
-        lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
 
     out = {
         &#39;ref_label&#39;: ref_label,
         &#39;surface&#39;: str(dura_file),
         &#39;vertex&#39;: int(model[&#39;vert&#39;]),
-        &#39;pos&#39;: list(dura[&#39;pos&#39;][model[&#39;vert&#39;], :] + ras_shift),
+        &#39;pos&#39;: list(dura[&#39;pos&#39;][model[&#39;vert&#39;], :]),
         &#39;normals&#39;: list(dura[&#39;pos_norm&#39;][model[&#39;vert&#39;], :]),
         &#39;rotation&#39;: rotation,
         &#39;percent_vasculature&#39;: model[&#39;percent_vasc&#39;],
@@ -675,11 +594,18 @@ def _export_results(grid_file, grid, morpho):
         }
     results_file = output / &#39;results.json&#39;
     with results_file.open(&#39;w&#39;) as f:
-        dump(out, f, indent=2)</code></pre>
+        dump(out, f, indent=2)
+
+    grid_file = output / &#39;electrodes&#39;
+    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
+    lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)
+
+    plot_results(model, pial, ras_shift, output)
+    return model[&#39;grid&#39;]</code></pre>
 </details>
 </dd>
 <dt id="gridloc.fitting.fitting_brute"><code class="name flex">
-<span>def <span class="ident">fitting_brute</span></span>(<span>minimizer_args, rotation, brute_ranges)</span>
+<span>def <span class="ident">fitting_brute</span></span>(<span>func, init, args)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -687,69 +613,40 @@ def _export_results(grid_file, grid, morpho):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fitting_brute(minimizer_args, rotation, brute_ranges):
+<pre><code class="python">def fitting_brute(func, init, args):
 
-    # make sure that the last point is included
-    for k, v in brute_ranges.items():
-        if len(brute_ranges[k]) == 2:
-            brute_ranges[k].append(1)
-        brute_ranges[k][1] += brute_ranges[k][2]
+    # shift rotation by initial value
+    # for x and y, the default value MUST be zero, because we start at
+    # the reference vertex
+    rotation = args[7][&#39;rotation&#39;]
+    rotation[0] += init[2]
+    rotation[1] += init[2]
 
     ranges = (
-        slice(*brute_ranges[&#39;x&#39;]),
-        slice(*brute_ranges[&#39;y&#39;]),
-        slice(*brute_ranges[&#39;rotation&#39;]),
+        slice(*args[7][&#39;x&#39;]),
+        slice(*args[7][&#39;y&#39;]),
+        slice(*rotation),
         )
 
     if mkl is not None:
         mkl.set_num_threads(2)
 
-    res = brute(
-        corr_ecog_model,
-        ranges,
-        args=minimizer_args,
-        disp=True,
-        workers=-1,
-        full_output=True,
-        finish=None,
-        )
+    with Pool(initializer=be_nice) as p:
+        res = brute(
+            corr_ecog_model,
+            ranges,
+            args=args,
+            disp=True,
+            workers=p.map,
+            full_output=True,
+            finish=fitting_simplex,
+            )
 
-    return res</code></pre>
-</details>
-</dd>
-<dt id="gridloc.fitting.fitting_hopping"><code class="name flex">
-<span>def <span class="ident">fitting_hopping</span></span>(<span>minimizer_args, rotation)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def fitting_hopping(minimizer_args, rotation):
-
-    res = basinhopping(
-        corr_ecog_model,
-        array([0, 0, rotation]),
-        niter=100,
-        T=0.5,
-        stepsize=5,
-        interval=10,
-        callback=print_results,
-        minimizer_kwargs=dict(
-            method=&#39;Nelder-Mead&#39;,
-            args=minimizer_args,
-            options=dict(
-                maxiter=10,
-                maxfev=10,
-                ),
-        )
-    )
     return res</code></pre>
 </details>
 </dd>
 <dt id="gridloc.fitting.fitting_simplex"><code class="name flex">
-<span>def <span class="ident">fitting_simplex</span></span>(<span>minimizer_args, rotation, ranges)</span>
+<span>def <span class="ident">fitting_simplex</span></span>(<span>func, init, args)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -757,20 +654,23 @@ def _export_results(grid_file, grid, morpho):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fitting_simplex(minimizer_args, rotation, ranges):
+<pre><code class="python">def fitting_simplex(func, init, args):
+    lg.info(f&#39;Brute force results: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now refininig&#39;)
 
+    x, y, rotation = init
+    ranges = args[7]
     simplex = array([
-        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
-        [ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
-        [-ranges[&#39;x&#39;][0], ranges[&#39;y&#39;][0], rotation - ranges[&#39;rotation&#39;][0]],
-        [-ranges[&#39;x&#39;][0], -ranges[&#39;y&#39;][0], rotation + ranges[&#39;rotation&#39;][0]],
+        [x - ranges[&#39;x&#39;][2] / 2, y - ranges[&#39;y&#39;][2] / 2, rotation - ranges[&#39;rotation&#39;][2] / 2],
+        [x + ranges[&#39;x&#39;][2] / 2, y - ranges[&#39;y&#39;][2] / 2, rotation - ranges[&#39;rotation&#39;][2] / 2],
+        [x - ranges[&#39;x&#39;][2] / 2, y + ranges[&#39;y&#39;][2] / 2, rotation - ranges[&#39;rotation&#39;][2] / 2],
+        [x - ranges[&#39;x&#39;][2] / 2, y - ranges[&#39;y&#39;][2] / 2, rotation + ranges[&#39;rotation&#39;][2] / 2],
         ])
 
     m = minimize(
-        corr_ecog_model,
-        array([0, 0, 0]),
+        func,
+        array([0, 0, 0]),  # ignored
         method=&#39;Nelder-Mead&#39;,
-        args=minimizer_args,
+        args=args,
         options=dict(
             maxiter=100,
             initial_simplex=simplex,
@@ -780,60 +680,6 @@ def _export_results(grid_file, grid, morpho):
         )
 
     return m</code></pre>
-</details>
-</dd>
-<dt id="gridloc.fitting.match_labels"><code class="name flex">
-<span>def <span class="ident">match_labels</span></span>(<span>ecog, *args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>make sure that that the values are in the same order as the labels in
-ecog, also getting rid of bad channels</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def match_labels(ecog, *args):
-    &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
-    ecog, also getting rid of bad channels&#34;&#34;&#34;
-
-    good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
-    ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
-    a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
-    output = [a, ]
-
-    for estimate in args:
-        field = (set(estimate.dtype.names) - {&#39;label&#39;, }).pop()
-        estimate_id = intersect1d(estimate[&#39;label&#39;], good, return_indices=True)[1]
-        b = estimate[field].flatten(&#39;C&#39;)[estimate_id]
-        output.append(b)
-
-    return output</code></pre>
-</details>
-</dd>
-<dt id="gridloc.fitting.normalize"><code class="name flex">
-<span>def <span class="ident">normalize</span></span>(<span>x)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def normalize(x):
-    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))</code></pre>
-</details>
-</dd>
-<dt id="gridloc.fitting.print_results"><code class="name flex">
-<span>def <span class="ident">print_results</span></span>(<span>x0, res, accept)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def print_results(x0, res, accept):
-    lg.info(f&#39;Done: {x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -859,11 +705,7 @@ ecog, also getting rid of bad channels</p></div>
 <li><code><a title="gridloc.fitting.corrcoef_match" href="#gridloc.fitting.corrcoef_match">corrcoef_match</a></code></li>
 <li><code><a title="gridloc.fitting.fitting" href="#gridloc.fitting.fitting">fitting</a></code></li>
 <li><code><a title="gridloc.fitting.fitting_brute" href="#gridloc.fitting.fitting_brute">fitting_brute</a></code></li>
-<li><code><a title="gridloc.fitting.fitting_hopping" href="#gridloc.fitting.fitting_hopping">fitting_hopping</a></code></li>
 <li><code><a title="gridloc.fitting.fitting_simplex" href="#gridloc.fitting.fitting_simplex">fitting_simplex</a></code></li>
-<li><code><a title="gridloc.fitting.match_labels" href="#gridloc.fitting.match_labels">match_labels</a></code></li>
-<li><code><a title="gridloc.fitting.normalize" href="#gridloc.fitting.normalize">normalize</a></code></li>
-<li><code><a title="gridloc.fitting.print_results" href="#gridloc.fitting.print_results">print_results</a></code></li>
 </ul>
 </li>
 </ul>

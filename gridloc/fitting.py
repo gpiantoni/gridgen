@@ -4,11 +4,10 @@ from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
 from multiprocessing import Pool
 from numpy.linalg import norm
-from numpy import arange, array, nanmax, nanmin, argmin, intersect1d, corrcoef
+from numpy import arange, array, argmin, intersect1d, corrcoef
 from logging import getLogger
 from datetime import datetime
 from json import dump
-from os import nice
 
 try:
     import mkl
@@ -19,10 +18,10 @@ from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
 from .construct import construct_grid
-from .io import read_surf, read_surface_ras_shift, export_grid, read_volume, write_tsv
-from .viz import to_html, to_div, plot_electrodes
-from .ecog.plot_ecog import plot_2d
+from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv
+from .viz import plot_results
 from .examine import measure_distances, measure_angles
+from .utils import be_nice, match_labels, normalize
 
 lg = getLogger(__name__)
 
@@ -120,40 +119,11 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     model = corr_ecog_model(best_fit, *minimizer_args[:-1], final=True)
     lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
 
-    output = output / ('bestfit_' + method + '_' + correlation + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
-    output.mkdir(parents=True)
-
-    grid_file = output / 'ecog'
-    fig = plot_electrodes(pial, model['grid'], ecog['ecog'])
-    to_html([to_div(fig), ], grid_file)
-    lg.debug(f'Exported merged model to {grid_file}')
-
     measure_distances(model['grid'])
     measure_angles(model['grid'])
 
-    grid_file = output / 'electrodes'
-    write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
-    lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
-
-    export_grid(model['grid'], ras_shift, grid_file)
-
-    grid_file = output / 'morphology'
-    fig0 = plot_2d(model['morpho'], 'morphology')
-    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'])
-    to_html([to_div(fig0), to_div(fig1)], grid_file)
-
-    if model['vasc'] is not None:
-        grid_file = output / 'vascular'
-        fig0 = plot_2d(model['vasc'], 'vasculature')
-        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'])
-        to_html([to_div(fig0), to_div(fig1)], grid_file)
-        lg.debug(f'Exported vascular to {grid_file}')
-
-        merged = (model['percent_vasc'] * normalize(model['vasc']['vasculature']) + (100 - model['percent_vasc']) * normalize(model['morpho']['morphology'])) / 100
-        grid_file = output / 'merged'
-        fig = plot_electrodes(pial, model['grid'], merged)
-        to_html([to_div(fig), ], grid_file)
-        lg.debug(f'Exported merged model to {grid_file}')
+    output = output / ('bestfit_' + method + '_' + correlation + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
+    output.mkdir(parents=True)
 
     out = {
         'ref_label': ref_label,
@@ -170,6 +140,11 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     with results_file.open('w') as f:
         dump(out, f, indent=2)
 
+    grid_file = output / 'electrodes'
+    write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
+    lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
+
+    plot_results(model, pial, ras_shift, output)
     return model['grid']
 
 
@@ -203,6 +178,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
 
     if final:
         return {
+            'ecog': ecog,
             'vert': start_vert,
             'grid': grid,
             'morpho': morpho,
@@ -255,28 +231,6 @@ def corrcoef_match(ecog, estimate, field='morphology'):
     b = estimate[field].flatten('C')[estimate_id]
 
     return corrcoef(a, b)[0, 1]
-
-
-def normalize(x):
-    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
-
-
-def match_labels(ecog, *args):
-    """make sure that that the values are in the same order as the labels in
-    ecog, also getting rid of bad channels"""
-
-    good = ecog['label'][ecog['good']]
-    ecog_id = intersect1d(ecog['label'], good, return_indices=True)[1]
-    a = ecog['ecog'].flatten('C')[ecog_id]
-    output = [a, ]
-
-    for estimate in args:
-        field = (set(estimate.dtype.names) - {'label', }).pop()
-        estimate_id = intersect1d(estimate['label'], good, return_indices=True)[1]
-        b = estimate[field].flatten('C')[estimate_id]
-        output.append(b)
-
-    return output
 
 
 def fitting_brute(func, init, args):
@@ -337,7 +291,3 @@ def fitting_simplex(func, init, args):
         )
 
     return m
-
-
-def be_nice():
-    nice(10)

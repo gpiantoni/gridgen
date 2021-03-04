@@ -25,14 +25,16 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from nibabel.freesurfer.io import write_geometry
-from numpy import reshape, corrcoef, isnan
+from numpy import reshape, corrcoef, isnan, mean, std
+from numpy.linalg import norm
 from logging import getLogger
 
 from .vascular import calculateAngioMap
-from ..io import read_ecog2d, read_surf, read_surface_ras_shift
+from ..io import read_ecog2d, read_surf, read_surface_ras_shift, read_elec
 from .io import read_matlab
 from .utils import get_initial_from_matlab
 from ..fitting import fitting
+from ..examine import measure_distances, measure_angles
 
 
 lg = getLogger(__name__)
@@ -46,8 +48,10 @@ def compare_to_matlab(parameters):
     cc = compare_ecog(parameters)
     lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
 
-    cc = compare_angio(parameters)
-    lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+    if False:
+        cc = compare_angio(parameters)
+        if cc is not None:
+            lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
 
     compare_fitting(parameters)
 
@@ -59,15 +63,27 @@ def compare_fitting(parameters):
     ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
     parameters = get_initial_from_matlab(parameters)
+    parameters[&#39;fit&#39;][&#39;method&#39;] = &#39;simplex&#39;
     parameters[&#39;fit&#39;][&#39;ranges&#39;] = {
-        &#39;x&#39;: [5, ],
-        &#39;y&#39;: [5, ],
-        &#39;rotation&#39;: [45, ],
+        &#39;x&#39;: [-10, 5, 10],
+        &#39;y&#39;: [-10, 5, 10],
+        &#39;rotation&#39;: [-45, 5, 45],
         }
-    fitting(
+    gridv2 = fitting(
         ecog=ecog2d,
         output=parameters[&#39;output_dir&#39;],
         **parameters[&#39;fit&#39;])
+
+    if parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;] is not None:
+        lg.info(&#39;Gridloc(matlab) best fit&#39;)
+        gridv1 = read_elec(
+            gridv2,
+            parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;])
+        measure_distances(gridv1)
+        measure_angles(gridv1)
+
+        distances = norm(gridv2[&#39;pos&#39;] - gridv1[&#39;pos&#39;], axis=2)
+        lg.info(f&#39;Distance between best fit in v1 and best fit in v2: {mean(distances):0.3f}mm (sd {std(distances):0.3f})&#39;)
 
 
 def convert_neuralAct_surfaces(parameters):
@@ -91,12 +107,11 @@ def compare_position_in_space(parameters):
     ras_shift = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
 
     for surf_type in [&#39;cortex&#39;, &#39;hullcortex&#39;, &#39;cortexcoarser&#39;]:
-        surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], normals=False)
-        surf[&#39;pos&#39;] -= ras_shift
+        surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], ras_shift=[0, 0, 0], normals=False)
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
 
     for surf_type in [&#39;dura_file&#39;, &#39;pial_file&#39;]:
-        surf = read_surf(parameters[&#39;fit&#39;][surf_type], normals=False)
+        surf = read_surf(parameters[&#39;fit&#39;][surf_type], ras_shift=ras_shift, normals=False)
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
 
 
@@ -124,7 +139,11 @@ def compare_ecog(parameters):
 
 def compare_angio(parameters):
     subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
-    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], normals=True)
+    if &#39;angiomap_file&#39; not in parameters[&#39;matlab&#39;][&#39;comparison&#39;] or parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;] is None:
+        lg.warning(&#39;No angiomap to compare to. Skipping&#39;)
+        return
+
+    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], ras_shift=[0, 0, 0], normals=True)
 
     [angioMap, normAngio] = calculateAngioMap(subjectInfo, subjectInfo[&#39;Tthreshold&#39;], subjectInfo[&#39;VoxelDepth&#39;], plotAngio=False, cortex=cortex)
     mat_angio = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;])
@@ -151,7 +170,11 @@ def compare_angio(parameters):
 </summary>
 <pre><code class="python">def compare_angio(parameters):
     subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
-    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], normals=True)
+    if &#39;angiomap_file&#39; not in parameters[&#39;matlab&#39;][&#39;comparison&#39;] or parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;] is None:
+        lg.warning(&#39;No angiomap to compare to. Skipping&#39;)
+        return
+
+    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], ras_shift=[0, 0, 0], normals=True)
 
     [angioMap, normAngio] = calculateAngioMap(subjectInfo, subjectInfo[&#39;Tthreshold&#39;], subjectInfo[&#39;VoxelDepth&#39;], plotAngio=False, cortex=cortex)
     mat_angio = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;])
@@ -207,15 +230,27 @@ def compare_angio(parameters):
     ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
     parameters = get_initial_from_matlab(parameters)
+    parameters[&#39;fit&#39;][&#39;method&#39;] = &#39;simplex&#39;
     parameters[&#39;fit&#39;][&#39;ranges&#39;] = {
-        &#39;x&#39;: [5, ],
-        &#39;y&#39;: [5, ],
-        &#39;rotation&#39;: [45, ],
+        &#39;x&#39;: [-10, 5, 10],
+        &#39;y&#39;: [-10, 5, 10],
+        &#39;rotation&#39;: [-45, 5, 45],
         }
-    fitting(
+    gridv2 = fitting(
         ecog=ecog2d,
         output=parameters[&#39;output_dir&#39;],
-        **parameters[&#39;fit&#39;])</code></pre>
+        **parameters[&#39;fit&#39;])
+
+    if parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;] is not None:
+        lg.info(&#39;Gridloc(matlab) best fit&#39;)
+        gridv1 = read_elec(
+            gridv2,
+            parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;])
+        measure_distances(gridv1)
+        measure_angles(gridv1)
+
+        distances = norm(gridv2[&#39;pos&#39;] - gridv1[&#39;pos&#39;], axis=2)
+        lg.info(f&#39;Distance between best fit in v1 and best fit in v2: {mean(distances):0.3f}mm (sd {std(distances):0.3f})&#39;)</code></pre>
 </details>
 </dd>
 <dt id="gridloc.matlab.pipeline.compare_position_in_space"><code class="name flex">
@@ -231,12 +266,11 @@ def compare_angio(parameters):
     ras_shift = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
 
     for surf_type in [&#39;cortex&#39;, &#39;hullcortex&#39;, &#39;cortexcoarser&#39;]:
-        surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], normals=False)
-        surf[&#39;pos&#39;] -= ras_shift
+        surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], ras_shift=[0, 0, 0], normals=False)
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
 
     for surf_type in [&#39;dura_file&#39;, &#39;pial_file&#39;]:
-        surf = read_surf(parameters[&#39;fit&#39;][surf_type], normals=False)
+        surf = read_surf(parameters[&#39;fit&#39;][surf_type], ras_shift=ras_shift, normals=False)
         print(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)</code></pre>
 </details>
 </dd>
@@ -257,8 +291,10 @@ def compare_angio(parameters):
     cc = compare_ecog(parameters)
     lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
 
-    cc = compare_angio(parameters)
-    lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+    if False:
+        cc = compare_angio(parameters)
+        if cc is not None:
+            lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
 
     compare_fitting(parameters)</code></pre>
 </details>
