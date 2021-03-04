@@ -37,9 +37,9 @@ def compare_fitting(parameters):
 
     parameters = get_initial_from_matlab(parameters)
     parameters['fit']['ranges'] = {
-        'x': [5, ],
-        'y': [5, ],
-        'rotation': [45, ],
+        'x': [-10, 2, 10],
+        'y': [-10, 2, 10],
+        'rotation': [-45, 5, 45],
         }
     gridv2 = fitting(
         ecog=ecog2d,
@@ -79,12 +79,11 @@ def compare_position_in_space(parameters):
     ras_shift = read_surface_ras_shift(parameters['fit']['T1_file'])
 
     for surf_type in ['cortex', 'hullcortex', 'cortexcoarser']:
-        surf = read_surf(parameters['matlab']['surfaces'][surf_type], normals=False)
-        surf['pos'] -= ras_shift
+        surf = read_surf(parameters['matlab']['surfaces'][surf_type], ras_shift=[0, 0, 0], normals=False)
         print(f'{surf_type: >20}: [{min(surf["pos"][:, 2]): 7.3f} - {max(surf["pos"][:, 2]): 7.3f}]')
 
     for surf_type in ['dura_file', 'pial_file']:
-        surf = read_surf(parameters['fit'][surf_type], normals=False)
+        surf = read_surf(parameters['fit'][surf_type], ras_shift=ras_shift, normals=False)
         print(f'{surf_type: >20}: [{min(surf["pos"][:, 2]): 7.3f} - {max(surf["pos"][:, 2]): 7.3f}]')
 
 
@@ -116,7 +115,7 @@ def compare_angio(parameters):
         lg.warning('No angiomap to compare to. Skipping')
         return
 
-    cortex = read_surf(parameters['matlab']['surfaces']['cortex'], normals=True)
+    cortex = read_surf(parameters['matlab']['surfaces']['cortex'], ras_shift=[0, 0, 0], normals=True)
 
     [angioMap, normAngio] = calculateAngioMap(subjectInfo, subjectInfo['Tthreshold'], subjectInfo['VoxelDepth'], plotAngio=False, cortex=cortex)
     mat_angio = read_matlab(parameters['matlab']['comparison']['angiomap_file'])

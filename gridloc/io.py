@@ -197,12 +197,14 @@ def _average_normal_per_vertex(i, tri_norm, tri):
     return tri_norm[(tri == i).any(axis=1)].mean(axis=0)
 
 
-def export_grid(grid, grid_file, format=None):
+def export_grid(grid, ras_shift, grid_file, format=None):
     """
     Parameters
     ----------
     grid : NxNx2x3 array
         grid with positions and normals
+    ras_shift : (3, ) array
+        shift between MRI volume and meshes
     grid_file : str
         file name to export to (extension is based on format)
     format : str
@@ -210,7 +212,7 @@ def export_grid(grid, grid_file, format=None):
 
     NOTES
     -----
-    Note that the positions are in the coordinate system of the meshes (not
+    Note that the positions should be in the coordinate system of the meshes (not
     the coordinate system of the volume MRI)
 
     TODO
@@ -220,11 +222,11 @@ def export_grid(grid, grid_file, format=None):
     """
     if format is None:
         for one_format in ('freeview', 'slicer'):
-            export_grid(grid, grid_file, one_format)
+            export_grid(grid, ras_shift, grid_file, one_format)
         return
 
     labels = grid['label'].reshape(-1)
-    positions = grid['pos'].reshape(-1, 3)
+    positions = grid['pos'].reshape(-1, 3) - ras_shift
     normals = grid['norm'].reshape(-1, 3)
 
     grid_file = Path(grid_file)

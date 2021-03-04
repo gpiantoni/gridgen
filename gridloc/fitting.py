@@ -1,6 +1,6 @@
 """Functions to compute the actual fitting of the grid onto the brain surface
 """
-from scipy.optimize import basinhopping, brute, minimize
+from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
 from numpy.linalg import norm
 from numpy import arange, array, nanmax, nanmin, argmin, intersect1d, corrcoef
@@ -26,7 +26,7 @@ lg = getLogger(__name__)
 
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
-            angio_threshold=None, correlation=None, ranges={}, method='simplex'):
+            angio_threshold=None, correlation='parametric', ranges={}, method='simplex'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -49,7 +49,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     correlation : str
         'parametric' (Pearson) or 'nonparametric' (rank)
     method : str
-        'simplex', 'hopping', 'brute'
+        'simplex', 'brute'
     ranges : dict of lists
         keys are x-direction, y-direction, rotation
 
@@ -81,26 +81,32 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     lg.debug(f'Target RAS: {init_ras}, vertex #{init_vert} RAS: {dura["pos"][init_vert]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {ref_label} is vertex #{init_vert} with orientation {initial["rotation"]}')
 
+    # start position is init_vert, plus some rotation
+    init = array([0, 0, init_rot])
+
+    # make sure that the last point is included in the range
+    for k, v in ranges.items():
+        ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
+        ranges[k][1] += ranges[k][2]
+
+    # has to be a tuple
     minimizer_args = (
-        dura,
-        init_vert,
-        ref_label,
-        ecog,
-        pial,
-        angio,
-        correlation,
+        dura,  # 0
+        init_vert,  # 1
+        ref_label,  # 2
+        ecog,  # 3
+        pial,  # 4
+        angio,  # 5
+        correlation,  # 6
+        ranges,  # 7
         )
 
     if method == 'simplex':
-        m = fitting_simplex(minimizer_args, init_rot, ranges)
-        best_fit = m.x
-
-    elif method == 'hopping':
-        m = fitting_hopping(minimizer_args, init_rot)
+        m = fitting_simplex(corr_ecog_model, init, minimizer_args)
         best_fit = m.x
 
     elif method == 'brute':
-        m = fitting_brute(minimizer_args, init_rot, ranges)
+        m = fitting_brute(corr_ecog_model, init, minimizer_args)
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -109,7 +115,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     # create grid with best values
     x, y, rotation = best_fit
-    model = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    model = corr_ecog_model(best_fit, *minimizer_args[:-1], final=True)
     lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
 
     output = output / ('bestfit_' + method + '_' + correlation + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
@@ -127,7 +133,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
 
-    export_grid(model['grid'], grid_file)
+    export_grid(model['grid'], ras_shift, grid_file)
 
     grid_file = output / 'morphology'
     fig0 = plot_2d(model['morpho'], 'morphology')
@@ -166,15 +172,17 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
-                    correlation=None, final=False):
+                    correlation=None, ranges=None, final=False):
     """Main model to minimize
+
+    Parameters
+    ----------
+    ranges : None
+        ignored, but easier to pass when working with arguments
 
     """
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    if not final:
-        lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = ')
-
     grid = construct_grid(dura, start_vert, ref_label, ecog['label'], rotation=rotation)
 
     morpho = compute_distance(grid, pial)
@@ -189,7 +197,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
 
     i, cc = compare_models(e, m, v, correlation=correlation)
     if not final:
-        lg.debug(' ' * 45 + f'{cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
+        lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = {cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
 
     if final:
         return {
@@ -251,10 +259,6 @@ def normalize(x):
     return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
 
 
-def print_results(x0, res, accept):
-    lg.info(f'Done: {x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° = {res: 8.3f}')
-
-
 def match_labels(ecog, *args):
     """make sure that that the values are in the same order as the labels in
     ecog, also getting rid of bad channels"""
@@ -273,20 +277,47 @@ def match_labels(ecog, *args):
     return output
 
 
-def fitting_simplex(minimizer_args, rotation, ranges):
+def fitting_brute(func, init, args):
 
+    ranges = (
+        slice(*args[7]['x']),
+        slice(*args[7]['y']),
+        slice(*args[7]['rotation']),
+        )
+
+    if mkl is not None:
+        mkl.set_num_threads(2)
+
+    res = brute(
+        corr_ecog_model,
+        ranges,
+        args=args,
+        disp=True,
+        workers=-1,
+        full_output=True,
+        finish=fitting_simplex,
+        )
+
+    return res
+
+
+def fitting_simplex(func, init, args):
+    lg.info(f'Brute force results: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now refininig')
+
+    x, y, rotation = init
+    ranges = args[7]
     simplex = array([
-        [-ranges['x'][0], -ranges['y'][0], rotation - ranges['rotation'][0]],
-        [ranges['x'][0], -ranges['y'][0], rotation - ranges['rotation'][0]],
-        [-ranges['x'][0], ranges['y'][0], rotation - ranges['rotation'][0]],
-        [-ranges['x'][0], -ranges['y'][0], rotation + ranges['rotation'][0]],
+        [x - ranges['x'][2] / 2, y - ranges['y'][2] / 2, rotation - ranges['rotation'][2] / 2],
+        [x + ranges['x'][2] / 2, y - ranges['y'][2] / 2, rotation - ranges['rotation'][2] / 2],
+        [x - ranges['x'][2] / 2, y + ranges['y'][2] / 2, rotation - ranges['rotation'][2] / 2],
+        [x - ranges['x'][2] / 2, y - ranges['y'][2] / 2, rotation + ranges['rotation'][2] / 2],
         ])
 
     m = minimize(
-        corr_ecog_model,
-        array([0, 0, 0]),
+        func,
+        array([0, 0, 0]),  # ignored
         method='Nelder-Mead',
-        args=minimizer_args,
+        args=args,
         options=dict(
             maxiter=100,
             initial_simplex=simplex,
@@ -296,55 +327,3 @@ def fitting_simplex(minimizer_args, rotation, ranges):
         )
 
     return m
-
-
-def fitting_hopping(minimizer_args, rotation):
-
-    res = basinhopping(
-        corr_ecog_model,
-        array([0, 0, rotation]),
-        niter=100,
-        T=0.5,
-        stepsize=5,
-        interval=10,
-        callback=print_results,
-        minimizer_kwargs=dict(
-            method='Nelder-Mead',
-            args=minimizer_args,
-            options=dict(
-                maxiter=10,
-                maxfev=10,
-                ),
-        )
-    )
-    return res
-
-
-def fitting_brute(minimizer_args, rotation, brute_ranges):
-
-    # make sure that the last point is included
-    for k, v in brute_ranges.items():
-        if len(brute_ranges[k]) == 2:
-            brute_ranges[k].append(1)
-        brute_ranges[k][1] += brute_ranges[k][2]
-
-    ranges = (
-        slice(*brute_ranges['x']),
-        slice(*brute_ranges['y']),
-        slice(*brute_ranges['rotation']),
-        )
-
-    if mkl is not None:
-        mkl.set_num_threads(2)
-
-    res = brute(
-        corr_ecog_model,
-        ranges,
-        args=minimizer_args,
-        disp=True,
-        workers=-1,
-        full_output=True,
-        finish=None,
-        )
-
-    return res

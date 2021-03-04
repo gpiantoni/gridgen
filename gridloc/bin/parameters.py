@@ -102,30 +102,30 @@ TEMPLATE = {
         "method": {
             "type": "str",
             "necessary": False,
-            "values": ['simplex', 'brute', 'hopping'],
+            "values": ['simplex', 'brute'],
             "help": "method to use",
         },
         "correlation": {
             "type": "str",
             "necessary": False,
-            "values": ['parametric', 'nonparameteric'],
+            "values": ['parametric', 'nonparametric'],
             "help": "'parametric' (Pearson) or 'nonparametric' (rank)",
         },
         "ranges": {
             "x": {
                 "type": "list",
                 "necessary": False,
-                "help": "Range in mm for x-direction. For simplex, it's a list of one float. For brute, it's [low, high] or [low, step, high]",
+                "help": "Range in mm for x-direction, in format [low, step, high]",
             },
             "y": {
                 "type": "list",
                 "necessary": False,
-                "help": "Range in mm for y-direction. For simplex, it's a list of one float. For brute, it's [low, high] or [low, step, high]",
+                "help": "Range in mm for y-direction, in format [low, step, high]",
             },
             "rotation": {
                 "type": "list",
                 "necessary": False,
-                "help": "Range in degrees for rotation. For simplex, it's a list of one float. For brute, it's [low, high] or [low, step, high]",
+                "help": "Range in degrees for rotation, in format [low, step, high]",
             },
         },
     },
