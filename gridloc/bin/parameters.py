@@ -102,8 +102,8 @@ TEMPLATE = {
         "method": {
             "type": "str",
             "necessary": False,
-            "values": ['simplex', 'brute'],
-            "help": "method to use",
+            "values": ['brute', 'simplex'],
+            "help": "method to use (brute includes simplex as a second step)",
         },
         "correlation": {
             "type": "str",
@@ -114,17 +114,17 @@ TEMPLATE = {
         "ranges": {
             "x": {
                 "type": "list",
-                "necessary": False,
+                "necessary": True,
                 "help": "Range in mm for x-direction, in format [low, step, high]",
             },
             "y": {
                 "type": "list",
-                "necessary": False,
+                "necessary": True,
                 "help": "Range in mm for y-direction, in format [low, step, high]",
             },
             "rotation": {
                 "type": "list",
-                "necessary": False,
+                "necessary": True,
                 "help": "Range in degrees for rotation, in format [low, step, high]",
             },
         },
@@ -147,6 +147,11 @@ TEMPLATE = {
                 'type': 'str',
                 'necessary': False,
                 'help': 'path to _angiomap.mat',
+                },
+            "model_file": {
+                'type': 'str',
+                'necessary': False,
+                'help': 'path to full models ("ROI")',
                 },
             "prediction_file": {
                 'type': 'str',

@@ -2,11 +2,13 @@
 """
 from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
+from multiprocessing import Pool
 from numpy.linalg import norm
 from numpy import arange, array, nanmax, nanmin, argmin, intersect1d, corrcoef
 from logging import getLogger
 from datetime import datetime
 from json import dump
+from os import nice
 
 try:
     import mkl
@@ -26,7 +28,7 @@ lg = getLogger(__name__)
 
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
-            angio_threshold=None, correlation='parametric', ranges={}, method='simplex'):
+            angio_threshold=None, correlation='parametric', ranges={}, method='brute'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -288,15 +290,16 @@ def fitting_brute(func, init, args):
     if mkl is not None:
         mkl.set_num_threads(2)
 
-    res = brute(
-        corr_ecog_model,
-        ranges,
-        args=args,
-        disp=True,
-        workers=-1,
-        full_output=True,
-        finish=fitting_simplex,
-        )
+    with Pool(initializer=be_nice) as p:
+        res = brute(
+            corr_ecog_model,
+            ranges,
+            args=args,
+            disp=True,
+            workers=p.map,
+            full_output=True,
+            finish=fitting_simplex,
+            )
 
     return res
 
@@ -327,3 +330,7 @@ def fitting_simplex(func, init, args):
         )
 
     return m
+
+
+def be_nice():
+    nice(10)

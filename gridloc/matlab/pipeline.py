@@ -22,9 +22,10 @@ def compare_to_matlab(parameters):
     cc = compare_ecog(parameters)
     lg.info(f'Correlation of gamma activity between matlab and python: {cc:0.3f}')
 
-    cc = compare_angio(parameters)
-    if cc is not None:
-        lg.info(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
+    if False:
+        cc = compare_angio(parameters)
+        if cc is not None:
+            lg.info(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
 
     compare_fitting(parameters)
 
@@ -36,6 +37,7 @@ def compare_fitting(parameters):
     ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
     parameters = get_initial_from_matlab(parameters)
+    parameters['fit']['method'] = 'brute'
     parameters['fit']['ranges'] = {
         'x': [-10, 2, 10],
         'y': [-10, 2, 10],
