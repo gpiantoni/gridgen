@@ -281,10 +281,17 @@ def match_labels(ecog, *args):
 
 def fitting_brute(func, init, args):
 
+    # shift rotation by initial value
+    # for x and y, the default value MUST be zero, because we start at
+    # the reference vertex
+    rotation = args[7]['rotation']
+    rotation[0] += init[2]
+    rotation[1] += init[2]
+
     ranges = (
         slice(*args[7]['x']),
         slice(*args[7]['y']),
-        slice(*args[7]['rotation']),
+        slice(*rotation),
         )
 
     if mkl is not None:
