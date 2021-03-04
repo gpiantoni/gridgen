@@ -293,7 +293,7 @@ def fitting_brute(func, init, args):
 
 
 def fitting_simplex(func, init, args):
-    lg.info(f&#39;Brute force results: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now refininig&#39;)
+    lg.info(f&#39;Starting point: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now applying simplex&#39;)
 
     x, y, rotation = init
     ranges = args[7]
@@ -655,7 +655,7 @@ def fitting_simplex(func, init, args):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fitting_simplex(func, init, args):
-    lg.info(f&#39;Brute force results: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now refininig&#39;)
+    lg.info(f&#39;Starting point: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now applying simplex&#39;)
 
     x, y, rotation = init
     ranges = args[7]
