@@ -35,7 +35,7 @@ from .io import read_matlab
 from .utils import get_initial_from_matlab
 from ..fitting import fitting
 from ..examine import measure_distances, measure_angles
-from .compat import projectElectrodes, createGrid
+from .compat import projectElectrodes, createGrid, projectToCoarser, calculateModel
 
 
 lg = getLogger(__name__)
@@ -176,8 +176,22 @@ def compare_values(parameters, m_out):
     lg.debug(&#39;Create Grid&#39;)
     ROI = createGrid(projectedROIpoints, rotation=None, turns=None, auxDims=subj_info[&#39;dims&#39;], subj_info=subj_info, hullcortex=hullcortex)
 
+    lg.debug(&#39;Project to Coarser&#39;)
+    cortexcoarser = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortexcoarser&#39;], [0, 0, 0], normals=True)
+    ROI = projectToCoarser(ROI, cortexcoarser)
+
+    if parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;] is None:
+        normAngio = None
+    else:
+        angiomat = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;])
+        normAngio = angiomat[&#39;normAngio&#39;]
+
+    lg.debug(&#39;Calculate model&#39;)
+    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], [0, 0, 0], normals=True)
+    ROI = calculateModel(subj_info, ROI, cortex, normAngio)
+
     lg.debug(&#39;Writing to file&#39;)
-    for k in (&#39;electrodes&#39;, &#39;normal&#39;, &#39;trielectrodes&#39;):
+    for k in ROI[0][0].keys():
         vals = compare_keys(ROI, roimat, k)
         savetxt(str(m_out / f&#39;{k}.tsv&#39;), vals, fmt=&#39;%.3f&#39;, delimiter=&#39;\t&#39;)
 
@@ -187,9 +201,13 @@ def compare_keys(ROI, roimat, key):
     for i0 in range(len(ROI)):
         v1 = []
         for i1 in range(len(ROI[i0])):
-            v1.append(
-                norm(ROI[i0][i1][&#39;normal&#39;] - roimat[&#39;coords&#39;][i0][&#39;normal&#39;][i1], axis=1).max()
-            )
+
+            if key in (&#39;McM&#39;, &#39;MvM&#39;, &#39;weights&#39;):
+                out = (ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1]).max()
+            else:
+                out = norm(ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1], axis=1).max()
+
+            v1.append(out)
         v0.append(v1)
     return array(v0)</code></pre>
 </details>
@@ -309,9 +327,13 @@ def compare_keys(ROI, roimat, key):
     for i0 in range(len(ROI)):
         v1 = []
         for i1 in range(len(ROI[i0])):
-            v1.append(
-                norm(ROI[i0][i1][&#39;normal&#39;] - roimat[&#39;coords&#39;][i0][&#39;normal&#39;][i1], axis=1).max()
-            )
+
+            if key in (&#39;McM&#39;, &#39;MvM&#39;, &#39;weights&#39;):
+                out = (ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1]).max()
+            else:
+                out = norm(ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1], axis=1).max()
+
+            v1.append(out)
         v0.append(v1)
     return array(v0)</code></pre>
 </details>
@@ -394,8 +416,22 @@ def compare_keys(ROI, roimat, key):
     lg.debug(&#39;Create Grid&#39;)
     ROI = createGrid(projectedROIpoints, rotation=None, turns=None, auxDims=subj_info[&#39;dims&#39;], subj_info=subj_info, hullcortex=hullcortex)
 
+    lg.debug(&#39;Project to Coarser&#39;)
+    cortexcoarser = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortexcoarser&#39;], [0, 0, 0], normals=True)
+    ROI = projectToCoarser(ROI, cortexcoarser)
+
+    if parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;] is None:
+        normAngio = None
+    else:
+        angiomat = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;])
+        normAngio = angiomat[&#39;normAngio&#39;]
+
+    lg.debug(&#39;Calculate model&#39;)
+    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], [0, 0, 0], normals=True)
+    ROI = calculateModel(subj_info, ROI, cortex, normAngio)
+
     lg.debug(&#39;Writing to file&#39;)
-    for k in (&#39;electrodes&#39;, &#39;normal&#39;, &#39;trielectrodes&#39;):
+    for k in ROI[0][0].keys():
         vals = compare_keys(ROI, roimat, k)
         savetxt(str(m_out / f&#39;{k}.tsv&#39;), vals, fmt=&#39;%.3f&#39;, delimiter=&#39;\t&#39;)</code></pre>
 </details>

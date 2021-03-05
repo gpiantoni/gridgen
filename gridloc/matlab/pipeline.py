@@ -9,7 +9,7 @@ from .io import read_matlab
 from .utils import get_initial_from_matlab
 from ..fitting import fitting
 from ..examine import measure_distances, measure_angles
-from .compat import projectElectrodes, createGrid
+from .compat import projectElectrodes, createGrid, projectToCoarser, calculateModel
 
 
 lg = getLogger(__name__)
@@ -150,8 +150,22 @@ def compare_values(parameters, m_out):
     lg.debug('Create Grid')
     ROI = createGrid(projectedROIpoints, rotation=None, turns=None, auxDims=subj_info['dims'], subj_info=subj_info, hullcortex=hullcortex)
 
+    lg.debug('Project to Coarser')
+    cortexcoarser = read_surf(parameters['matlab']['surfaces']['cortexcoarser'], [0, 0, 0], normals=True)
+    ROI = projectToCoarser(ROI, cortexcoarser)
+
+    if parameters['matlab']['comparison']['angiomap_file'] is None:
+        normAngio = None
+    else:
+        angiomat = read_matlab(parameters['matlab']['comparison']['angiomap_file'])
+        normAngio = angiomat['normAngio']
+
+    lg.debug('Calculate model')
+    cortex = read_surf(parameters['matlab']['surfaces']['cortex'], [0, 0, 0], normals=True)
+    ROI = calculateModel(subj_info, ROI, cortex, normAngio)
+
     lg.debug('Writing to file')
-    for k in ('electrodes', 'normal', 'trielectrodes'):
+    for k in ROI[0][0].keys():
         vals = compare_keys(ROI, roimat, k)
         savetxt(str(m_out / f'{k}.tsv'), vals, fmt='%.3f', delimiter='\t')
 
@@ -161,8 +175,12 @@ def compare_keys(ROI, roimat, key):
     for i0 in range(len(ROI)):
         v1 = []
         for i1 in range(len(ROI[i0])):
-            v1.append(
-                norm(ROI[i0][i1]['normal'] - roimat['coords'][i0]['normal'][i1], axis=1).max()
-            )
+
+            if key in ('McM', 'MvM', 'weights'):
+                out = (ROI[i0][i1][key] - roimat['coords'][i0][key][i1]).max()
+            else:
+                out = norm(ROI[i0][i1][key] - roimat['coords'][i0][key][i1], axis=1).max()
+
+            v1.append(out)
         v0.append(v1)
     return array(v0)
