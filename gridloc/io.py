@@ -31,6 +31,7 @@ from nibabel.affines import apply_affine
 
 from logging import getLogger
 from .construct import make_grid
+from .matlab.io import read_matlab
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
@@ -99,12 +100,14 @@ def write_ecog2d(ecog_file, ecog2d):
 
 
 def read_ecog2d(ecog_file, grid_file):
-    """Read the values of ECoG analysis to file
+    """Read the values of ECoG analysis
 
     Parameters
     ----------
     ecog_file : Path
-        file to write to (preferred extension .csv)
+        file with ecog data (in 2d)
+    grid_file : Path
+        file with labels (in 2d)
 
     Returns
     -------
@@ -122,6 +125,37 @@ def read_ecog2d(ecog_file, grid_file):
     ecog_on_grid['ecog'] = ecog
     ecog_on_grid['good'] = ~isnan(ecog)
     ecog_on_grid['label'] = read_grid2d(grid_file)['label']
+
+    return ecog_on_grid
+
+
+def read_ecog2d_matlab(gamma_file, grid_file):
+    """Read the values of ECoG analysis
+
+    Parameters
+    ----------
+    ecog_file : Path
+        file with ecog data from matlab ('gamma mean')
+    grid_file : Path
+        file with labels (in 2d)
+
+    Returns
+    -------
+    ecog2d : 2d ndarray
+        ecog (n_rows, n_columns) with fields (label, ecog)
+    """
+    grid2d = read_grid2d(grid_file)
+    gamma_mean = read_matlab(gamma_file)
+
+    d_ = dtype([
+        ('label', '<U256'),
+        ('ecog', 'f8'),
+        ('good', 'bool'),
+        ])
+    ecog_on_grid = zeros(grid2d.shape, dtype=d_)
+    ecog_on_grid['label'] = grid2d['label']
+    ecog_on_grid['ecog'] = gamma_mean.reshape(grid2d.shape, order='F')
+    ecog_on_grid['good'] = ~isnan(ecog_on_grid['ecog'])
 
     return ecog_on_grid
 

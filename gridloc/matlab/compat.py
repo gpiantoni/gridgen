@@ -1,15 +1,17 @@
 """The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility"""
 
-from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate, intersect1d, corrcoef
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
-from ..utils import be_nice
+from ..utils import be_nice, normalize
 
+from .io import read_matlab
+from ..io import read_ecog2d_matlab
 from ..geometry import calc_plane_to_axis
 from ..construct import make_grid_with_labels
 

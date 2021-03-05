@@ -8,7 +8,7 @@ from numpy import set_printoptions
 
 from .parameters import convert_to_path, TEMPLATE, prepare_template, help_template, validate_template
 from ..fitting import fitting
-from ..matlab.pipeline import compare_to_matlab
+from ..matlab.comparison import compare_to_matlab
 from ..viz import to_html, to_div, plot_2d
 from ..io import (
     read_grid2d,
