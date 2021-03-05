@@ -180,7 +180,7 @@ def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
     return coords_Tangent
 
 
-def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None):
+def createGrid(sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None):
     &#34;&#34;&#34;Create GRID per ROI point and project on cortex
 
     Parameters
@@ -198,21 +198,25 @@ def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, 
     hullcortex : dict with &#39;pos&#39; and &#39;tri&#39;
         hull cortex
     &#34;&#34;&#34;
-    hemi = subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;]
+    hemivect = subj_info[&#39;hemiVect&#39;]
     intElec = subj_info[&#39;intElec&#39;]
-    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemivect=hemivect, hullcortex=hullcortex)
     with Pool(initializer=be_nice) as p:
         ROI = p.map(f, range(sub[&#39;electrodes&#39;].shape[0]))
 
     return ROI
 
 
-def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi, hullcortex):
+def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemivect, hullcortex):
     ROI_pos = sub[&#39;trielectrodes&#39;][roi_punt, :]
     ROI_norm = sub[&#39;normal&#39;][roi_punt, :]
 
+    # swap orientation when on the side
+    if hemivect[&#39;side&#39;] in (&#39;r&#39;, &#39;l&#39;):
+        auxDims = auxDims[1], auxDims[0]
+
     twoDgridElectrodes = calcCoords(ROI_pos, intElec, auxDims)
-    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemi)
+    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemivect[&#39;hemi&#39;])
 
     normNormals = ROI_norm / norm(ROI_norm)
 
@@ -423,7 +427,7 @@ Cortex is only needed when using normAngio</p></div>
 </details>
 </dd>
 <dt id="gridloc.matlab.compat.createGrid"><code class="name flex">
-<span>def <span class="ident">createGrid</span></span>(<span>sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None)</span>
+<span>def <span class="ident">createGrid</span></span>(<span>sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create GRID per ROI point and project on cortex</p>
@@ -446,7 +450,7 @@ Cortex is only needed when using normAngio</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None):
+<pre><code class="python">def createGrid(sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None):
     &#34;&#34;&#34;Create GRID per ROI point and project on cortex
 
     Parameters
@@ -464,9 +468,9 @@ Cortex is only needed when using normAngio</p></div>
     hullcortex : dict with &#39;pos&#39; and &#39;tri&#39;
         hull cortex
     &#34;&#34;&#34;
-    hemi = subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;]
+    hemivect = subj_info[&#39;hemiVect&#39;]
     intElec = subj_info[&#39;intElec&#39;]
-    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemivect=hemivect, hullcortex=hullcortex)
     with Pool(initializer=be_nice) as p:
         ROI = p.map(f, range(sub[&#39;electrodes&#39;].shape[0]))
 
@@ -474,7 +478,7 @@ Cortex is only needed when using normAngio</p></div>
 </details>
 </dd>
 <dt id="gridloc.matlab.compat.createGrid_per_point"><code class="name flex">
-<span>def <span class="ident">createGrid_per_point</span></span>(<span>roi_punt, sub, intElec, auxDims, hemi, hullcortex)</span>
+<span>def <span class="ident">createGrid_per_point</span></span>(<span>roi_punt, sub, intElec, auxDims, hemivect, hullcortex)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -482,12 +486,16 @@ Cortex is only needed when using normAngio</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi, hullcortex):
+<pre><code class="python">def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemivect, hullcortex):
     ROI_pos = sub[&#39;trielectrodes&#39;][roi_punt, :]
     ROI_norm = sub[&#39;normal&#39;][roi_punt, :]
 
+    # swap orientation when on the side
+    if hemivect[&#39;side&#39;] in (&#39;r&#39;, &#39;l&#39;):
+        auxDims = auxDims[1], auxDims[0]
+
     twoDgridElectrodes = calcCoords(ROI_pos, intElec, auxDims)
-    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemi)
+    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemivect[&#39;hemi&#39;])
 
     normNormals = ROI_norm / norm(ROI_norm)
 

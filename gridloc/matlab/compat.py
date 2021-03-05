@@ -151,7 +151,7 @@ def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
     return coords_Tangent
 
 
-def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, hullcortex=None):
+def createGrid(sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None):
     """Create GRID per ROI point and project on cortex
 
     Parameters
@@ -169,21 +169,25 @@ def createGrid(sub, rotation=None, turns=None, auxDims=(8, 16), subj_info=None, 
     hullcortex : dict with 'pos' and 'tri'
         hull cortex
     """
-    hemi = subj_info['hemiVect']['hemi']
+    hemivect = subj_info['hemiVect']
     intElec = subj_info['intElec']
-    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemi=hemi, hullcortex=hullcortex)
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemivect=hemivect, hullcortex=hullcortex)
     with Pool(initializer=be_nice) as p:
         ROI = p.map(f, range(sub['electrodes'].shape[0]))
 
     return ROI
 
 
-def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemi, hullcortex):
+def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemivect, hullcortex):
     ROI_pos = sub['trielectrodes'][roi_punt, :]
     ROI_norm = sub['normal'][roi_punt, :]
 
+    # swap orientation when on the side
+    if hemivect['side'] in ('r', 'l'):
+        auxDims = auxDims[1], auxDims[0]
+
     twoDgridElectrodes = calcCoords(ROI_pos, intElec, auxDims)
-    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemi)
+    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemivect['hemi'])
 
     normNormals = ROI_norm / norm(ROI_norm)
 

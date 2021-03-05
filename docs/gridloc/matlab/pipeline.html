@@ -25,7 +25,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from nibabel.freesurfer.io import write_geometry
-from numpy import reshape, corrcoef, isnan, mean, std, savetxt, array
+from numpy import reshape, corrcoef, isnan, mean, std, savetxt, array, atleast_1d
 from numpy.linalg import norm
 from logging import getLogger
 
@@ -53,11 +53,11 @@ def compare_to_matlab(parameters):
 
     cc = compare_ecog(parameters)
     lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
-    savetxt(str(m_out / &#39;gamma.txt&#39;), cc, fmt=&#39;%.3f&#39;)
+    savetxt(str(m_out / &#39;gamma.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
 
     cc = compare_angio(parameters)
     if cc is not None:
-        savetxt(str(m_out / &#39;angio.txt&#39;), cc, fmt=&#39;%.3f&#39;)
+        savetxt(str(m_out / &#39;angio.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
         lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
 
     compare_fitting(parameters)
@@ -359,11 +359,11 @@ def compare_keys(ROI, roimat, key):
 
     cc = compare_ecog(parameters)
     lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
-    savetxt(str(m_out / &#39;gamma.txt&#39;), cc, fmt=&#39;%.3f&#39;)
+    savetxt(str(m_out / &#39;gamma.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
 
     cc = compare_angio(parameters)
     if cc is not None:
-        savetxt(str(m_out / &#39;angio.txt&#39;), cc, fmt=&#39;%.3f&#39;)
+        savetxt(str(m_out / &#39;angio.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
         lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
 
     compare_fitting(parameters)</code></pre>

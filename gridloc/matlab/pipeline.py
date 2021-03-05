@@ -1,5 +1,5 @@
 from nibabel.freesurfer.io import write_geometry
-from numpy import reshape, corrcoef, isnan, mean, std, savetxt, array
+from numpy import reshape, corrcoef, isnan, mean, std, savetxt, array, atleast_1d
 from numpy.linalg import norm
 from logging import getLogger
 
@@ -27,11 +27,11 @@ def compare_to_matlab(parameters):
 
     cc = compare_ecog(parameters)
     lg.info(f'Correlation of gamma activity between matlab and python: {cc:0.3f}')
-    savetxt(str(m_out / 'gamma.txt'), cc, fmt='%.3f')
+    savetxt(str(m_out / 'gamma.txt'), atleast_1d(cc), fmt='%.3f')
 
     cc = compare_angio(parameters)
     if cc is not None:
-        savetxt(str(m_out / 'angio.txt'), cc, fmt='%.3f')
+        savetxt(str(m_out / 'angio.txt'), atleast_1d(cc), fmt='%.3f')
         lg.info(f'Correlation of angiogram projection between matlab and python: {cc:0.3f}')
 
     compare_fitting(parameters)
