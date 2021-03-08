@@ -31,7 +31,6 @@ from nibabel.affines import apply_affine
 
 from logging import getLogger
 from .construct import make_grid
-from .matlab.io import read_matlab
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
@@ -144,6 +143,8 @@ def read_ecog2d_matlab(gamma_file, grid_file):
     ecog2d : 2d ndarray
         ecog (n_rows, n_columns) with fields (label, ecog)
     """
+    from .matlab.io import read_matlab
+
     grid2d = read_grid2d(grid_file)
     gamma_mean = read_matlab(gamma_file)
 

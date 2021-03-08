@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gridloc.matlab.geometry API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gridloc.matlab.geometry</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where, ones
+from numpy.linalg import norm
+
+EPSILON = 1e-5
+
+
+def project_to_cortex(surf, point, normal, sorted_triangles=None):
+    &#34;&#34;&#34;Project a point (electrode) onto the triangulated mesh (surface).
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    point : (3, ) array
+        x, y, z coordinates of the electrodes
+    normal : (3, ) array
+        normal of the electrodes
+    sorted_triangles : (n, ) array
+        indices of triangles to select (order is important). If you pass this
+        parameters, it will return the first triangle which is intersected by
+        the line
+
+    Returns
+    -------
+    int
+        distance between surface and electrode
+    array (3, )
+        projected position onto the surface
+
+
+    Notes
+    -----
+    Returns NaN values when there is no intersection possible to the cortex.
+    &#34;&#34;&#34;
+    if sorted_triangles is None:
+        vertices = surf[&#39;tri&#39;]
+    else:
+        vertices = surf[&#39;tri&#39;][sorted_triangles]
+
+    normal = normal / norm(normal)
+    t = intersect_ray_triangle(
+        surf[&#39;pos&#39;][vertices][:, 0, :],
+        surf[&#39;pos&#39;][vertices][:, 1, :],
+        surf[&#39;pos&#39;][vertices][:, 2, :],
+        point,
+        normal,
+        line=True)
+
+    if isnan(t).all():
+        return NaN, array([NaN, NaN, NaN])
+
+    if sorted_triangles is None:
+        i = nanargmin(abs(t))
+    else:
+        i = where(~isnan(t))[0][0]
+    projected_point = point + normal * t[i]
+
+    return t[i], projected_point
+
+
+def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
+    &#34;&#34;&#34;Implementation of the Möller-Trumbore algorithm to detect ray-triangle
+    intersection.
+
+
+    Parameters
+    ----------
+    vertex0 : (n, 3) array
+        the first vertex for all the triangles of the mesh
+    vertex1 : (n, 3) array
+        the second vertex for all the triangles of the mesh
+    vertex2 : (n, 3) array
+        the third vertex for all the triangles of the mesh
+    rayOrigin : (3, ) array
+        start position of the ray
+    rayVector : (3, ) array
+        direction of the ray vector
+    line : bool
+        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+        if True, it detects intersection in both direction (treated as a line
+        with two directions)
+
+    Returns
+    -------
+    array (n, )
+        distance of each triangle to the point of interest. It&#39;s NaN if 1.
+        the direction of the point is parallel to the triangle, 2. the projected
+        point is outside the triangle, 3. the direction is in the opposite direction
+        to the triangle (so, this is a ray, not a line).
+
+    Notes
+    -----
+    Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+    &#34;&#34;&#34;
+    i_good = ones(vertex0.shape[0], dtype=bool)
+    edge1 = vertex1 - vertex0
+    edge2 = vertex2 - vertex0
+    h = cross(rayVector, edge2, axis=-1)
+    a = einsum(&#39;ij,ij-&gt;i&#39;, edge1, h)  # dot product
+
+    i_parallel = (a &gt; -EPSILON) &amp; (a &lt; EPSILON)
+    i_good[i_parallel] = False
+
+    f = 1 / a
+
+    s = rayOrigin - vertex0
+    u = f * einsum(&#39;ij,ij-&gt;i&#39;, s, h)
+    i_outside = (u &lt; 0.0) | (u &gt; 1.0)
+    i_good[i_outside] = False
+
+    q = cross(s, edge1)
+    v = f * einsum(&#39;j,ij-&gt;i&#39;, rayVector, q)
+
+    i_outside = (v &lt; 0.0) | (u + v &gt; 1.0)
+    i_good[i_outside] = False
+
+    t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
+    if not line:
+        i_opposite = t &lt; EPSILON
+        i_good[i_opposite] = NaN
+
+    t[~i_good] = NaN
+
+    return t
+
+
+def check_if_point_in_triangle(v0, v1, v2, p):
+    &#34;&#34;&#34;They have to be on the same plane&#34;&#34;&#34;
+    p_bary = cartesian_to_barycentric(v0, v1, v2, p)
+    return (0 &lt;= p_bary).all() and (p_bary &lt;= 1).all()
+
+
+def intersect_line_plane(vertex0, tri_norm, pos, pos_norm):
+    pos_norm = pos_norm / norm(pos_norm)
+    t = (dot(tri_norm, vertex0) - dot(tri_norm, pos)) / dot(pos_norm, tri_norm)
+    intersection = pos + pos_norm * t
+    return t, intersection
+
+
+def cartesian_to_barycentric(v0, v1, v2, p):
+    S = sum((v0 - v1) * (v0 - v2))
+    S1 = sum((v1 - p) * (v2 - p))
+    S2 = sum((p - v2) * (p - v1))
+
+    a = S1 / S
+    b = S2 / S
+    c = 1 - a - b
+    return array([a, b, c])</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridloc.matlab.geometry.cartesian_to_barycentric"><code class="name flex">
+<span>def <span class="ident">cartesian_to_barycentric</span></span>(<span>v0, v1, v2, p)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cartesian_to_barycentric(v0, v1, v2, p):
+    S = sum((v0 - v1) * (v0 - v2))
+    S1 = sum((v1 - p) * (v2 - p))
+    S2 = sum((p - v2) * (p - v1))
+
+    a = S1 / S
+    b = S2 / S
+    c = 1 - a - b
+    return array([a, b, c])</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.geometry.check_if_point_in_triangle"><code class="name flex">
+<span>def <span class="ident">check_if_point_in_triangle</span></span>(<span>v0, v1, v2, p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>They have to be on the same plane</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_if_point_in_triangle(v0, v1, v2, p):
+    &#34;&#34;&#34;They have to be on the same plane&#34;&#34;&#34;
+    p_bary = cartesian_to_barycentric(v0, v1, v2, p)
+    return (0 &lt;= p_bary).all() and (p_bary &lt;= 1).all()</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.geometry.intersect_line_plane"><code class="name flex">
+<span>def <span class="ident">intersect_line_plane</span></span>(<span>vertex0, tri_norm, pos, pos_norm)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def intersect_line_plane(vertex0, tri_norm, pos, pos_norm):
+    pos_norm = pos_norm / norm(pos_norm)
+    t = (dot(tri_norm, vertex0) - dot(tri_norm, pos)) / dot(pos_norm, tri_norm)
+    intersection = pos + pos_norm * t
+    return t, intersection</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.geometry.intersect_ray_triangle"><code class="name flex">
+<span>def <span class="ident">intersect_ray_triangle</span></span>(<span>vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implementation of the Möller-Trumbore algorithm to detect ray-triangle
+intersection.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>vertex0</code></strong> :&ensp;<code>(n, 3) array</code></dt>
+<dd>the first vertex for all the triangles of the mesh</dd>
+<dt><strong><code>vertex1</code></strong> :&ensp;<code>(n, 3) array</code></dt>
+<dd>the second vertex for all the triangles of the mesh</dd>
+<dt><strong><code>vertex2</code></strong> :&ensp;<code>(n, 3) array</code></dt>
+<dd>the third vertex for all the triangles of the mesh</dd>
+<dt><strong><code>rayOrigin</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>start position of the ray</dd>
+<dt><strong><code>rayVector</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>direction of the ray vector</dd>
+<dt><strong><code>line</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+if True, it detects intersection in both direction (treated as a line
+with two directions)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array (n, )</code></dt>
+<dd>distance of each triangle to the point of interest. It's NaN if 1.
+the direction of the point is parallel to the triangle, 2. the projected
+point is outside the triangle, 3. the direction is in the opposite direction
+to the triangle (so, this is a ray, not a line).</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Implementation derived from <a href="https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm">https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
+    &#34;&#34;&#34;Implementation of the Möller-Trumbore algorithm to detect ray-triangle
+    intersection.
+
+
+    Parameters
+    ----------
+    vertex0 : (n, 3) array
+        the first vertex for all the triangles of the mesh
+    vertex1 : (n, 3) array
+        the second vertex for all the triangles of the mesh
+    vertex2 : (n, 3) array
+        the third vertex for all the triangles of the mesh
+    rayOrigin : (3, ) array
+        start position of the ray
+    rayVector : (3, ) array
+        direction of the ray vector
+    line : bool
+        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
+        if True, it detects intersection in both direction (treated as a line
+        with two directions)
+
+    Returns
+    -------
+    array (n, )
+        distance of each triangle to the point of interest. It&#39;s NaN if 1.
+        the direction of the point is parallel to the triangle, 2. the projected
+        point is outside the triangle, 3. the direction is in the opposite direction
+        to the triangle (so, this is a ray, not a line).
+
+    Notes
+    -----
+    Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+    &#34;&#34;&#34;
+    i_good = ones(vertex0.shape[0], dtype=bool)
+    edge1 = vertex1 - vertex0
+    edge2 = vertex2 - vertex0
+    h = cross(rayVector, edge2, axis=-1)
+    a = einsum(&#39;ij,ij-&gt;i&#39;, edge1, h)  # dot product
+
+    i_parallel = (a &gt; -EPSILON) &amp; (a &lt; EPSILON)
+    i_good[i_parallel] = False
+
+    f = 1 / a
+
+    s = rayOrigin - vertex0
+    u = f * einsum(&#39;ij,ij-&gt;i&#39;, s, h)
+    i_outside = (u &lt; 0.0) | (u &gt; 1.0)
+    i_good[i_outside] = False
+
+    q = cross(s, edge1)
+    v = f * einsum(&#39;j,ij-&gt;i&#39;, rayVector, q)
+
+    i_outside = (v &lt; 0.0) | (u + v &gt; 1.0)
+    i_good[i_outside] = False
+
+    t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
+    if not line:
+        i_opposite = t &lt; EPSILON
+        i_good[i_opposite] = NaN
+
+    t[~i_good] = NaN
+
+    return t</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.geometry.project_to_cortex"><code class="name flex">
+<span>def <span class="ident">project_to_cortex</span></span>(<span>surf, point, normal, sorted_triangles=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Project a point (electrode) onto the triangulated mesh (surface).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict with 'pos', 'tri'</code></dt>
+<dd>surface of the brain use to project the electrodes (it's not necessary
+to have 'tri_norm')</dd>
+<dt><strong><code>point</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>x, y, z coordinates of the electrodes</dd>
+<dt><strong><code>normal</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>normal of the electrodes</dd>
+<dt><strong><code>sorted_triangles</code></strong> :&ensp;<code>(n, ) array</code></dt>
+<dd>indices of triangles to select (order is important). If you pass this
+parameters, it will return the first triangle which is intersected by
+the line</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>distance between surface and electrode</dd>
+<dt><code>array (3, )</code></dt>
+<dd>projected position onto the surface</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Returns NaN values when there is no intersection possible to the cortex.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def project_to_cortex(surf, point, normal, sorted_triangles=None):
+    &#34;&#34;&#34;Project a point (electrode) onto the triangulated mesh (surface).
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    point : (3, ) array
+        x, y, z coordinates of the electrodes
+    normal : (3, ) array
+        normal of the electrodes
+    sorted_triangles : (n, ) array
+        indices of triangles to select (order is important). If you pass this
+        parameters, it will return the first triangle which is intersected by
+        the line
+
+    Returns
+    -------
+    int
+        distance between surface and electrode
+    array (3, )
+        projected position onto the surface
+
+
+    Notes
+    -----
+    Returns NaN values when there is no intersection possible to the cortex.
+    &#34;&#34;&#34;
+    if sorted_triangles is None:
+        vertices = surf[&#39;tri&#39;]
+    else:
+        vertices = surf[&#39;tri&#39;][sorted_triangles]
+
+    normal = normal / norm(normal)
+    t = intersect_ray_triangle(
+        surf[&#39;pos&#39;][vertices][:, 0, :],
+        surf[&#39;pos&#39;][vertices][:, 1, :],
+        surf[&#39;pos&#39;][vertices][:, 2, :],
+        point,
+        normal,
+        line=True)
+
+    if isnan(t).all():
+        return NaN, array([NaN, NaN, NaN])
+
+    if sorted_triangles is None:
+        i = nanargmin(abs(t))
+    else:
+        i = where(~isnan(t))[0][0]
+    projected_point = point + normal * t[i]
+
+    return t[i], projected_point</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc.matlab" href="index.html">gridloc.matlab</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridloc.matlab.geometry.cartesian_to_barycentric" href="#gridloc.matlab.geometry.cartesian_to_barycentric">cartesian_to_barycentric</a></code></li>
+<li><code><a title="gridloc.matlab.geometry.check_if_point_in_triangle" href="#gridloc.matlab.geometry.check_if_point_in_triangle">check_if_point_in_triangle</a></code></li>
+<li><code><a title="gridloc.matlab.geometry.intersect_line_plane" href="#gridloc.matlab.geometry.intersect_line_plane">intersect_line_plane</a></code></li>
+<li><code><a title="gridloc.matlab.geometry.intersect_ray_triangle" href="#gridloc.matlab.geometry.intersect_ray_triangle">intersect_ray_triangle</a></code></li>
+<li><code><a title="gridloc.matlab.geometry.project_to_cortex" href="#gridloc.matlab.geometry.project_to_cortex">project_to_cortex</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

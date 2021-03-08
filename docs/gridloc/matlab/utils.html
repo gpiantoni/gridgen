@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gridloc.matlab.utils API documentation</title>
+<meta name="description" content="Functions directly useful to compat.py" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gridloc.matlab.utils</code></h1>
+</header>
+<section id="section-intro">
+<p>Functions directly useful to compat.py</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Functions directly useful to compat.py
+&#34;&#34;&#34;
+
+from os import nice
+from numpy import arange, meshgrid, c_, zeros, prod, argmax, dot, cross, NaN, array, eye, ones, where, argsort, concatenate
+from numpy.linalg import norm, solve
+from scipy.spatial.transform import Rotation
+from logging import getLogger
+
+from .io import read_matlab
+from ..io import read_grid2d
+
+EPSILON = 1e-5
+
+lg = getLogger(__name__)
+
+
+def calcCoords(c, GridSteps, dims):
+    &#34;&#34;&#34;Calculate the coordinates of a grid placed with the point c as
+    middlepoint of the space where the grid is going to be projected.
+    Also define the GridSteps and GridSize for the density and
+    size, respectively, of the mesh that&#39;s being calculated.
+    &#34;&#34;&#34;
+    x_steps = arange(dims[0]) * GridSteps[0]
+    y_steps = arange(dims[1]) * GridSteps[1]
+
+    x_mesh, y_mesh = meshgrid(x_steps - x_steps.mean(), y_steps - y_steps.mean())
+    diff_mat = c_[zeros(prod(dims)), x_mesh.flatten(&#39;F&#39;), y_mesh.flatten(&#39;F&#39;)]
+
+    return c + diff_mat
+
+
+def plane_intersect(N1, A1, N2, A2):
+    &#34;&#34;&#34;Python implementation of plane_intersect.m
+
+    Parameters
+    ----------
+    N1 : (3, ) array
+        equation for the first plane
+    A1 : (3, ) array
+        point belonging to the first plane
+    N2 : (3, ) array
+        equation for the second plane
+    A2 : (3, ) array
+        point belonging to the second plane
+
+    Returns
+    -------
+    array (3, )
+        one point belonging to the intersection of the plane
+    array (3, )
+        equation describing the plane
+
+    Notes
+    -----
+    It will return NaN if there is no intersection between the two planes.
+    &#34;&#34;&#34;
+    P = array([0., 0., 0.])
+    N = cross(N1, N2)
+    if norm(N) &lt; EPSILON:  # parallel or coincide
+        return array([NaN, NaN, NaN]), NaN
+
+    maxc = argmax(abs(N))
+
+    d1 = -dot(N1, A1)
+    d2 = -dot(N2, A2)
+
+    if maxc == 0:
+        P[0] = 0
+        P[1] = (d2 * N1[2] - d1 * N2[2]) / N[0]
+        P[2] = (d1 * N2[1] - d2 * N1[1]) / N[0]
+
+    elif maxc == 1:
+        P[0] = (d1 * N2[2] - d2 * N1[2]) / N[1]
+        P[1] = 0
+        P[2] = (d2 * N1[0] - d1 * N2[0]) / N[1]
+
+    elif maxc == 2:
+        P[0] = (d2 * N1[1] - d1 * N2[1]) / N[2]
+        P[1] = (d1 * N2[0] - d2 * N1[0]) / N[2]
+        P[2] = 0
+
+    return P, N
+
+
+def AxelRot(radians, u, x0):
+    &#34;&#34;&#34;Python implementation of AxelRot.m
+
+    Parameters
+    ----------
+    radians : float
+        rotation in radians, clockwise
+    u : (3, ) array
+        axis about to which compute the rotation
+    x0 : (3, ) array
+        point for shift
+
+    Returns
+    -------
+    array (4, 4)
+        affine matrix with rotation and translation
+    &#34;&#34;&#34;
+    u = u / norm(u)
+    AxisShift = x0 - (x0 @ u) * u  # l. 85
+
+    Mshift = eye(4)
+    Mshift[:3, 3] = -AxisShift
+
+    Mroto = eye(4)
+    Mroto[:3, :3] = Rotation.from_rotvec(u * radians).as_matrix()  # l.92
+
+    # be careful about the sign of AxisShift
+    return solve(Mshift, Mroto) @ Mshift  # l. 94
+
+
+def _apply_affine(c, affine):
+    &#34;&#34;&#34;Apply affine matrix to many points at the same time.
+
+    Parameters
+    ----------
+    c : (n, 3) array
+        points to transform
+    affine : (4, 4) array
+        affine matrix (bottom row should be [0, 0, 0, 1])
+
+    Returns
+    -------
+    array (n, 3)
+        points transformed
+    &#34;&#34;&#34;
+    C = c_[c, ones(c.shape[0])]
+    X = (affine @ C.T).T
+    return X[:, :3]
+
+
+def _sort_closest_triangles(surf, electrode, intersval):
+    &#34;&#34;&#34;sort triangles based on the distance of the vertices. First compute
+    which vertices are closer than `intersval` to the electrode, then select
+    only vertices which have that vertex. This function keeps the order of distance
+    of the vertices. Each vertex has three triangles, so the order of the first
+    3 triangles is arbitrary. Here we use matlab convention for compatibility.
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    electrode : (3, ) array
+        x, y, z coordinates of the electrodes
+    intersval : float
+        radius in which the vertices should be
+
+    Returns
+    -------
+    list
+        sorted list of indices of triangles, sorted mostly by the distance of
+        their closest vertex to `electrode`.
+    &#34;&#34;&#34;
+    dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)
+    closevert = where(dvect &lt; intersval)[0]
+    dvecti = argsort(dvect[closevert])
+    sortvert = closevert[dvecti]
+
+    # l. 176-192
+    sorttri = []
+    tri = surf[&#39;tri&#39;].copy()
+    for cv in sortvert:
+        rows = concatenate([where(cv == tri[:, i])[0] for i in range(3)])
+        tri[rows, :] = 0
+        sorttri.extend(rows.tolist())
+
+    return sorttri
+
+
+def be_nice():
+    nice(10)
+
+
+def get_initial_from_matlab(parameters):
+    &#34;&#34;&#34;get initial values from matlab
+    &#34;&#34;&#34;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    grid2d = read_grid2d(grid2d_tsv)
+    i0 = grid2d.shape[0] // 2
+    i1 = grid2d.shape[1] // 2
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
+
+    gridInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;gridInfo_file&#39;])
+    matlab_center = gridInfo[&#39;coords_ROI&#39;][&#39;ROI_Tangent&#39;].mean(axis=0)
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
+
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    if subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+        rotation = 180
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+        rotation = -90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+        rotation = 90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+        rotation = 0
+
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
+
+    lg.info(&#39;initial location based on matlab gridInfo&#39;)
+    lg.info(parameters[&#39;fit&#39;][&#39;initial&#39;])
+
+    return parameters</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridloc.matlab.utils.AxelRot"><code class="name flex">
+<span>def <span class="ident">AxelRot</span></span>(<span>radians, u, x0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Python implementation of AxelRot.m</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>radians</code></strong> :&ensp;<code>float</code></dt>
+<dd>rotation in radians, clockwise</dd>
+<dt><strong><code>u</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>axis about to which compute the rotation</dd>
+<dt><strong><code>x0</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>point for shift</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array (4, 4)</code></dt>
+<dd>affine matrix with rotation and translation</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AxelRot(radians, u, x0):
+    &#34;&#34;&#34;Python implementation of AxelRot.m
+
+    Parameters
+    ----------
+    radians : float
+        rotation in radians, clockwise
+    u : (3, ) array
+        axis about to which compute the rotation
+    x0 : (3, ) array
+        point for shift
+
+    Returns
+    -------
+    array (4, 4)
+        affine matrix with rotation and translation
+    &#34;&#34;&#34;
+    u = u / norm(u)
+    AxisShift = x0 - (x0 @ u) * u  # l. 85
+
+    Mshift = eye(4)
+    Mshift[:3, 3] = -AxisShift
+
+    Mroto = eye(4)
+    Mroto[:3, :3] = Rotation.from_rotvec(u * radians).as_matrix()  # l.92
+
+    # be careful about the sign of AxisShift
+    return solve(Mshift, Mroto) @ Mshift  # l. 94</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.utils.be_nice"><code class="name flex">
+<span>def <span class="ident">be_nice</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def be_nice():
+    nice(10)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.utils.calcCoords"><code class="name flex">
+<span>def <span class="ident">calcCoords</span></span>(<span>c, GridSteps, dims)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate the coordinates of a grid placed with the point c as
+middlepoint of the space where the grid is going to be projected.
+Also define the GridSteps and GridSize for the density and
+size, respectively, of the mesh that's being calculated.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calcCoords(c, GridSteps, dims):
+    &#34;&#34;&#34;Calculate the coordinates of a grid placed with the point c as
+    middlepoint of the space where the grid is going to be projected.
+    Also define the GridSteps and GridSize for the density and
+    size, respectively, of the mesh that&#39;s being calculated.
+    &#34;&#34;&#34;
+    x_steps = arange(dims[0]) * GridSteps[0]
+    y_steps = arange(dims[1]) * GridSteps[1]
+
+    x_mesh, y_mesh = meshgrid(x_steps - x_steps.mean(), y_steps - y_steps.mean())
+    diff_mat = c_[zeros(prod(dims)), x_mesh.flatten(&#39;F&#39;), y_mesh.flatten(&#39;F&#39;)]
+
+    return c + diff_mat</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.utils.get_initial_from_matlab"><code class="name flex">
+<span>def <span class="ident">get_initial_from_matlab</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>get initial values from matlab</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_initial_from_matlab(parameters):
+    &#34;&#34;&#34;get initial values from matlab
+    &#34;&#34;&#34;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    grid2d = read_grid2d(grid2d_tsv)
+    i0 = grid2d.shape[0] // 2
+    i1 = grid2d.shape[1] // 2
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;label&#39;] = grid2d[i0, i1][&#39;label&#39;]
+
+    gridInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;gridInfo_file&#39;])
+    matlab_center = gridInfo[&#39;coords_ROI&#39;][&#39;ROI_Tangent&#39;].mean(axis=0)
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;RAS&#39;] = matlab_center
+
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    if subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+        rotation = 180
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+        rotation = -90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+        rotation = 90
+    elif subjectInfo[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+        rotation = 0
+
+    parameters[&#39;fit&#39;][&#39;initial&#39;][&#39;rotation&#39;] = rotation
+
+    lg.info(&#39;initial location based on matlab gridInfo&#39;)
+    lg.info(parameters[&#39;fit&#39;][&#39;initial&#39;])
+
+    return parameters</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.utils.plane_intersect"><code class="name flex">
+<span>def <span class="ident">plane_intersect</span></span>(<span>N1, A1, N2, A2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Python implementation of plane_intersect.m</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>N1</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>equation for the first plane</dd>
+<dt><strong><code>A1</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>point belonging to the first plane</dd>
+<dt><strong><code>N2</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>equation for the second plane</dd>
+<dt><strong><code>A2</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>point belonging to the second plane</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array (3, )</code></dt>
+<dd>one point belonging to the intersection of the plane</dd>
+<dt><code>array (3, )</code></dt>
+<dd>equation describing the plane</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>It will return NaN if there is no intersection between the two planes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plane_intersect(N1, A1, N2, A2):
+    &#34;&#34;&#34;Python implementation of plane_intersect.m
+
+    Parameters
+    ----------
+    N1 : (3, ) array
+        equation for the first plane
+    A1 : (3, ) array
+        point belonging to the first plane
+    N2 : (3, ) array
+        equation for the second plane
+    A2 : (3, ) array
+        point belonging to the second plane
+
+    Returns
+    -------
+    array (3, )
+        one point belonging to the intersection of the plane
+    array (3, )
+        equation describing the plane
+
+    Notes
+    -----
+    It will return NaN if there is no intersection between the two planes.
+    &#34;&#34;&#34;
+    P = array([0., 0., 0.])
+    N = cross(N1, N2)
+    if norm(N) &lt; EPSILON:  # parallel or coincide
+        return array([NaN, NaN, NaN]), NaN
+
+    maxc = argmax(abs(N))
+
+    d1 = -dot(N1, A1)
+    d2 = -dot(N2, A2)
+
+    if maxc == 0:
+        P[0] = 0
+        P[1] = (d2 * N1[2] - d1 * N2[2]) / N[0]
+        P[2] = (d1 * N2[1] - d2 * N1[1]) / N[0]
+
+    elif maxc == 1:
+        P[0] = (d1 * N2[2] - d2 * N1[2]) / N[1]
+        P[1] = 0
+        P[2] = (d2 * N1[0] - d1 * N2[0]) / N[1]
+
+    elif maxc == 2:
+        P[0] = (d2 * N1[1] - d1 * N2[1]) / N[2]
+        P[1] = (d1 * N2[0] - d2 * N1[0]) / N[2]
+        P[2] = 0
+
+    return P, N</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc.matlab" href="index.html">gridloc.matlab</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridloc.matlab.utils.AxelRot" href="#gridloc.matlab.utils.AxelRot">AxelRot</a></code></li>
+<li><code><a title="gridloc.matlab.utils.be_nice" href="#gridloc.matlab.utils.be_nice">be_nice</a></code></li>
+<li><code><a title="gridloc.matlab.utils.calcCoords" href="#gridloc.matlab.utils.calcCoords">calcCoords</a></code></li>
+<li><code><a title="gridloc.matlab.utils.get_initial_from_matlab" href="#gridloc.matlab.utils.get_initial_from_matlab">get_initial_from_matlab</a></code></li>
+<li><code><a title="gridloc.matlab.utils.plane_intersect" href="#gridloc.matlab.utils.plane_intersect">plane_intersect</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

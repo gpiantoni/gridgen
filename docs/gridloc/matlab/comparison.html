@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gridloc.matlab.comparison API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gridloc.matlab.comparison</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from nibabel.freesurfer.io import write_geometry
+from numpy import corrcoef, isnan, mean, std, savetxt, array, atleast_1d
+from numpy.linalg import norm
+from logging import getLogger
+
+from .vascular import calculateAngioMap
+from ..io import read_ecog2d, read_surf, read_surface_ras_shift, read_elec, read_ecog2d_matlab
+from .io import read_matlab
+from .utils import get_initial_from_matlab
+from ..fitting import fitting
+from ..examine import measure_distances, measure_angles
+from .pipeline import compute_ROI
+
+
+lg = getLogger(__name__)
+
+
+def compare_to_matlab(parameters):
+    convert_neuralAct_surfaces(parameters)
+
+    m_out = parameters[&#39;output_dir&#39;] / &#39;matlab&#39;
+    m_out.mkdir(exist_ok=True)
+
+    compare_values(parameters, m_out)
+
+    compare_position_in_space(parameters)
+
+    cc = compare_ecog(parameters)
+    lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
+    savetxt(str(m_out / &#39;gamma.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
+
+    cc = compare_angio(parameters)
+    if cc is not None:
+        savetxt(str(m_out / &#39;angio.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
+        lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+
+    compare_fitting(parameters)
+
+
+def compare_fitting(parameters):
+
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    ecog_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.tsv&#39;
+    ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
+    parameters = get_initial_from_matlab(parameters)
+    parameters[&#39;fit&#39;][&#39;method&#39;] = &#39;simplex&#39;
+    parameters[&#39;fit&#39;][&#39;ranges&#39;] = {
+        &#39;x&#39;: [-10, 10, 10],
+        &#39;y&#39;: [-10, 10, 10],
+        &#39;rotation&#39;: [-45, 10, 45],
+        }
+    gridv2 = fitting(
+        ecog=ecog2d,
+        output=parameters[&#39;output_dir&#39;],
+        **parameters[&#39;fit&#39;])
+
+    if parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;] is not None:
+        lg.info(&#39;Gridloc(matlab) best fit&#39;)
+        gridv1 = read_elec(
+            gridv2,
+            parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;])
+        measure_distances(gridv1)
+        measure_angles(gridv1)
+
+        distances = norm(gridv2[&#39;pos&#39;] - gridv1[&#39;pos&#39;], axis=2)
+        lg.info(f&#39;Distance between best fit in v1 and best fit in v2: {mean(distances):0.3f}mm (sd {std(distances):0.3f})&#39;)
+
+
+def convert_neuralAct_surfaces(parameters):
+
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    neuralAct = read_matlab(subjectInfo[&#39;neuralAct&#39;])
+
+    conversion_dir = parameters[&#39;output_dir&#39;] / &#39;surfaces&#39;
+    conversion_dir.mkdir(exist_ok=True, parents=True)
+    parameters[&#39;matlab&#39;][&#39;surfaces&#39;] = {}
+    for surf_type in list(neuralAct):
+        surf_file = conversion_dir / surf_type
+        tri = neuralAct[surf_type][&#39;tri&#39;].astype(int) - 1
+        write_geometry(str(surf_file), neuralAct[surf_type][&#39;vert&#39;], tri)
+        parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type] = surf_file
+
+    return parameters
+
+
+def compare_position_in_space(parameters):
+    ras_shift = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
+
+    lg.debug(&#39;Most inferior and most superior values for these surfaces (to check alignment)&#39;)
+    for surf_type in [&#39;cortex&#39;, &#39;hullcortex&#39;, &#39;cortexcoarser&#39;]:
+        surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], ras_shift=[0, 0, 0], normals=False)
+        lg.debug(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
+
+    for surf_type in [&#39;dura_file&#39;, &#39;pial_file&#39;]:
+        surf = read_surf(parameters[&#39;fit&#39;][surf_type], ras_shift=ras_shift, normals=False)
+        lg.debug(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
+
+
+def compare_ecog(parameters):
+    &#34;&#34;&#34;
+
+    TODO
+    ----
+    this function could use read_ecog2d_matlab
+    &#34;&#34;&#34;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    ecog_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.tsv&#39;
+    ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
+    subj_info = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    gamma = read_ecog2d_matlab(
+        subj_info[&#39;gamma_mean&#39;],
+        grid2d_tsv,
+        )
+
+    i_x = ecog2d[&#39;ecog&#39;].flatten()
+    i_y = gamma[&#39;ecog&#39;].flatten()
+
+    cc = corrcoef(
+        i_x[~isnan(i_x) &amp; ~isnan(i_y)],
+        i_y[~isnan(i_x) &amp; ~isnan(i_y)],
+        )[0, 1]
+    return cc
+
+
+def compare_angio(parameters):
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    if &#39;angiomap_file&#39; not in parameters[&#39;matlab&#39;][&#39;comparison&#39;] or parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;] is None:
+        lg.warning(&#39;No angiomap to compare to. Skipping&#39;)
+        return
+
+    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], ras_shift=[0, 0, 0], normals=True)
+
+    [angioMap, normAngio] = calculateAngioMap(subjectInfo, subjectInfo[&#39;Tthreshold&#39;], subjectInfo[&#39;VoxelDepth&#39;], plotAngio=False, cortex=cortex)
+    mat_angio = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;])
+
+    cc = corrcoef(mat_angio[&#39;angioMap&#39;], angioMap)[0, 1]
+    return cc
+
+
+def compare_values(parameters, m_out):
+
+    ROI = compute_ROI(parameters)
+
+    lg.debug(&#39;Reading model file from matlab&#39;)
+    roimat = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;model_file&#39;])
+
+    lg.debug(&#39;Writing to file&#39;)
+    for k in ROI[0][0].keys():
+        vals = compare_keys(ROI, roimat, k)
+        savetxt(str(m_out / f&#39;{k}.tsv&#39;), vals, fmt=&#39;%.3f&#39;, delimiter=&#39;\t&#39;)
+
+
+def compare_keys(ROI, roimat, key):
+    v0 = []
+    for i0 in range(len(ROI)):
+        v1 = []
+        for i1 in range(len(ROI[i0])):
+
+            if key in (&#39;McM&#39;, &#39;MvM&#39;, &#39;weights&#39;):
+                out = (ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1]).max()
+            else:
+                out = norm(ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1], axis=1).max()
+
+            v1.append(out)
+        v0.append(v1)
+    return array(v0)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridloc.matlab.comparison.compare_angio"><code class="name flex">
+<span>def <span class="ident">compare_angio</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_angio(parameters):
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    if &#39;angiomap_file&#39; not in parameters[&#39;matlab&#39;][&#39;comparison&#39;] or parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;] is None:
+        lg.warning(&#39;No angiomap to compare to. Skipping&#39;)
+        return
+
+    cortex = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][&#39;cortex&#39;], ras_shift=[0, 0, 0], normals=True)
+
+    [angioMap, normAngio] = calculateAngioMap(subjectInfo, subjectInfo[&#39;Tthreshold&#39;], subjectInfo[&#39;VoxelDepth&#39;], plotAngio=False, cortex=cortex)
+    mat_angio = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;angiomap_file&#39;])
+
+    cc = corrcoef(mat_angio[&#39;angioMap&#39;], angioMap)[0, 1]
+    return cc</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.compare_ecog"><code class="name flex">
+<span>def <span class="ident">compare_ecog</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="todo">Todo</h2>
+<p>this function could use read_ecog2d_matlab</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_ecog(parameters):
+    &#34;&#34;&#34;
+
+    TODO
+    ----
+    this function could use read_ecog2d_matlab
+    &#34;&#34;&#34;
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    ecog_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.tsv&#39;
+    ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
+    subj_info = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    gamma = read_ecog2d_matlab(
+        subj_info[&#39;gamma_mean&#39;],
+        grid2d_tsv,
+        )
+
+    i_x = ecog2d[&#39;ecog&#39;].flatten()
+    i_y = gamma[&#39;ecog&#39;].flatten()
+
+    cc = corrcoef(
+        i_x[~isnan(i_x) &amp; ~isnan(i_y)],
+        i_y[~isnan(i_x) &amp; ~isnan(i_y)],
+        )[0, 1]
+    return cc</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.compare_fitting"><code class="name flex">
+<span>def <span class="ident">compare_fitting</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_fitting(parameters):
+
+    grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
+    ecog_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.tsv&#39;
+    ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
+    parameters = get_initial_from_matlab(parameters)
+    parameters[&#39;fit&#39;][&#39;method&#39;] = &#39;simplex&#39;
+    parameters[&#39;fit&#39;][&#39;ranges&#39;] = {
+        &#39;x&#39;: [-10, 10, 10],
+        &#39;y&#39;: [-10, 10, 10],
+        &#39;rotation&#39;: [-45, 10, 45],
+        }
+    gridv2 = fitting(
+        ecog=ecog2d,
+        output=parameters[&#39;output_dir&#39;],
+        **parameters[&#39;fit&#39;])
+
+    if parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;] is not None:
+        lg.info(&#39;Gridloc(matlab) best fit&#39;)
+        gridv1 = read_elec(
+            gridv2,
+            parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;prediction_file&#39;])
+        measure_distances(gridv1)
+        measure_angles(gridv1)
+
+        distances = norm(gridv2[&#39;pos&#39;] - gridv1[&#39;pos&#39;], axis=2)
+        lg.info(f&#39;Distance between best fit in v1 and best fit in v2: {mean(distances):0.3f}mm (sd {std(distances):0.3f})&#39;)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.compare_keys"><code class="name flex">
+<span>def <span class="ident">compare_keys</span></span>(<span>ROI, roimat, key)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_keys(ROI, roimat, key):
+    v0 = []
+    for i0 in range(len(ROI)):
+        v1 = []
+        for i1 in range(len(ROI[i0])):
+
+            if key in (&#39;McM&#39;, &#39;MvM&#39;, &#39;weights&#39;):
+                out = (ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1]).max()
+            else:
+                out = norm(ROI[i0][i1][key] - roimat[&#39;coords&#39;][i0][key][i1], axis=1).max()
+
+            v1.append(out)
+        v0.append(v1)
+    return array(v0)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.compare_position_in_space"><code class="name flex">
+<span>def <span class="ident">compare_position_in_space</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_position_in_space(parameters):
+    ras_shift = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
+
+    lg.debug(&#39;Most inferior and most superior values for these surfaces (to check alignment)&#39;)
+    for surf_type in [&#39;cortex&#39;, &#39;hullcortex&#39;, &#39;cortexcoarser&#39;]:
+        surf = read_surf(parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type], ras_shift=[0, 0, 0], normals=False)
+        lg.debug(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)
+
+    for surf_type in [&#39;dura_file&#39;, &#39;pial_file&#39;]:
+        surf = read_surf(parameters[&#39;fit&#39;][surf_type], ras_shift=ras_shift, normals=False)
+        lg.debug(f&#39;{surf_type: &gt;20}: [{min(surf[&#34;pos&#34;][:, 2]): 7.3f} - {max(surf[&#34;pos&#34;][:, 2]): 7.3f}]&#39;)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.compare_to_matlab"><code class="name flex">
+<span>def <span class="ident">compare_to_matlab</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_to_matlab(parameters):
+    convert_neuralAct_surfaces(parameters)
+
+    m_out = parameters[&#39;output_dir&#39;] / &#39;matlab&#39;
+    m_out.mkdir(exist_ok=True)
+
+    compare_values(parameters, m_out)
+
+    compare_position_in_space(parameters)
+
+    cc = compare_ecog(parameters)
+    lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
+    savetxt(str(m_out / &#39;gamma.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
+
+    cc = compare_angio(parameters)
+    if cc is not None:
+        savetxt(str(m_out / &#39;angio.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
+        lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+
+    compare_fitting(parameters)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.compare_values"><code class="name flex">
+<span>def <span class="ident">compare_values</span></span>(<span>parameters, m_out)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_values(parameters, m_out):
+
+    ROI = compute_ROI(parameters)
+
+    lg.debug(&#39;Reading model file from matlab&#39;)
+    roimat = read_matlab(parameters[&#39;matlab&#39;][&#39;comparison&#39;][&#39;model_file&#39;])
+
+    lg.debug(&#39;Writing to file&#39;)
+    for k in ROI[0][0].keys():
+        vals = compare_keys(ROI, roimat, k)
+        savetxt(str(m_out / f&#39;{k}.tsv&#39;), vals, fmt=&#39;%.3f&#39;, delimiter=&#39;\t&#39;)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.comparison.convert_neuralAct_surfaces"><code class="name flex">
+<span>def <span class="ident">convert_neuralAct_surfaces</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_neuralAct_surfaces(parameters):
+
+    subjectInfo = read_matlab(parameters[&#39;matlab&#39;][&#39;input&#39;][&#39;subjectInfo_file&#39;])
+    neuralAct = read_matlab(subjectInfo[&#39;neuralAct&#39;])
+
+    conversion_dir = parameters[&#39;output_dir&#39;] / &#39;surfaces&#39;
+    conversion_dir.mkdir(exist_ok=True, parents=True)
+    parameters[&#39;matlab&#39;][&#39;surfaces&#39;] = {}
+    for surf_type in list(neuralAct):
+        surf_file = conversion_dir / surf_type
+        tri = neuralAct[surf_type][&#39;tri&#39;].astype(int) - 1
+        write_geometry(str(surf_file), neuralAct[surf_type][&#39;vert&#39;], tri)
+        parameters[&#39;matlab&#39;][&#39;surfaces&#39;][surf_type] = surf_file
+
+    return parameters</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc.matlab" href="index.html">gridloc.matlab</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridloc.matlab.comparison.compare_angio" href="#gridloc.matlab.comparison.compare_angio">compare_angio</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.compare_ecog" href="#gridloc.matlab.comparison.compare_ecog">compare_ecog</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.compare_fitting" href="#gridloc.matlab.comparison.compare_fitting">compare_fitting</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.compare_keys" href="#gridloc.matlab.comparison.compare_keys">compare_keys</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.compare_position_in_space" href="#gridloc.matlab.comparison.compare_position_in_space">compare_position_in_space</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.compare_to_matlab" href="#gridloc.matlab.comparison.compare_to_matlab">compare_to_matlab</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.compare_values" href="#gridloc.matlab.comparison.compare_values">compare_values</a></code></li>
+<li><code><a title="gridloc.matlab.comparison.convert_neuralAct_surfaces" href="#gridloc.matlab.comparison.convert_neuralAct_surfaces">convert_neuralAct_surfaces</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
