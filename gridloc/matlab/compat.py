@@ -1,17 +1,15 @@
 """The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility"""
 
-from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate, intersect1d, corrcoef
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
-from ..utils import be_nice, normalize
+from ..utils import be_nice
 
-from .io import read_matlab
-from ..io import read_ecog2d_matlab
 from ..geometry import calc_plane_to_axis
 from ..construct import make_grid_with_labels
 
@@ -62,7 +60,7 @@ def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype='',
         if true, it uses the normals of `subjstructs`, if false it recomputes them
     interstype : str
         if `''` all triangles of the model are processed; if `'fixed'`, you need
-        to specify a radius `intersval`)
+        to specify a radius `intersval`
     intersval : float
         radius when `interstype` == `'fixed'`
 
