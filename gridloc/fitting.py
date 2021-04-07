@@ -162,7 +162,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
     start_vert = search_grid(dura, ref_vert, x, y)
     grid = construct_grid(dura, start_vert, ref_label, ecog['label'], rotation=rotation)
 
-    morpho = compute_distance(grid, pial)
+    morpho = compute_distance(grid, pial, 'minimum')
 
     if angio is not None and angio is not False:
         vasc = compute_vasculature(grid, angio)

@@ -1,4 +1,5 @@
 from pathlib import Path
+from json import JSONEncoder
 
 TEMPLATE = {
     "output_dir": {
@@ -273,3 +274,9 @@ def validate_template(temp, d):
             out[k] = validate_template(v, d[k])
 
     return out
+
+
+class JSONEncoder_path(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)
