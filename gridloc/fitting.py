@@ -19,7 +19,7 @@ from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
 from .construct import construct_grid
 from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv
-from .viz import plot_results
+from .viz import plot_results, to_div, to_html, plot_electrodes
 from .examine import measure_distances, measure_angles
 from .utils import be_nice, match_labels, normalize
 
@@ -86,7 +86,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     lg.info(f'Starting position for {ref_label} is vertex #{init_vert} with orientation {initial["rotation"]}')
 
     # start position is init_vert, plus some rotation
-    init = array([0, 0, init_rot])
+    x = y = rotation = 0
 
     # make sure that the last point is included in the range
     for k, v in ranges.items():
@@ -98,19 +98,27 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         dura,  # 0
         init_vert,  # 1
         ref_label,  # 2
-        ecog,  # 3
-        pial,  # 4
-        angio,  # 5
-        correlation,  # 6
-        ranges,  # 7
+        init_rot,  # 3
+        ecog,  # 4
+        pial,  # 5
+        angio,  # 6
+        correlation,  # 7
+        ranges,  # 8
         )
 
+    # start position
+    model = corr_ecog_model([x, y, rotation], *minimizer_args[:-1], final=True)
+    lg.info(f'Start position at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
+    fig = plot_electrodes(pial, model['grid'], ref_label=ref_label)
+    grid_file = output / 'start_pos.html'
+    to_html([to_div(fig), ], grid_file)
+
     if method == 'simplex':
-        m = fitting_simplex(corr_ecog_model, init, minimizer_args)
+        m = fitting_simplex(corr_ecog_model, [x, y, rotation], minimizer_args)
         best_fit = m.x
 
     elif method == 'brute':
-        m = fitting_brute(corr_ecog_model, init, minimizer_args)
+        m = fitting_brute(corr_ecog_model, [x, y, rotation], minimizer_args)
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -148,7 +156,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     return model['grid']
 
 
-def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
+def corr_ecog_model(x0, dura, ref_vert, ref_label, init_rot, ecog, pial, angio=None,
                     correlation=None, ranges=None, final=False):
     """Main model to minimize
 
@@ -160,7 +168,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, ecog, pial, angio=None,
     """
     x, y, rotation = x0
     start_vert = search_grid(dura, ref_vert, x, y)
-    grid = construct_grid(dura, start_vert, ref_label, ecog['label'], rotation=rotation)
+    grid = construct_grid(dura, start_vert, ref_label, ecog['label'], rotation=init_rot + rotation)
 
     morpho = compute_distance(grid, pial, 'minimum')
 
@@ -238,7 +246,7 @@ def fitting_brute(func, init, args):
     # shift rotation by initial value
     # for x and y, the default value MUST be zero, because we start at
     # the reference vertex
-    rotation = args[7]['rotation']
+    rotation = args[8]['rotation']
     rotation[0] += init[2]
     rotation[1] += init[2]
 

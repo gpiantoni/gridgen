@@ -50,7 +50,7 @@ def plot_results(model, pial, ras_shift, output):
         lg.debug(f'Exported merged model to {grid_file}')
 
 
-def plot_electrodes(pial, grid, values=None):
+def plot_electrodes(pial, grid, values=None, ref_label=None):
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
     labels = grid['label'].reshape(-1)
@@ -60,6 +60,8 @@ def plot_electrodes(pial, grid, values=None):
         colors = labels.copy()
         colors[iswire] = 'red'
         colors[~iswire] = 'black'
+        if ref_label is not None:
+            colors[labels == ref_label] = 'green'
         marker = dict(
             size=MARKER_SIZE,
             color=colors,
