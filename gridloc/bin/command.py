@@ -39,10 +39,27 @@ def create_arguments():
     parser = ArgumentParser(
         description='Tools to calculate the position of ECoG grid on brain based on the neuronal activity',
         formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument(
+        'parameters', help=dedent("""\
+        Path to file with the parameters for the analysis. The file with parameters
+        should be formatted as a json file."""))
     list_functions = parser.add_subparsers(
         title='Functions')
+    parser.add_argument(
+        '-l', '--log', default='info',
+        help='Logging level: info (default), debug')
+    parser.add_argument(
+        '-o', '--output_dir',
+        help=dedent("""\
+        Output directory. Default is the current directory.
+        You can also specify it in the parameters.
 
-    # grid
+        Parameters:
+          output_dir :
+        """))
+
+    # create parameters
     subparam = list_functions.add_parser(
         'parameters', help=dedent("""\
         Generate an empty parameters json file. Fields with `null` are optional.
@@ -104,24 +121,6 @@ def create_arguments():
         """))
     subfun3.set_defaults(function='matlab')
 
-    for subfun in (subfun0, subfun1, subfun2, subfun3):
-        subfun.add_argument(
-            '-l', '--log', default='info',
-            help='Logging level: info (default), debug')
-        subfun.add_argument(
-            '-o', '--output_dir',
-            help=dedent("""\
-            Output directory. Default is the current directory.
-            You can also specify it in the parameters.
-
-            Parameters:
-              output_dir :
-            """))
-        subfun.add_argument(
-            'parameters', help=dedent("""\
-            Path to file with the parameters for the analysis. The file with parameters
-            should be formatted as a json file."""))
-
     return parser
 
 
@@ -129,8 +128,9 @@ def main(arguments=None):
     """Main function which is called from the command line"""
     parser = create_arguments()
     args = parser.parse_args(arguments)
+    func = args.function
 
-    if args.function == 'parameters':
+    if func == 'parameters':
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix('.json')
         with p_json.open('w') as f:
@@ -157,7 +157,8 @@ def main(arguments=None):
     p_json = Path(args.parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
-    parameters = validate_template(TEMPLATE, parameters)
+
+    parameters[func] = validate_template(TEMPLATE[func], parameters[func])
 
     if args.output_dir is not None:
         output = args.output_dir
@@ -206,15 +207,19 @@ def main(arguments=None):
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
+        start_time = datetime.now()
+        output_dir = parameters['output_dir'] / ('bestfit_' + parameters['fit']['method'] + '_' + parameters['fit']['correlation'] + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
+        output_dir.mkdir(parents=True)
+
+        parameters['timestamp'] = start_time.isoformat()
+        parameters_json = output_dir / 'parameters.json'
+        with parameters_json.open('w') as f:
+            dump(parameters, f, indent=2, cls=JSONEncoder_path)
+
         fitting(
             ecog=ecog2d,
-            output=parameters['output_dir'],
+            output=output_dir,
             **parameters['fit'])
 
     if args.function == 'matlab':
         compare_to_matlab(parameters)
-
-    parameters['timestamp'] = datetime.now().isoformat()
-    parameters_json = parameters['output_dir'] / 'parameters.json'
-    with parameters_json.open('w') as f:
-        dump(parameters, f, indent=2, cls=JSONEncoder_path)

@@ -1,5 +1,9 @@
 from pathlib import Path
 from json import JSONEncoder
+from collections.abc import Iterable
+
+
+DIMENSIONS = 'x', 'y', 'rotation'
 
 TEMPLATE = {
     "output_dir": {
@@ -22,12 +26,13 @@ TEMPLATE = {
             'type': 'str',
             'necessary': True,
             'values': ['TBLR', 'TBRL', 'BTLR', 'BTRL', 'LRTB', 'LRBT', 'RLTB', 'RLBT'],
-            'help': 'direction of the grid',
+            'help': 'direction of the grid (wires are by definition at the bottom)',
+            'default': 'TBLR'
             },
         "chan_pattern": {
             'type': 'str',
             'necessary': False,
-            'help': 'pattern to name the channels (it should match the naming pattern of the data)',
+            'help': 'pattern to name the channels (it should match the naming pattern of the data). Examples are "chan{}" or "chan{03d}',
             },
         },
     "ecog": {
@@ -40,6 +45,7 @@ TEMPLATE = {
             'type': 'list',
             'necessary': True,
             'help': 'low and high threshold of the frequency range of interest',
+            'default': [65, 95],
             },
         "begtime": {
             'type': 'float',
@@ -105,28 +111,47 @@ TEMPLATE = {
             "necessary": True,
             "values": ['brute', 'simplex'],
             "help": "method to use (brute includes simplex as a second step)",
+            "default": "brute",
         },
         "correlation": {
             "type": "str",
             "necessary": False,
             "values": ['parametric', 'nonparametric'],
-            "help": "'parametric' (Pearson) or 'nonparametric' (rank)",
+            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
+            "default": "parametric",
+        },
+        "steps": {
+            "x": {
+                "type": "float",
+                "necessary": False,
+                "help": "Step size in mm for x-direction, for method simplex",
+            },
+            "y": {
+                "type": "float",
+                "necessary": False,
+                "help": "Step size in mm for y-direction, for method simplex",
+            },
+            "rotation": {
+                "type": "float",
+                "necessary": False,
+                "help": "Step size in degrees for rotation, for method simplex",
+            },
         },
         "ranges": {
             "x": {
                 "type": "list",
-                "necessary": True,
-                "help": "Range in mm for x-direction, in format [low, step, high]",
+                "necessary": False,
+                "help": "Range in mm for x-direction, in format [low, step, high], for method brute",
             },
             "y": {
                 "type": "list",
-                "necessary": True,
-                "help": "Range in mm for y-direction, in format [low, step, high]",
+                "necessary": False,
+                "help": "Range in mm for y-direction, in format [low, step, high], for method brute",
             },
             "rotation": {
                 "type": "list",
-                "necessary": True,
-                "help": "Range in degrees for rotation, in format [low, step, high]",
+                "necessary": False,
+                "help": "Range in degrees for rotation, in format [low, step, high], for method brute",
             },
         },
     },
@@ -201,16 +226,16 @@ def prepare_template(temp):
                 out[k] = None
 
             elif v['type'] == 'int':
-                out[k] = 0
+                out[k] = v.get('default', 0)
 
             elif v['type'] == 'float':
-                out[k] = 0.0
+                out[k] = v.get('default', 0.0)
 
             elif v['type'] == 'str':
-                out[k] = ''
+                out[k] = v.get('default', '')
 
             elif v['type'] == 'list':
-                out[k] = []
+                out[k] = v.get('default', [])
 
         else:
             out[k] = prepare_template(v)
@@ -257,12 +282,32 @@ def help_template(temp):
 def validate_template(temp, d):
     out = {}
     for k, v in temp.items():
-        if k not in d or d[k] is None:
-            continue
 
-        if 'type' in v:
-            if v['necessary'] and k not in d:
-                raise ValueError(f'{k} should be defined')
+        if 'method' in d:
+            if d['method'] == 'brute':
+                for dim in DIMENSIONS:
+                    if d.get('ranges', {}).get(dim, None) is None:
+                        raise ValueError(f'{dim} should be defined in "ranges" with method "brute"')
+
+                d.pop('steps', None)
+
+            if d['method'] == 'simplex':
+                for dim in DIMENSIONS:
+                    if d.get('steps', {}).get(dim, None) is None:
+                        raise ValueError(f'{dim} should be defined in "steps" with method "simplex"')
+
+                d.pop('ranges', None)
+
+        if k not in d or d[k] is None:
+            if v.get('default', False):
+                out[k] = v['default']
+
+        elif 'type' in v:
+            if v['necessary']:
+                if k not in d:
+                    raise ValueError(f'{k} should be defined')
+                if isinstance(d[k], Iterable) and len(d[k]) == 0:
+                    raise ValueError(f'{k} should be defined')
 
             if 'values' in v and d[k] not in v['values']:
                 values = ', '.join(f'{x}' for x in v['values'])

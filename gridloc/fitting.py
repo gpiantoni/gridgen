@@ -27,7 +27,8 @@ lg = getLogger(__name__)
 
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
-            angio_threshold=None, correlation='parametric', ranges={}, method='brute'):
+            angio_threshold=None, correlation='parametric', ranges={}, steps={},
+            method='brute'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -52,6 +53,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     method : str
         'simplex', 'brute'
     ranges : dict of lists
+        keys are x-direction, y-direction, rotation
+    steps : dict of lists
         keys are x-direction, y-direction, rotation
 
     Returns
@@ -121,9 +124,6 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     measure_distances(model['grid'])
     measure_angles(model['grid'])
-
-    output = output / ('bestfit_' + method + '_' + correlation + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
-    output.mkdir(parents=True)
 
     out = {
         'ref_label': ref_label,
