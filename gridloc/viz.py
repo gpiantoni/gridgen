@@ -158,9 +158,22 @@ def plot_2d(grid2d, value='ecog'):
                 ),
             ),
         ]
+
+    annots = [{
+        'x': n_cols / 2,
+        'y': n_rows,
+        'showarrow': False,
+        'text': 'WIRES',
+        'xref': 'x',
+        'yref': 'y',
+        'align': 'right',
+        'bgcolor': 'white'
+        }]
+
     layout = go.Layout(
         width=n_cols * 60,
         height=n_rows * 60,
+        annotations=annots,
         autosize=False,
         xaxis=dict(
             visible=False,
