@@ -420,6 +420,7 @@ def read_volume(volume_file, threshold=-Inf):
     output = zeros(i.sum(), dtype=d_)
 
     output[&#39;pos&#39;] = apply_affine(volume.affine, array(where(i)).T)
+    output[&#39;pos&#39;] = array(where(i)).T
     output[&#39;value&#39;] = data[i]
 
     return output
@@ -1000,6 +1001,7 @@ To get from volume to surface coordinates, substract these numbers.</p>
     output = zeros(i.sum(), dtype=d_)
 
     output[&#39;pos&#39;] = apply_affine(volume.affine, array(where(i)).T)
+    output[&#39;pos&#39;] = array(where(i)).T
     output[&#39;value&#39;] = data[i]
 
     return output</code></pre>

@@ -102,7 +102,7 @@ TEMPLATE = {
             },
         "method": {
             "type": "str",
-            "necessary": False,
+            "necessary": True,
             "values": ['brute', 'simplex'],
             "help": "method to use (brute includes simplex as a second step)",
         },

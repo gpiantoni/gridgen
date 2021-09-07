@@ -29,11 +29,19 @@
 from pathlib import Path
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG
 from argparse import ArgumentParser, RawTextHelpFormatter
-from json import load, dumps
+from json import load, dump
 from textwrap import dedent
 from numpy import set_printoptions
+from datetime import datetime
 
-from .parameters import convert_to_path, TEMPLATE, prepare_template, help_template, validate_template
+from .parameters import (
+    convert_to_path,
+    help_template,
+    JSONEncoder_path,
+    prepare_template,
+    validate_template,
+    TEMPLATE,
+    )
 from ..fitting import fitting
 from ..matlab.comparison import compare_to_matlab
 from ..viz import to_html, to_div, plot_2d
@@ -153,7 +161,7 @@ def main(arguments=None):
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
         with p_json.open(&#39;w&#39;) as f:
-            f.write(dumps(parameters, indent=2))
+            dump(parameters, f, indent=2)
         return
 
     # log can be info or debug
@@ -183,9 +191,7 @@ def main(arguments=None):
     elif &#39;output_dir&#39; in parameters:
         output = parameters[&#39;output_dir&#39;]
     else:
-        output = &#39;.&#39;
-
-    lg.debug(dumps(parameters, indent=2))
+        output = &#39;gridloc_output&#39;
 
     parameters[&#39;output_dir&#39;] = output
     parameters = convert_to_path(parameters, p_json.parent)
@@ -233,7 +239,12 @@ def main(arguments=None):
             **parameters[&#39;fit&#39;])
 
     if args.function == &#39;matlab&#39;:
-        compare_to_matlab(parameters)</code></pre>
+        compare_to_matlab(parameters)
+
+    parameters[&#39;timestamp&#39;] = datetime.now().isoformat()
+    parameters_json = parameters[&#39;output_dir&#39;] / &#39;parameters.json&#39;
+    with parameters_json.open(&#39;w&#39;) as f:
+        dump(parameters, f, indent=2, cls=JSONEncoder_path)</code></pre>
 </details>
 </section>
 <section>
@@ -361,7 +372,7 @@ def main(arguments=None):
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
         with p_json.open(&#39;w&#39;) as f:
-            f.write(dumps(parameters, indent=2))
+            dump(parameters, f, indent=2)
         return
 
     # log can be info or debug
@@ -391,9 +402,7 @@ def main(arguments=None):
     elif &#39;output_dir&#39; in parameters:
         output = parameters[&#39;output_dir&#39;]
     else:
-        output = &#39;.&#39;
-
-    lg.debug(dumps(parameters, indent=2))
+        output = &#39;gridloc_output&#39;
 
     parameters[&#39;output_dir&#39;] = output
     parameters = convert_to_path(parameters, p_json.parent)
@@ -441,7 +450,12 @@ def main(arguments=None):
             **parameters[&#39;fit&#39;])
 
     if args.function == &#39;matlab&#39;:
-        compare_to_matlab(parameters)</code></pre>
+        compare_to_matlab(parameters)
+
+    parameters[&#39;timestamp&#39;] = datetime.now().isoformat()
+    parameters_json = parameters[&#39;output_dir&#39;] / &#39;parameters.json&#39;
+    with parameters_json.open(&#39;w&#39;) as f:
+        dump(parameters, f, indent=2, cls=JSONEncoder_path)</code></pre>
 </details>
 </dd>
 </dl>

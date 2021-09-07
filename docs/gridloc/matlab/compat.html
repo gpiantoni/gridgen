@@ -30,17 +30,15 @@ of the Matlab functions, for compatibility</p>
 <pre><code class="python">&#34;&#34;&#34;The functions in this module should have the same name and argument signature
 of the Matlab functions, for compatibility&#34;&#34;&#34;
 
-from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate, intersect1d, corrcoef
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate
 from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
-from ..utils import be_nice, normalize
+from ..utils import be_nice
 
-from .io import read_matlab
-from ..io import read_ecog2d_matlab
 from ..geometry import calc_plane_to_axis
 from ..construct import make_grid_with_labels
 
@@ -91,7 +89,7 @@ def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype=&#39
         if true, it uses the normals of `subjstructs`, if false it recomputes them
     interstype : str
         if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
-        to specify a radius `intersval`)
+        to specify a radius `intersval`
     intersval : float
         radius when `interstype` == `&#39;fixed&#39;`
 
@@ -687,7 +685,7 @@ to have 'tri_norm')</dd>
 <dd>if true, it uses the normals of <code>subjstructs</code>, if false it recomputes them</dd>
 <dt><strong><code>interstype</code></strong> :&ensp;<code>str</code></dt>
 <dd>if <code>''</code> all triangles of the model are processed; if <code>'fixed'</code>, you need
-to specify a radius <code>intersval</code>)</dd>
+to specify a radius <code>intersval</code></dd>
 <dt><strong><code>intersval</code></strong> :&ensp;<code>float</code></dt>
 <dd>radius when <code>interstype</code> == <code>'fixed'</code></dd>
 </dl>
@@ -721,7 +719,7 @@ vertices) and the projection onto the surface.</dd>
         if true, it uses the normals of `subjstructs`, if false it recomputes them
     interstype : str
         if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
-        to specify a radius `intersval`)
+        to specify a radius `intersval`
     intersval : float
         radius when `interstype` == `&#39;fixed&#39;`
 
