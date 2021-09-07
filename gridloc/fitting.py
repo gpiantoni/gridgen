@@ -18,7 +18,7 @@ from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
 from .construct import construct_grid
-from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv
+from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv, WIRE
 from .viz import plot_results, to_div, to_html, plot_electrodes
 from .examine import measure_distances, measure_angles
 from .utils import be_nice, match_labels, normalize
@@ -94,7 +94,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         ranges[k][1] += ranges[k][2]
 
     # has to be a tuple
-    minimizer_args = (
+    minimizer_args = [
         dura,  # 0
         init_vert,  # 1
         ref_label,  # 2
@@ -103,22 +103,23 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         pial,  # 5
         angio,  # 6
         correlation,  # 7
-        ranges,  # 8
-        )
+        ]
 
     # start position
-    model = corr_ecog_model([x, y, rotation], *minimizer_args[:-1], final=True)
-    lg.info(f'Start position at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
+    model = corr_ecog_model([x, y, rotation], *minimizer_args, final=True)
+    lg.info(f'Starting position at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
     fig = plot_electrodes(pial, model['grid'], ref_label=ref_label)
     grid_file = output / 'start_pos.html'
     to_html([to_div(fig), ], grid_file)
 
     if method == 'simplex':
-        m = fitting_simplex(corr_ecog_model, [x, y, rotation], minimizer_args)
+        args = minimizer_args + [steps, ]
+        m = fitting_simplex(corr_ecog_model, [x, y, rotation], tuple(args))
         best_fit = m.x
 
     elif method == 'brute':
-        m = fitting_brute(corr_ecog_model, [x, y, rotation], minimizer_args)
+        args = minimizer_args + [ranges, ]
+        m = fitting_brute(corr_ecog_model, [x, y, rotation], tuple(args))
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -127,12 +128,19 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     # create grid with best values
     x, y, rotation = best_fit
-    model = corr_ecog_model(best_fit, *minimizer_args[:-1], final=True)
-    lg.info(f'Best fit at {x: 8.3f}mm {y: 8.3f}mm {rotation: 8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]: 8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
+    model = corr_ecog_model(best_fit, *minimizer_args, final=True)
+    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
+
+    plot_results(model, pial, ras_shift, output)
+
+    # remove wires
+    i_keep = model['grid']['label'] != WIRE
+    for field in ['ecog', 'grid', 'morpho', 'vasc']:
+        if model[field] is not None:
+            model[field] = model[field][i_keep]
 
     measure_distances(model['grid'])
     measure_angles(model['grid'])
-
     out = {
         'ref_label': ref_label,
         'surface': str(dura_file),
@@ -141,7 +149,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         'normals': list(dura['pos_norm'][model['vert'], :]),
         'rotation': rotation,
         'percent_vasculature': model['percent_vasc'],
-        'r2': model['cc'],
+        'corrcoef': model['cc'],
         'duration': comp_dur,
         }
     results_file = output / 'results.json'
@@ -152,13 +160,16 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
 
-    plot_results(model, pial, ras_shift, output)
     return model['grid']
 
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, init_rot, ecog, pial, angio=None,
                     correlation=None, ranges=None, final=False):
     """Main model to minimize
+
+    Note that when final=False, cc should be minimized (the smaller the better)
+    while when final=True, cc should be as large as possible (more intuitive
+    reading)
 
     Parameters
     ----------
@@ -182,7 +193,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, init_rot, ecog, pial, angio=N
 
     i, cc = compare_models(e, m, v, correlation=correlation)
     if not final:
-        lg.debug(f'{x0[0]: 8.3f}mm {x0[1]: 8.3f}mm {x0[2]: 8.3f}° (vert{start_vert: 6d}) = {cc: 8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
+        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
 
     if final:
         return {
@@ -192,7 +203,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, init_rot, ecog, pial, angio=N
             'morpho': morpho,
             'vasc': vasc,
             'percent_vasc': 100 * (1 - i),
-            'cc': cc,
+            'cc': -1 * cc,
             }
 
     else:
@@ -251,8 +262,8 @@ def fitting_brute(func, init, args):
     rotation[1] += init[2]
 
     ranges = (
-        slice(*args[7]['x']),
-        slice(*args[7]['y']),
+        slice(*args[8]['x']),
+        slice(*args[8]['y']),
         slice(*rotation),
         )
 
@@ -275,15 +286,18 @@ def fitting_brute(func, init, args):
 
 def fitting_simplex(func, init, args):
     """TODO: check after brute"""
-    lg.info(f'Starting point: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now applying simplex')
+    lg.info(f'Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°')
 
+    steps = args[8]
+
+    # it's all 0 when calling simplex directly but it might be different when it's finish-brute
     x, y, rotation = init
-    steps = args[7]
+
     simplex = array([
-        [x - steps['x'], y - steps['y'], rotation - ranges['rotation'][2] / 2],
-        [x + steps['x'], y - steps['y'], rotation - ranges['rotation'][2] / 2],
-        [x - steps['x'], y + steps['y'], rotation - ranges['rotation'][2] / 2],
-        [x - steps['x'], y - steps['y'], rotation + ranges['rotation'][2] / 2],
+        [x - steps['x'], y - steps['y'], rotation - steps['rotation']],
+        [x + steps['x'], y - steps['y'], rotation - steps['rotation']],
+        [x - steps['x'], y + steps['y'], rotation - steps['rotation']],
+        [x - steps['x'], y - steps['y'], rotation + steps['rotation']],
         ])
 
     m = minimize(
