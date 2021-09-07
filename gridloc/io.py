@@ -80,8 +80,6 @@ def read_grid2d(grid_file):
     labels = []
     with grid_file.open('r') as f:
         for row in f.readlines():
-            if row.startswith(WIRE):
-                continue
             labels.append([x.strip() for x in row.split('\t')])
 
     labels = array(labels)
@@ -101,9 +99,6 @@ def write_ecog2d(ecog_file, ecog2d):
         ecog (n_rows, n_columns) with fields (label, ecog, good)
     """
     savetxt(ecog_file, ecog2d['ecog'], fmt='%.8f', delimiter='\t')
-    with ecog_file.open('a') as f:
-        wires = [WIRE, ] * ecog2d.shape[1]
-        f.write('\t'.join(wires))
 
 
 def read_ecog2d(ecog_file, grid_file):

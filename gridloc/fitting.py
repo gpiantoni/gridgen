@@ -266,15 +266,16 @@ def fitting_brute(func, init, args):
 
 
 def fitting_simplex(func, init, args):
+    """TODO: check after brute"""
     lg.info(f'Starting point: {init[0]: 8.3f}mm {init[1]: 8.3f}mm {init[2]: 8.3f}°. Now applying simplex')
 
     x, y, rotation = init
-    ranges = args[7]
+    steps = args[7]
     simplex = array([
-        [x - ranges['x'][2] / 2, y - ranges['y'][2] / 2, rotation - ranges['rotation'][2] / 2],
-        [x + ranges['x'][2] / 2, y - ranges['y'][2] / 2, rotation - ranges['rotation'][2] / 2],
-        [x - ranges['x'][2] / 2, y + ranges['y'][2] / 2, rotation - ranges['rotation'][2] / 2],
-        [x - ranges['x'][2] / 2, y - ranges['y'][2] / 2, rotation + ranges['rotation'][2] / 2],
+        [x - steps['x'], y - steps['y'], rotation - ranges['rotation'][2] / 2],
+        [x + steps['x'], y - steps['y'], rotation - ranges['rotation'][2] / 2],
+        [x - steps['x'], y + steps['y'], rotation - ranges['rotation'][2] / 2],
+        [x - steps['x'], y - steps['y'], rotation + ranges['rotation'][2] / 2],
         ])
 
     m = minimize(

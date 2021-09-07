@@ -4,7 +4,7 @@ from plotly.offline import plot
 from textwrap import dedent
 import plotly.graph_objects as go
 
-from .io import export_grid
+from .io import export_grid, WIRE
 from .utils import normalize
 
 
@@ -56,9 +56,13 @@ def plot_electrodes(pial, grid, values=None):
     labels = grid['label'].reshape(-1)
 
     if values is None:
+        iswire = labels == WIRE
+        colors = labels.copy()
+        colors[iswire] = 'red'
+        colors[~iswire] = 'black'
         marker = dict(
             size=MARKER_SIZE,
-            color='black',
+            color=colors,
             )
 
     else:
