@@ -114,12 +114,12 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     if method == 'simplex':
         args = minimizer_args + [steps, ]
-        m = fitting_simplex(corr_ecog_model, [x, y, rotation], tuple(args))
+        m = fitting_simplex(corr_ecog_model, None, tuple(args))
         best_fit = m.x
 
     elif method == 'brute':
         args = minimizer_args + [ranges, ]
-        m = fitting_brute(corr_ecog_model, [x, y, rotation], tuple(args))
+        m = fitting_brute(corr_ecog_model, tuple(args))
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -252,19 +252,15 @@ def corrcoef_match(ecog, estimate, field='morphology'):
     return corrcoef(a, b)[0, 1]
 
 
-def fitting_brute(func, init, args):
+def fitting_brute(func, args):
 
     # shift rotation by initial value
     # for x and y, the default value MUST be zero, because we start at
     # the reference vertex
-    rotation = args[8]['rotation']
-    rotation[0] += init[2]
-    rotation[1] += init[2]
-
     ranges = (
         slice(*args[8]['x']),
         slice(*args[8]['y']),
-        slice(*rotation),
+        slice(*args[8]['rotation']),
         )
 
     if mkl is not None:
@@ -285,13 +281,15 @@ def fitting_brute(func, init, args):
 
 
 def fitting_simplex(func, init, args):
-    """TODO: check after brute"""
     lg.info(f'Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°')
 
-    steps = args[8]
-
-    # it's all 0 when calling simplex directly but it might be different when it's finish-brute
-    x, y, rotation = init
+    if init is None:  # when called stand alone
+        x = y = rotation = 0
+        steps = args[8]
+    else:
+        x, y, rotation = init
+        # convert ranges to simplex steps
+        steps = {k: args[8][k][2] / 2 for k in ('x', 'y', 'rotation')}
 
     simplex = array([
         [x - steps['x'], y - steps['y'], rotation - steps['rotation']],
