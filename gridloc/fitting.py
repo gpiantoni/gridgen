@@ -108,7 +108,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     # start position
     model = corr_ecog_model([x, y, rotation], *minimizer_args, final=True)
     lg.info(f'Starting position at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
-    fig = plot_electrodes(pial, model['grid'], ref_label=ref_label)
+    fig = plot_electrodes(pial, model['grid'], ref_label=ref_label, angio=angio)
     grid_file = output / 'start_pos.html'
     to_html([to_div(fig), ], grid_file)
 
@@ -131,7 +131,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
     lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
 
-    plot_results(model, pial, ras_shift, output)
+    plot_results(model, pial, ras_shift, output, angio=angio)
 
     model = remove_wires(model)
 
@@ -278,12 +278,12 @@ def fitting_brute(func, args):
 
 
 def fitting_simplex(func, init, args):
-    lg.info(f'Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°')
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
         steps = args[8]
     else:
+        lg.info(f'Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°')
         x, y, rotation = init
         # convert ranges to simplex steps
         steps = {k: args[8][k][2] / 2 for k in ('x', 'y', 'rotation')}

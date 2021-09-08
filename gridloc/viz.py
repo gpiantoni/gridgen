@@ -1,5 +1,5 @@
 from logging import getLogger
-from numpy import mean, sign, nanmin, nanmax
+from numpy import mean, sign, nanmin, nanmax, log10
 from plotly.offline import plot
 from textwrap import dedent
 import plotly.graph_objects as go
@@ -22,33 +22,33 @@ MARKER_SIZE = 3
 lg = getLogger(__name__)
 
 
-def plot_results(model, pial, ras_shift, output):
+def plot_results(model, pial, ras_shift, output, angio=None):
 
     grid_file = output / 'bestfit'
-    fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'])
+    fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'], angio=angio)
     to_html([to_div(fig), ], grid_file)
     lg.debug(f'Exported merged model to {grid_file}')
 
     grid_file = output / 'morphology'
     fig0 = plot_2d(model['morpho'], 'morphology')
-    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'])
+    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'], angio=angio)
     to_html([to_div(fig0), to_div(fig1)], grid_file)
 
     if model['vasc'] is not None:
         grid_file = output / 'vascular'
         fig0 = plot_2d(model['vasc'], 'vasculature')
-        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'])
+        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'], angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported vascular to {grid_file}')
 
         merged = (model['percent_vasc'] * normalize(model['vasc']['vasculature']) + (100 - model['percent_vasc']) * normalize(model['morpho']['morphology'])) / 100
         grid_file = output / 'merged'
-        fig = plot_electrodes(pial, model['grid'], merged)
+        fig = plot_electrodes(pial, model['grid'], merged, angio=angio)
         to_html([to_div(fig), ], grid_file)
         lg.debug(f'Exported merged model to {grid_file}')
 
 
-def plot_electrodes(pial, grid, values=None, ref_label=None):
+def plot_electrodes(pial, grid, values=None, ref_label=None, angio=None):
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
     labels = grid['label'].reshape(-1)
@@ -110,6 +110,22 @@ def plot_electrodes(pial, grid, values=None, ref_label=None):
             marker=marker,
             ),
         ]
+
+    if angio is not None:
+        traces.append(
+            go.Scatter3d(
+                x=angio['pos'][:, 0],
+                y=angio['pos'][:, 1],
+                z=angio['pos'][:, 2],
+                mode='markers',
+                marker=dict(
+                    size=5,
+                    color=log10(angio['value']),
+                    symbol='diamond',
+                    colorscale='Hot',
+                    ),
+                opacity=1,
+                ))
 
     fig = go.Figure(
         data=traces,
