@@ -4,7 +4,7 @@ from plotly.offline import plot
 from textwrap import dedent
 import plotly.graph_objects as go
 
-from .io import export_grid, WIRE
+from .io import WIRE
 from .utils import normalize
 
 

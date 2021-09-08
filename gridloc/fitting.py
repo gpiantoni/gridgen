@@ -133,11 +133,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
     plot_results(model, pial, ras_shift, output)
 
-    # remove wires
-    i_keep = model['grid']['label'] != WIRE
-    for field in ['ecog', 'grid', 'morpho', 'vasc']:
-        if model[field] is not None:
-            model[field] = model[field][i_keep]
+    model = remove_wires(model)
 
     measure_distances(model['grid'])
     measure_angles(model['grid'])
@@ -313,3 +309,15 @@ def fitting_simplex(func, init, args):
         )
 
     return m
+
+
+def remove_wires(model):
+    """We select rows with WIRE, so that we keep the 2d shape of the models
+    """
+    i_keep = model['grid']['label'] != WIRE
+    i_keep = i_keep.all(axis=1)
+    for field in ['ecog', 'grid', 'morpho', 'vasc']:
+        if model[field] is not None:
+            model[field] = model[field][i_keep, :]
+
+    return model
