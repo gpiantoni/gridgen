@@ -1,15 +1,20 @@
-from numpy import dot, arccos, pi, zeros, cross, dtype
+from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
+from ..matlab.geometry import intersect_ray_triangle
 
 d_ = dtype([
     ('label', '<U256'),   # labels cannot be longer than 256 char
     ('morphology', 'f4'),
     ])
 
+
 def compute_distance(grid, pial, method='minimum'):
 
-    if method == 'minimum':
+    if method == 'ray':
+        distance = _distance_ray(grid, pial)
+
+    elif method == 'minimum':
         distance = _distance_minimum(grid, pial)
 
     elif method == 'view':
@@ -21,6 +26,26 @@ def compute_distance(grid, pial, method='minimum'):
     elif method == 'pdf':
         distance = _distance_pdf(grid, pial)
 
+    return distance
+
+
+def _distance_ray(grid, pial):
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            dist = intersect_ray_triangle(
+                pial['pos'][pial['tri'][:, 0], :],
+                pial['pos'][pial['tri'][:, 1], :],
+                pial['pos'][pial['tri'][:, 2], :],
+                grid['pos'][i_x, i_y],
+                -1 * grid['norm'][i_x, i_y],
+                line=True
+                )
+
+            distance['morphology'][i_x, i_y] = nanmin(dist)
+
+    distance['label'] = grid['label']
     return distance
 
 

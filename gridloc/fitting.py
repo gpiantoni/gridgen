@@ -28,7 +28,7 @@ lg = getLogger(__name__)
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, correlation='parametric', ranges={}, steps={},
-            method='brute', init=False):
+            method='brute', init=False, morphology='ray'):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -58,6 +58,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         keys are x-direction, y-direction, rotation
     init : bool
         only show the initial position (do not compute running)
+    morphology : str
+        method to compute morphology
 
     Returns
     -------
@@ -105,6 +107,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         pial,  # 5
         angio,  # 6
         correlation,  # 7
+        morphology,  # 8
         ]
 
     if init:
@@ -165,7 +168,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
 
 
 def corr_ecog_model(x0, dura, ref_vert, ref_label, init_rot, ecog, pial, angio=None,
-                    correlation=None, ranges=None, final=False):
+                    correlation=None, ranges=None, final=False, morphology='ray'):
     """Main model to minimize
 
     Note that when final=False, cc should be minimized (the smaller the better)
@@ -182,7 +185,7 @@ def corr_ecog_model(x0, dura, ref_vert, ref_label, init_rot, ecog, pial, angio=N
     start_vert = search_grid(dura, ref_vert, x, y)
     grid = construct_grid(dura, start_vert, ref_label, ecog['label'], rotation=init_rot + rotation)
 
-    morpho = compute_distance(grid, pial, 'minimum')
+    morpho = compute_distance(grid, pial, morphology)
 
     if angio is not None and angio is not False:
         vasc = compute_vasculature(grid, angio)
@@ -259,9 +262,9 @@ def fitting_brute(func, args):
     # for x and y, the default value MUST be zero, because we start at
     # the reference vertex
     ranges = (
-        slice(*args[8]['x']),
-        slice(*args[8]['y']),
-        slice(*args[8]['rotation']),
+        slice(*args[9]['x']),
+        slice(*args[9]['y']),
+        slice(*args[9]['rotation']),
         )
 
     if mkl is not None:
@@ -285,12 +288,12 @@ def fitting_simplex(func, init, args):
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
-        steps = args[8]
+        steps = args[9]
     else:
         lg.info(f'Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°')
         x, y, rotation = init
         # convert ranges to simplex steps
-        steps = {k: args[8][k][2] / 2 for k in ('x', 'y', 'rotation')}
+        steps = {k: args[9][k][2] / 2 for k in ('x', 'y', 'rotation')}
 
     simplex = array([
         [x - steps['x'], y - steps['y'], rotation - steps['rotation']],

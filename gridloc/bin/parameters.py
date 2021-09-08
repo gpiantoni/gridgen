@@ -120,6 +120,13 @@ TEMPLATE = {
             "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
             "default": "parametric",
         },
+        "morphology": {
+            "type": "str",
+            "necessary": False,
+            "values": ['ray', 'minimum', 'view', 'cylinder', 'pdf'],
+            "help": "",
+            "default": "ray",
+        },
         "steps": {
             "x": {
                 "type": "float",
