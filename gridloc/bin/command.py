@@ -99,19 +99,27 @@ def create_arguments():
         """))
     subfun1.set_defaults(function='ecog')
 
-    # fit
     subfun2 = list_functions.add_parser(
-        'fit', help=dedent("""\
-        Generate the grid, with the correct labels.
+        'init', help=dedent("""\
+        Fit the ecog values to the surface
 
         Output:
-          bestfit_vert{}_rot{}.label : electrode locations in freesurfer format
-          bestfit_vert{}_rot{}.html : estimated activity of the best fit based on brain surface
+            ???
 
         """))
-    subfun2.set_defaults(function='fit')
+    subfun2.set_defaults(function='init')
 
     subfun3 = list_functions.add_parser(
+        'fit', help=dedent("""\
+        Fit the ecog values to the surface
+
+        Output:
+            ???
+
+        """))
+    subfun3.set_defaults(function='fit')
+
+    subfun4 = list_functions.add_parser(
         'matlab', help=dedent("""\
         Compute values based on a conversion of the matlab code and compare the
         values with those computed by matlab
@@ -119,7 +127,7 @@ def create_arguments():
         Output:
           ???
         """))
-    subfun3.set_defaults(function='matlab')
+    subfun4.set_defaults(function='matlab')
 
     return parser
 
@@ -129,6 +137,8 @@ def main(arguments=None):
     parser = create_arguments()
     args = parser.parse_args(arguments)
     func = args.function
+    if func == 'init':
+        func = 'fit'
 
     if func == 'parameters':
         parameters = prepare_template(TEMPLATE)
@@ -177,14 +187,14 @@ def main(arguments=None):
     ecog_fig = parameters['output_dir'] / 'grid2d_ecog.html'
     transform_file = parameters['output_dir'] / 'tkras'
 
-    if args.function in ('grid2d', ):
+    if args.function == 'grid2d':
         from ..construct import make_grid_with_labels
 
         grid2d = make_grid_with_labels(**parameters['grid2d'])
         lg.info(f'Writing labels to {grid2d_tsv}')
         write_grid2d(grid2d_tsv, grid2d)
 
-    if args.function in ('ecog', ):
+    if args.function == 'ecog':
         from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
 
         lg.info(f'Reading 2d grid from {grid2d_tsv}')
@@ -200,25 +210,29 @@ def main(arguments=None):
         fig = plot_2d(ecog2d, 'ecog')
         to_html([to_div(fig), ], ecog_fig)
 
-    if args.function in ('fit', ):
+    if args.function in ('init', 'fit'):
 
         offset = read_surface_ras_shift(parameters['fit']['T1_file'])
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        start_time = datetime.now()
-        output_dir = parameters['output_dir'] / ('bestfit_' + parameters['fit']['method'] + '_' + parameters['fit']['correlation'] + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
-        output_dir.mkdir(parents=True)
+        if args.function == 'fit':
+            start_time = datetime.now()
+            output_dir = parameters['output_dir'] / ('bestfit_' + parameters['fit']['method'] + '_' + parameters['fit']['correlation'] + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
+            output_dir.mkdir(parents=True)
 
-        parameters['timestamp'] = start_time.isoformat()
-        parameters_json = output_dir / 'parameters.json'
-        with parameters_json.open('w') as f:
-            dump(parameters, f, indent=2, cls=JSONEncoder_path)
+            parameters['timestamp'] = start_time.isoformat()
+            parameters_json = output_dir / 'parameters.json'
+            with parameters_json.open('w') as f:
+                dump(parameters, f, indent=2, cls=JSONEncoder_path)
+        else:
+            output_dir = parameters['output_dir']
 
         fitting(
             ecog=ecog2d,
             output=output_dir,
+            init=args.function == 'init',
             **parameters['fit'])
 
     if args.function == 'matlab':

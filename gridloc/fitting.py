@@ -28,7 +28,7 @@ lg = getLogger(__name__)
 
 def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=None,
             angio_threshold=None, correlation='parametric', ranges={}, steps={},
-            method='brute'):
+            method='brute', init=False):
     """Fit the brain activity onto the surface
 
     Parameters
@@ -56,6 +56,8 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         keys are x-direction, y-direction, rotation
     steps : dict of lists
         keys are x-direction, y-direction, rotation
+    init : bool
+        only show the initial position (do not compute running)
 
     Returns
     -------
@@ -105,12 +107,14 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         correlation,  # 7
         ]
 
-    # start position
-    model = corr_ecog_model([x, y, rotation], *minimizer_args, final=True)
-    lg.info(f'Starting position at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
-    fig = plot_electrodes(pial, model['grid'], ref_label=ref_label, angio=angio)
-    grid_file = output / 'start_pos.html'
-    to_html([to_div(fig), ], grid_file)
+    if init:
+        # start position
+        model = corr_ecog_model([x, y, rotation], *minimizer_args, final=True)
+        lg.info(f'Starting position at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
+        fig = plot_electrodes(pial, model['grid'], ref_label=ref_label, angio=angio)
+        grid_file = output / 'start_pos.html'
+        to_html([to_div(fig), ], grid_file)
+        return
 
     if method == 'simplex':
         args = minimizer_args + [steps, ]
