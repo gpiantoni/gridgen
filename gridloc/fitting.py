@@ -18,7 +18,7 @@ from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
 from .construct import construct_grid
-from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv, WIRE
+from .io import read_surf, read_surface_ras_shift, read_volume, write_tsv, WIRE, export_grid
 from .viz import plot_results, to_div, to_html, plot_electrodes
 from .examine import measure_distances, measure_angles
 from .utils import be_nice, match_labels, normalize
@@ -157,6 +157,7 @@ def fitting(T1_file, dura_file, pial_file, initial, ecog, output, angio_file=Non
         dump(out, f, indent=2)
 
     grid_file = output / 'electrodes'
+    export_grid(model['grid'], ras_shift, grid_file)
     write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
 

@@ -24,12 +24,10 @@ lg = getLogger(__name__)
 
 def plot_results(model, pial, ras_shift, output):
 
-    grid_file = output / 'ecog'
+    grid_file = output / 'bestfit'
     fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'])
     to_html([to_div(fig), ], grid_file)
     lg.debug(f'Exported merged model to {grid_file}')
-
-    export_grid(model['grid'], ras_shift, grid_file)
 
     grid_file = output / 'morphology'
     fig0 = plot_2d(model['morpho'], 'morphology')
