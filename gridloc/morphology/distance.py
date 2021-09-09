@@ -1,4 +1,4 @@
-from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin
+from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 from ..matlab.geometry import intersect_ray_triangle
@@ -9,7 +9,7 @@ d_ = dtype([
     ])
 
 
-def compute_distance(grid, pial, method='minimum'):
+def compute_distance(grid, pial, method='minimum', max_distance=None):
 
     if method == 'ray':
         distance = _distance_ray(grid, pial)
@@ -25,6 +25,9 @@ def compute_distance(grid, pial, method='minimum'):
 
     elif method == 'pdf':
         distance = _distance_pdf(grid, pial)
+
+    if max_distance and method in ('ray', 'minimum'):
+        distance['morphology'][distance['morphology'] > max_distance] = NaN
 
     return distance
 

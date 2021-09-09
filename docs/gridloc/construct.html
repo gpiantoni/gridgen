@@ -113,7 +113,7 @@ def construct_grid(surf, start_vert, start_label, labels, grid3d, rotation=0):
     grid3d[&#39;angles&#39;] = arange(
         -1 * grid3d[&#39;maximum_angle&#39;],
         grid3d[&#39;maximum_angle&#39;],
-        0.2)  # steps
+        grid3d[&#39;step_angle&#39;])
 
     radians = rotation / 180 * pi
     n_rows, n_cols = labels.shape
@@ -344,7 +344,7 @@ reasonable results</dd>
     grid3d[&#39;angles&#39;] = arange(
         -1 * grid3d[&#39;maximum_angle&#39;],
         grid3d[&#39;maximum_angle&#39;],
-        0.2)  # steps
+        grid3d[&#39;step_angle&#39;])
 
     radians = rotation / 180 * pi
     n_rows, n_cols = labels.shape

@@ -24,7 +24,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin
+<pre><code class="python">from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 from ..matlab.geometry import intersect_ray_triangle
@@ -35,7 +35,7 @@ d_ = dtype([
     ])
 
 
-def compute_distance(grid, pial, method=&#39;minimum&#39;):
+def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
 
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
@@ -51,6 +51,9 @@ def compute_distance(grid, pial, method=&#39;minimum&#39;):
 
     elif method == &#39;pdf&#39;:
         distance = _distance_pdf(grid, pial)
+
+    if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
+        distance[&#39;morphology&#39;][distance[&#39;morphology&#39;] &gt; max_distance] = NaN
 
     return distance
 
@@ -149,7 +152,7 @@ def _distance_pdf(grid, pial):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridloc.morphology.distance.compute_distance"><code class="name flex">
-<span>def <span class="ident">compute_distance</span></span>(<span>grid, pial, method='minimum')</span>
+<span>def <span class="ident">compute_distance</span></span>(<span>grid, pial, method='minimum', max_distance=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -157,7 +160,7 @@ def _distance_pdf(grid, pial):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_distance(grid, pial, method=&#39;minimum&#39;):
+<pre><code class="python">def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
 
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
@@ -173,6 +176,9 @@ def _distance_pdf(grid, pial):
 
     elif method == &#39;pdf&#39;:
         distance = _distance_pdf(grid, pial)
+
+    if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
+        distance[&#39;morphology&#39;][distance[&#39;morphology&#39;] &gt; max_distance] = NaN
 
     return distance</code></pre>
 </details>

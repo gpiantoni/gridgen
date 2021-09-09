@@ -188,21 +188,27 @@ TEMPLATE = {
             &#34;values&#34;: [&#39;brute&#39;, &#39;simplex&#39;],
             &#34;help&#34;: &#34;method to use (brute includes simplex as a second step)&#34;,
             &#34;default&#34;: &#34;brute&#34;,
-        },
+            },
         &#34;correlation&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
             &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
             &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank).&#34;,
             &#34;default&#34;: &#34;parametric&#34;,
-        },
+            },
         &#34;morphology&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
             &#34;values&#34;: [&#39;ray&#39;, &#39;minimum&#39;, &#39;view&#39;, &#39;cylinder&#39;, &#39;pdf&#39;],
             &#34;help&#34;: &#34;how to compute the distance of the morphology&#34;,
             &#34;default&#34;: &#34;ray&#34;,
-        },
+            },
+        &#34;maximum_distance&#34;: {
+            &#39;type&#39;: &#39;float&#39;,
+            &#39;necessary&#39;: False,
+            &#39;help&#39;: &#39;maximum distance between electrode and pial surface. Exact interpretation depends on the type of `morphology`&#39;,
+            &#39;default&#39;: 10,
+            },
         &#34;steps&#34;: {
             &#34;x&#34;: {
                 &#34;type&#34;: &#34;float&#34;,

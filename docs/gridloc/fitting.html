@@ -87,13 +87,13 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
     # has to be a tuple
-    minimizer_args = [
+    minimizer_args = (
         ecog,  # 0
         grid3d,  # 1
         initial,  # 2
         mri,  # 3
         fit,  # 4
-        ]
+        )
 
     if not fit:
         # start position
@@ -109,19 +109,12 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         to_html([to_div(fig), ], grid_file)
         return
 
-    if method == &#39;simplex&#39;:
-        args = minimizer_args + [steps, ]
-        m = fitting_simplex(corr_ecog_model, None, tuple(args))
+    if fit[&#39;method&#39;] == &#39;simplex&#39;:
+        m = fitting_simplex(corr_ecog_model, None, minimizer_args)
         best_fit = m.x
 
-    elif method == &#39;brute&#39;:
-        # make sure that the last point is included in the range
-        for k, v in ranges.items():
-            ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
-            ranges[k][1] += ranges[k][2]
-
-        args = minimizer_args + [ranges, ]
-        m = fitting_brute(corr_ecog_model, tuple(args))
+    elif fit[&#39;method&#39;] == &#39;brute&#39;:
+        m = fitting_brute(corr_ecog_model, minimizer_args)
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -133,7 +126,7 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
     lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vert&#34;]: 6d}) = {model[&#34;cc&#34;]:+8.3f} (vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
 
-    plot_results(model, pial, ras_shift, output, angio=angio)
+    plot_results(model, mri[&#39;pial&#39;], mri[&#39;ras_shift&#39;], output, angio=mri[&#39;angio&#39;])
 
     model = remove_wires(model)
 
@@ -184,17 +177,17 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
         ecog[&#39;label&#39;],
         rotation=initial[&#39;rotation&#39;] + rotation)
 
-    morpho = compute_distance(grid, mri[&#39;pial&#39;], morphology)
+    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;morphology&#39;], fit[&#39;maximum_distance&#39;])
 
-    if angio is not None and angio is not False:
-        vasc = compute_vasculature(grid, angio)
+    if mri[&#39;angio&#39;] is not None:
+        vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
         e, m, v = match_labels(ecog, morpho, vasc)
 
     else:
         e, m = match_labels(ecog, morpho)
         v = vasc = None
 
-    i, cc = compare_models(e, m, v, correlation=correlation)
+    i, cc = compare_models(e, m, v, correlation=fit[&#39;correlation&#39;])
     if not final:
         lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
@@ -257,10 +250,16 @@ def corrcoef_match(ecog, estimate, field=&#39;morphology&#39;):
 
 def fitting_brute(func, args):
 
+    ranges = args[4][&#39;ranges&#39;]
+    # make sure that the last point is included in the range
+    for k, v in ranges.items():
+        ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
+        ranges[k][1] += ranges[k][2]
+
     ranges = (
-        slice(*args[9][&#39;x&#39;]),
-        slice(*args[9][&#39;y&#39;]),
-        slice(*args[9][&#39;rotation&#39;]),
+        slice(ranges[&#39;x&#39;]),
+        slice(ranges[&#39;y&#39;]),
+        slice(ranges[&#39;rotation&#39;]),
         )
 
     if mkl is not None:
@@ -270,7 +269,7 @@ def fitting_brute(func, args):
         res = brute(
             corr_ecog_model,
             ranges,
-            args=args[:-1],
+            args=args,
             disp=True,
             workers=p.map,
             full_output=True,
@@ -284,12 +283,12 @@ def fitting_simplex(func, init, args):
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
-        steps = args[9]
+        steps = args[4][&#39;steps&#39;]
     else:
         lg.info(f&#39;Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°&#39;)
         x, y, rotation = init
         # convert ranges to simplex steps
-        steps = {k: args[9][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
+        steps = {k: args[4][&#39;ranges&#39;][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
 
     simplex = array([
         [x - steps[&#39;x&#39;], y - steps[&#39;y&#39;], rotation - steps[&#39;rotation&#39;]],
@@ -302,7 +301,7 @@ def fitting_simplex(func, init, args):
         func,
         array([0, 0, 0]),  # ignored
         method=&#39;Nelder-Mead&#39;,
-        args=args[:-1],
+        args=args,
         options=dict(
             maxiter=100,
             initial_simplex=simplex,
@@ -410,17 +409,17 @@ reading)</p>
         ecog[&#39;label&#39;],
         rotation=initial[&#39;rotation&#39;] + rotation)
 
-    morpho = compute_distance(grid, mri[&#39;pial&#39;], morphology)
+    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;morphology&#39;], fit[&#39;maximum_distance&#39;])
 
-    if angio is not None and angio is not False:
-        vasc = compute_vasculature(grid, angio)
+    if mri[&#39;angio&#39;] is not None:
+        vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
         e, m, v = match_labels(ecog, morpho, vasc)
 
     else:
         e, m = match_labels(ecog, morpho)
         v = vasc = None
 
-    i, cc = compare_models(e, m, v, correlation=correlation)
+    i, cc = compare_models(e, m, v, correlation=fit[&#39;correlation&#39;])
     if not final:
         lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
@@ -524,13 +523,13 @@ reading)</p>
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
     # has to be a tuple
-    minimizer_args = [
+    minimizer_args = (
         ecog,  # 0
         grid3d,  # 1
         initial,  # 2
         mri,  # 3
         fit,  # 4
-        ]
+        )
 
     if not fit:
         # start position
@@ -546,19 +545,12 @@ reading)</p>
         to_html([to_div(fig), ], grid_file)
         return
 
-    if method == &#39;simplex&#39;:
-        args = minimizer_args + [steps, ]
-        m = fitting_simplex(corr_ecog_model, None, tuple(args))
+    if fit[&#39;method&#39;] == &#39;simplex&#39;:
+        m = fitting_simplex(corr_ecog_model, None, minimizer_args)
         best_fit = m.x
 
-    elif method == &#39;brute&#39;:
-        # make sure that the last point is included in the range
-        for k, v in ranges.items():
-            ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
-            ranges[k][1] += ranges[k][2]
-
-        args = minimizer_args + [ranges, ]
-        m = fitting_brute(corr_ecog_model, tuple(args))
+    elif fit[&#39;method&#39;] == &#39;brute&#39;:
+        m = fitting_brute(corr_ecog_model, minimizer_args)
         best_fit = m[0]
 
     end_time = datetime.now()
@@ -570,7 +562,7 @@ reading)</p>
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
     lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vert&#34;]: 6d}) = {model[&#34;cc&#34;]:+8.3f} (vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
 
-    plot_results(model, pial, ras_shift, output, angio=angio)
+    plot_results(model, mri[&#39;pial&#39;], mri[&#39;ras_shift&#39;], output, angio=mri[&#39;angio&#39;])
 
     model = remove_wires(model)
 
@@ -610,10 +602,16 @@ reading)</p>
 </summary>
 <pre><code class="python">def fitting_brute(func, args):
 
+    ranges = args[4][&#39;ranges&#39;]
+    # make sure that the last point is included in the range
+    for k, v in ranges.items():
+        ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
+        ranges[k][1] += ranges[k][2]
+
     ranges = (
-        slice(*args[9][&#39;x&#39;]),
-        slice(*args[9][&#39;y&#39;]),
-        slice(*args[9][&#39;rotation&#39;]),
+        slice(ranges[&#39;x&#39;]),
+        slice(ranges[&#39;y&#39;]),
+        slice(ranges[&#39;rotation&#39;]),
         )
 
     if mkl is not None:
@@ -623,7 +621,7 @@ reading)</p>
         res = brute(
             corr_ecog_model,
             ranges,
-            args=args[:-1],
+            args=args,
             disp=True,
             workers=p.map,
             full_output=True,
@@ -646,12 +644,12 @@ reading)</p>
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
-        steps = args[9]
+        steps = args[4][&#39;steps&#39;]
     else:
         lg.info(f&#39;Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°&#39;)
         x, y, rotation = init
         # convert ranges to simplex steps
-        steps = {k: args[9][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
+        steps = {k: args[4][&#39;ranges&#39;][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
 
     simplex = array([
         [x - steps[&#39;x&#39;], y - steps[&#39;y&#39;], rotation - steps[&#39;rotation&#39;]],
@@ -664,7 +662,7 @@ reading)</p>
         func,
         array([0, 0, 0]),  # ignored
         method=&#39;Nelder-Mead&#39;,
-        args=args[:-1],
+        args=args,
         options=dict(
             maxiter=100,
             initial_simplex=simplex,

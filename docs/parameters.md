@@ -34,6 +34,7 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
   - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
   - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank).. Values: [parametric, nonparametric]. Default: parametric
   - **morphology**: (str, optional) how to compute the distance of the morphology. Values: [ray, minimum, view, cylinder, pdf]. Default: ray
+  - **maximum_distance**: (float, optional) maximum distance between electrode and pial surface. Exact interpretation depends on the type of `morphology`. Default: 10
   - **steps**
     - **x**: (float, optional) Step size in mm for x-direction, for method simplex
     - **y**: (float, optional) Step size in mm for y-direction, for method simplex
