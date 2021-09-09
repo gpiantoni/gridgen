@@ -1,19 +1,18 @@
 """Sub-functions to find one node (electrode) at the time, based on the location
 of the previous nodes"""
 from logging import getLogger
-from numpy import array, arange, argmin, cross, pi, sqrt
+from numpy import array, argmin, cross, pi, sqrt
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
 
 from .geometry import calc_plane_to_axis
 
-# POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
 
 lg = getLogger(__name__)
 lg.propagate = False
 
 
-def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
+def find_new_pos_0d(grid, neighbors, surf, grid3d, x, y, radians=0):
     """Find the position of an electrode which has 1 neighbor perpendicular to it.
     We try to estimate the position of electrode `x` based on the position of `a`.
 
@@ -30,6 +29,10 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
     surf : dict
         surface with normals. It's better to use the smooth surface to have
         reasonable results
+    grid3d : dict
+        - interelec_distance : float
+        - maximum_angle : float
+        - angles : (n, ) array of possible angles
     x : int
         row index for this electrode
     y : int
@@ -47,7 +50,7 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
     pos_neighbor = grid['pos'][x_neighbor, y_neighbor]  # this cannot be nan
     normal_neighbor = grid['norm'][x_neighbor, y_neighbor]  # this cannot be nan
 
-    coords_2d = array([x - x_neighbor, y - y_neighbor]) * interelec_distance
+    coords_2d = array([x - x_neighbor, y - y_neighbor]) * grid3d['interelec_distance']
 
     plane = calc_plane_to_axis(normal_neighbor, radians=radians)
     if coords_2d[0] == 0:
@@ -58,7 +61,7 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
     pos_potential = []
     plane_potential = []
     distance = []
-    for degrees in POSSIBLE_DEGREES:
+    for degrees in grid3d['angles']:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
         trans_2d_to_3d = plane @ r.as_matrix()
@@ -68,7 +71,7 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
 
     idx_min_angle = argmin(distance)
-    min_angle = POSSIBLE_DEGREES[idx_min_angle]
+    min_angle = grid3d['angles'][idx_min_angle]
 
     new_pos = pos_potential[idx_min_angle]
     new_plane = plane_potential[idx_min_angle]
@@ -82,7 +85,7 @@ def find_new_pos_0d(grid, neighbors, surf, x, y, radians=0):
     grid['done'][x, y] = True
 
 
-def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
+def find_new_pos_1d(grid, neighbors, surf, grid3d, x, y, opposite):
     """Find the position of an electrode which has 1 neighbor on the same line.
     We try to estimate the position of electrode `x` based on the position of `a`
     and `b`.
@@ -98,6 +101,10 @@ def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
     surf : dict
         surface with normals. It's better to use the smooth surface to have
         reasonable results
+    grid3d : dict
+        - interelec_distance : float
+        - maximum_angle : float
+        - angles : (n, ) array of possible angles
     x : int
         row index for this electrode
     y : int
@@ -126,17 +133,17 @@ def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
     pos_potential = []
     plane_potential = []
     distance = []
-    for degrees in POSSIBLE_DEGREES:
+    for degrees in grid3d['angles']:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
-        new_pos = direction @ r.as_matrix() * interelec_distance + pos1
+        new_pos = direction @ r.as_matrix() * grid3d['interelec_distance'] + pos1
         new_normal = cross(rotation_axis, direction @ r.as_matrix())
         pos_potential.append(new_pos)
         plane_potential.append(new_normal)
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
 
     idx_min_angle = argmin(distance)
-    min_angle = POSSIBLE_DEGREES[idx_min_angle]
+    min_angle = grid3d['angles'][idx_min_angle]
 
     new_pos = pos_potential[idx_min_angle]
     r = Rotation.from_rotvec(rotation_axis * min_angle / 180 * pi)
@@ -151,7 +158,7 @@ def find_new_pos_1d(grid, neighbors, surf, x, y, opposite):
     grid['done'][x, y] = True
 
 
-def find_new_pos_2d(grid, neighbors, surf, x, y):
+def find_new_pos_2d(grid, neighbors, surf, grid3d, x, y):
     """Find the position of an electrode which has already 2 neighbors. So, we
     try to estimate the position of electrode `x` based on the position of `a`
     and `b`.
@@ -175,6 +182,10 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
     surf : dict
         surface with normals. It's better to use the smooth surface to have
         reasonable results
+    grid3d : dict
+        - interelec_distance : float
+        - maximum_angle : float
+        - angles : (n, ) array of possible angles
     x : int
         row index for this electrode
     y : int
@@ -204,11 +215,11 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
     search_direction = cross(normal_center, rotation_axis)
 
     # this will fail when the distance between two opposite electrodes is more than twice the interelectrode distance
-    search_distance = sqrt((interelec_distance ** 2 - norm(center - pos1) ** 2))
+    search_distance = sqrt((grid3d['interelec_distance'] ** 2 - norm(center - pos1) ** 2))
 
     pos_potential = []
     distance = []
-    for degrees in POSSIBLE_DEGREES:
+    for degrees in grid3d['angles']:
 
         r = Rotation.from_rotvec(rotation_axis * degrees / 180 * pi)
         new_pos = (search_distance * search_direction) @ r.as_matrix() + center
@@ -216,7 +227,7 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
         distance.append(norm(surf['pos'] - new_pos, axis=1).min())
 
     idx_min_angle = argmin(distance)
-    min_angle = POSSIBLE_DEGREES[idx_min_angle]
+    min_angle = grid3d['angles'][idx_min_angle]
     new_pos = pos_potential[idx_min_angle]
     r = Rotation.from_rotvec(rotation_axis * min_angle / 180 * pi)
     new_normal = normal_center @ r.as_matrix()

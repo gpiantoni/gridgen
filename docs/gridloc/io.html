@@ -74,6 +74,7 @@ WIRE = &#39;wire&#39;
 
 lg = getLogger(__name__)
 
+
 def write_grid2d(grid_file, grid2d):
     &#34;&#34;&#34;Write the labels of a 2D grid to file
 
@@ -459,7 +460,31 @@ def read_elec(grid2d, elec_file):
     i = unravel_index(i_grid, grid2d.shape)
     grid2d[&#39;pos&#39;][i] = xyz[i_mat]
 
-    return grid2d</code></pre>
+    return grid2d
+
+
+def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
+    &#34;&#34;&#34;
+    &#34;&#34;&#34;
+    ras_shift = read_surface_ras_shift(T1_file)
+    lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
+    dura = read_surf(dura_file, ras_shift=ras_shift)
+    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
+    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
+
+    if angio_file is not None and angio_file:
+        lg.debug(f&#39;Reading angiogram from {angio_file} and thresholding at {angio_threshold}&#39;)
+        angio = read_volume(angio_file, angio_threshold)
+    else:
+        angio = None
+
+    out = {
+        &#34;ras_shift&#34;: ras_shift,
+        &#34;pial&#34;: pial,
+        &#34;dura&#34;: dura,
+        &#34;angio&#34;: angio,
+        }
+    return out</code></pre>
 </details>
 </section>
 <section>
@@ -801,6 +826,39 @@ imports them)</p></div>
     return grid2d</code></pre>
 </details>
 </dd>
+<dt id="gridloc.io.read_mri"><code class="name flex">
+<span>def <span class="ident">read_mri</span></span>(<span>T1_file, dura_file, pial_file, angio_file, angio_threshold)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
+    &#34;&#34;&#34;
+    &#34;&#34;&#34;
+    ras_shift = read_surface_ras_shift(T1_file)
+    lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
+    dura = read_surf(dura_file, ras_shift=ras_shift)
+    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
+    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
+
+    if angio_file is not None and angio_file:
+        lg.debug(f&#39;Reading angiogram from {angio_file} and thresholding at {angio_threshold}&#39;)
+        angio = read_volume(angio_file, angio_threshold)
+    else:
+        angio = None
+
+    out = {
+        &#34;ras_shift&#34;: ras_shift,
+        &#34;pial&#34;: pial,
+        &#34;dura&#34;: dura,
+        &#34;angio&#34;: angio,
+        }
+    return out</code></pre>
+</details>
+</dd>
 <dt id="gridloc.io.read_surf"><code class="name flex">
 <span>def <span class="ident">read_surf</span></span>(<span>surf_file, ras_shift=None, normals=True)</span>
 </code></dt>
@@ -1136,6 +1194,7 @@ MRI space or in mesh space.</dd>
 <li><code><a title="gridloc.io.read_ecog2d_matlab" href="#gridloc.io.read_ecog2d_matlab">read_ecog2d_matlab</a></code></li>
 <li><code><a title="gridloc.io.read_elec" href="#gridloc.io.read_elec">read_elec</a></code></li>
 <li><code><a title="gridloc.io.read_grid2d" href="#gridloc.io.read_grid2d">read_grid2d</a></code></li>
+<li><code><a title="gridloc.io.read_mri" href="#gridloc.io.read_mri">read_mri</a></code></li>
 <li><code><a title="gridloc.io.read_surf" href="#gridloc.io.read_surf">read_surf</a></code></li>
 <li><code><a title="gridloc.io.read_surface_ras_shift" href="#gridloc.io.read_surface_ras_shift">read_surface_ras_shift</a></code></li>
 <li><code><a title="gridloc.io.read_volume" href="#gridloc.io.read_volume">read_volume</a></code></li>

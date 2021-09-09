@@ -47,6 +47,7 @@ WIRE = 'wire'
 
 lg = getLogger(__name__)
 
+
 def write_grid2d(grid_file, grid2d):
     """Write the labels of a 2D grid to file
 
@@ -433,3 +434,27 @@ def read_elec(grid2d, elec_file):
     grid2d['pos'][i] = xyz[i_mat]
 
     return grid2d
+
+
+def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
+    """
+    """
+    ras_shift = read_surface_ras_shift(T1_file)
+    lg.debug(f'Reading positions and computing normals of {dura_file}')
+    dura = read_surf(dura_file, ras_shift=ras_shift)
+    lg.debug(f'Reading positions of {pial_file}')
+    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
+
+    if angio_file is not None and angio_file:
+        lg.debug(f'Reading angiogram from {angio_file} and thresholding at {angio_threshold}')
+        angio = read_volume(angio_file, angio_threshold)
+    else:
+        angio = None
+
+    out = {
+        "ras_shift": ras_shift,
+        "pial": pial,
+        "dura": dura,
+        "angio": angio,
+        }
+    return out

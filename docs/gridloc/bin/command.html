@@ -179,7 +179,7 @@ def main(arguments=None):
     lg.handlers = []
     lg.addHandler(handler)
 
-    parameters = parse_parameters(args.parameters, args.function, args.output)
+    parameters = parse_parameters(args.parameters, args.function, args.output_dir)
 
     # outputs
     grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
@@ -219,7 +219,8 @@ def main(arguments=None):
 
         if args.function == &#39;fit&#39;:
             start_time = datetime.now()
-            output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + parameters[&#39;fit&#39;][&#39;method&#39;] + &#39;_&#39; + parameters[&#39;fit&#39;][&#39;correlation&#39;] + &#39;_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+            folder_name = &#39;_&#39;.join(parameters[&#39;fit&#39;][k] for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;morphology&#39;))
+            output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
             output_dir.mkdir(parents=True)
 
             parameters[&#39;timestamp&#39;] = start_time.isoformat()
@@ -230,10 +231,13 @@ def main(arguments=None):
             output_dir = parameters[&#39;output_dir&#39;]
 
         fitting(
-            ecog=ecog2d,
             output=output_dir,
-            init=args.function == &#39;init&#39;,
-            **parameters[&#39;fit&#39;])
+            ecog=ecog2d,
+            initial=parameters[&#39;initial&#39;],
+            mri=parameters[&#39;mri&#39;],
+            grid3d=parameters[&#39;grid3d&#39;],
+            fit=parameters[&#39;fit&#39;],
+            )
 
     if args.function == &#39;matlab&#39;:
         compare_to_matlab(parameters)</code></pre>
@@ -386,7 +390,7 @@ def main(arguments=None):
     lg.handlers = []
     lg.addHandler(handler)
 
-    parameters = parse_parameters(args.parameters, args.function, args.output)
+    parameters = parse_parameters(args.parameters, args.function, args.output_dir)
 
     # outputs
     grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
@@ -426,7 +430,8 @@ def main(arguments=None):
 
         if args.function == &#39;fit&#39;:
             start_time = datetime.now()
-            output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + parameters[&#39;fit&#39;][&#39;method&#39;] + &#39;_&#39; + parameters[&#39;fit&#39;][&#39;correlation&#39;] + &#39;_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+            folder_name = &#39;_&#39;.join(parameters[&#39;fit&#39;][k] for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;morphology&#39;))
+            output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
             output_dir.mkdir(parents=True)
 
             parameters[&#39;timestamp&#39;] = start_time.isoformat()
@@ -437,10 +442,13 @@ def main(arguments=None):
             output_dir = parameters[&#39;output_dir&#39;]
 
         fitting(
-            ecog=ecog2d,
             output=output_dir,
-            init=args.function == &#39;init&#39;,
-            **parameters[&#39;fit&#39;])
+            ecog=ecog2d,
+            initial=parameters[&#39;initial&#39;],
+            mri=parameters[&#39;mri&#39;],
+            grid3d=parameters[&#39;grid3d&#39;],
+            fit=parameters[&#39;fit&#39;],
+            )
 
     if args.function == &#39;matlab&#39;:
         compare_to_matlab(parameters)</code></pre>

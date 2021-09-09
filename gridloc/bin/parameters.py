@@ -23,6 +23,7 @@ REQUIRED = {
     'fit': [
         'grid3d',
         'mri',
+        'initial',
         'fit',
         ],
     'matlab': [
@@ -103,6 +104,12 @@ TEMPLATE = {
             "help": "maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid)",
             "default": 5,
             },
+        "step_angle": {
+            "type": "float",
+            "necessary": False,
+            "help": "step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid.",
+            "default": 0.25,
+            },
         },
     "mri": {
         "T1_file": {
@@ -160,7 +167,7 @@ TEMPLATE = {
             "type": "str",
             "necessary": False,
             "values": ['parametric', 'nonparametric'],
-            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
+            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank).",
             "default": "parametric",
         },
         "morphology": {
@@ -405,6 +412,10 @@ def parse_parameters(parameters, function, output_dir=None):
             raise ValueError(f'You need to specify "{k}" when running {function}')
         else:
             parameters[k] = validate_template(TEMPLATE[k], parameters[k])
+
+    # we remove "fit" from parameters so that we can pass it to `fitting`
+    if function == 'init':
+        parameters['fit'] = {}
 
     if output_dir is not None:
         output = output_dir

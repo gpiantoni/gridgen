@@ -49,6 +49,7 @@ REQUIRED = {
     &#39;fit&#39;: [
         &#39;grid3d&#39;,
         &#39;mri&#39;,
+        &#39;initial&#39;,
         &#39;fit&#39;,
         ],
     &#39;matlab&#39;: [
@@ -129,6 +130,12 @@ TEMPLATE = {
             &#34;help&#34;: &#34;maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid)&#34;,
             &#34;default&#34;: 5,
             },
+        &#34;step_angle&#34;: {
+            &#34;type&#34;: &#34;float&#34;,
+            &#34;necessary&#34;: False,
+            &#34;help&#34;: &#34;step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid.&#34;,
+            &#34;default&#34;: 0.25,
+            },
         },
     &#34;mri&#34;: {
         &#34;T1_file&#34;: {
@@ -186,7 +193,7 @@ TEMPLATE = {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
             &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
-            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank)&#34;,
+            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank).&#34;,
             &#34;default&#34;: &#34;parametric&#34;,
         },
         &#34;morphology&#34;: {
@@ -432,6 +439,10 @@ def parse_parameters(parameters, function, output_dir=None):
         else:
             parameters[k] = validate_template(TEMPLATE[k], parameters[k])
 
+    # we remove &#34;fit&#34; from parameters so that we can pass it to `fitting`
+    if function == &#39;init&#39;:
+        parameters[&#39;fit&#39;] = {}
+
     if output_dir is not None:
         output = output_dir
     elif &#39;output_dir&#39; in parameters:
@@ -596,6 +607,10 @@ it absolute in reference to "parent"</p>
             raise ValueError(f&#39;You need to specify &#34;{k}&#34; when running {function}&#39;)
         else:
             parameters[k] = validate_template(TEMPLATE[k], parameters[k])
+
+    # we remove &#34;fit&#34; from parameters so that we can pass it to `fitting`
+    if function == &#39;init&#39;:
+        parameters[&#39;fit&#39;] = {}
 
     if output_dir is not None:
         output = output_dir

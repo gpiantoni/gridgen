@@ -192,7 +192,8 @@ def main(arguments=None):
 
         if args.function == 'fit':
             start_time = datetime.now()
-            output_dir = parameters['output_dir'] / ('bestfit_' + parameters['fit']['method'] + '_' + parameters['fit']['correlation'] + '_' + start_time.strftime('%Y%m%d_%H%M%S'))
+            folder_name = '_'.join(parameters['fit'][k] for k in ('method', 'correlation', 'morphology'))
+            output_dir = parameters['output_dir'] / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
             output_dir.mkdir(parents=True)
 
             parameters['timestamp'] = start_time.isoformat()
@@ -203,10 +204,13 @@ def main(arguments=None):
             output_dir = parameters['output_dir']
 
         fitting(
-            ecog=ecog2d,
             output=output_dir,
-            init=args.function == 'init',
-            **parameters['fit'])
+            ecog=ecog2d,
+            initial=parameters['initial'],
+            mri=parameters['mri'],
+            grid3d=parameters['grid3d'],
+            fit=parameters['fit'],
+            )
 
     if args.function == 'matlab':
         compare_to_matlab(parameters)

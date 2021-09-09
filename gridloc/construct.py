@@ -1,6 +1,6 @@
 """Function to build a grid from a starting point, in 2D or 3D
 """
-from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud, where
+from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud, where, arange
 from logging import getLogger
 
 from .geometry import count_neighbors
@@ -55,7 +55,7 @@ def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern='{}'):
     return grid
 
 
-def construct_grid(surf, start_vert, start_label, labels, rotation=0):
+def construct_grid(surf, start_vert, start_label, labels, grid3d, rotation=0):
     """Construct 3D grid, based on a starting vertex on a surface
 
     Parameters
@@ -69,6 +69,9 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
         label of the electrode, which is assumed to be in the initial vertex
     labels : 2d array
         a 2d array with the channel labels
+    grid3d : dict
+        - interelec_distance : float
+        - maximum_angle : float
     rotation : float
         rotation from the inferior-superior axis (clockwise, in degrees)
 
@@ -80,6 +83,11 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
     """
+    grid3d['angles'] = arange(
+        -1 * grid3d['maximum_angle'],
+        grid3d['maximum_angle'],
+        grid3d['step_angle'])
+
     radians = rotation / 180 * pi
     n_rows, n_cols = labels.shape
 
@@ -108,13 +116,13 @@ def construct_grid(surf, start_vert, start_label, labels, rotation=0):
             opposite_x, opposite_y = 2 * neighbors[0] - (x, y)
 
             if (0 <= opposite_x < n_rows) and (0 <= opposite_y < n_cols) and grid['done'][opposite_x, opposite_y]:
-                find_new_pos_1d(grid, neighbors, surf, x, y, (opposite_x, opposite_y))
+                find_new_pos_1d(grid, neighbors, surf, grid3d, x, y, (opposite_x, opposite_y))
 
             else:
-                find_new_pos_0d(grid, neighbors, surf, x, y, radians=radians)
+                find_new_pos_0d(grid, neighbors, surf, grid3d, x, y, radians=radians)
 
         elif n_neighbors == 2:
-            find_new_pos_2d(grid, neighbors, surf, x, y)
+            find_new_pos_2d(grid, neighbors, surf, grid3d, x, y)
 
         else:
             raise ValueError(f'Electrode {x:d}-{y:d} has {n_neighbors:d} but it can only have one or two neighbors')
