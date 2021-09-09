@@ -385,12 +385,19 @@ class JSONEncoder_path(JSONEncoder):
 
 if __name__ == &#39;__main__&#39;:
 
-    md = &#39;## Parameters\n&#39; + &#39;\n&#39;.join(help_template(TEMPLATE))
-
+    md = [
+        &#39;## Parameters&#39;,
+        &#39;&#39;,
+        &#39;Parameters should be saved as a `json` file.&#39;,
+        &#39;You can pass the parameters with the command `gridloc parameters.json func` where `func` is one of the possible functions (`grid2d`, `ecog`, `fit` etc).&#39;,
+        &#39;You can also use the command `gridloc parameters.json parameters` to generate a template `parameters.json` file.&#39;,
+        &#39;&#39;,
+        ]
+    md = md + help_template(TEMPLATE)
     parameters_file = PKG_PATH / &#39;docs&#39; / &#39;parameters.md&#39;
 
     with parameters_file.open(&#39;w&#39;) as f:
-        f.write(md)</code></pre>
+        f.write(&#39;\n&#39;.join(md))</code></pre>
 </details>
 </section>
 <section>
