@@ -107,7 +107,7 @@ TEMPLATE = {
         "step_angle": {
             "type": "float",
             "necessary": False,
-            "help": "step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid.",
+            "help": "step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid",
             "default": 0.25,
             },
         },
@@ -167,7 +167,7 @@ TEMPLATE = {
             "type": "str",
             "necessary": False,
             "values": ['parametric', 'nonparametric'],
-            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank).",
+            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
             "default": "parametric",
             },
         "morphology": {

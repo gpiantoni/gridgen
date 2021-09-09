@@ -1,5 +1,5 @@
 from os import nice
-from numpy import nanmax, nanmin, intersect1d
+from numpy import nanmax, nanmin, intersect1d, isnan, array
 
 
 def be_nice():
@@ -10,19 +10,21 @@ def normalize(x):
     return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
 
 
-def match_labels(ecog, *args):
+def match_labels(*args):
     """make sure that that the values are in the same order as the labels in
     ecog, also getting rid of bad channels"""
+    args = [x.flatten('C') for x in args]
 
-    good = ecog['label'][ecog['good']]
-    ecog_id = intersect1d(ecog['label'], good, return_indices=True)[1]
-    a = ecog['ecog'].flatten('C')[ecog_id]
-    output = [a, ]
+    FIELDS = 'ecog', 'morphology', 'vasculature'
 
-    for estimate in args:
-        field = (set(estimate.dtype.names) - {'label', }).pop()
-        estimate_id = intersect1d(estimate['label'], good, return_indices=True)[1]
-        b = estimate[field].flatten('C')[estimate_id]
-        output.append(b)
+    labels = set(args[0]['label'])
 
-    return output
+    for i, arg in enumerate(args):
+        labels = labels & set(arg['label'][~isnan(arg[FIELDS[i]])])
+
+    out = []
+    for i, arg in enumerate(args):
+        i_chan = intersect1d(arg['label'], array(list(labels)), assume_unique=False, return_indices=True)[1]
+        out.append(arg[FIELDS[i]][i_chan])
+
+    return out

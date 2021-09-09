@@ -50,13 +50,13 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         grid2d with best positions
     """
     start_time = datetime.now()
-    mri = read_mri(**mri)
+    mris = read_mri(**mri)
 
     init_ras = array(initial['RAS'])
-    initial['vertex'] = argmin(norm(mri['dura']['pos'] - init_ras, axis=1))
-    vert_dist = norm(init_ras - mri['dura']['pos'][initial["vertex"]])
+    initial['vertex'] = argmin(norm(mris['dura']['pos'] - init_ras, axis=1))
+    vert_dist = norm(init_ras - mris['dura']['pos'][initial["vertex"]])
 
-    lg.debug(f'Target RAS: {init_ras}, vertex #{initial["vertex"]} RAS: {mri["dura"]["pos"][initial["vertex"]]} (distance = {vert_dist:0.3}mm)')
+    lg.debug(f'Target RAS: {init_ras}, vertex #{initial["vertex"]} RAS: {mris["dura"]["pos"][initial["vertex"]]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {initial["label"]} is vertex #{initial["vertex"]} with orientation {initial["rotation"]}')
 
     # has to be a tuple
@@ -64,20 +64,20 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         ecog,  # 0
         grid3d,  # 1
         initial,  # 2
-        mri,  # 3
+        mris,  # 3
         fit,  # 4
         )
 
     if not fit:
         # start position
         grid = construct_grid(
-            mri["dura"],
+            mris["dura"],
             initial['vertex'],
             initial["label"],
             ecog['label'],
             grid3d,
             rotation=initial['rotation'])
-        fig = plot_electrodes(mri['pial'], grid, ref_label=initial['label'], angio=mri['angio'])
+        fig = plot_electrodes(mris['pial'], grid, ref_label=initial['label'], angio=mris['angio'])
         grid_file = output / 'start_pos.html'
         to_html([to_div(fig), ], grid_file)
         return
@@ -97,22 +97,23 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (vascular contribution: {model["percent_vasc"]:.2f}%)')
+    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (# included channels:{len(model["n_chan"]): 4d}, vascular contribution: {model["percent_vasc"]:.2f}%)')
 
-    plot_results(model, mri['pial'], mri['ras_shift'], output, angio=mri['angio'])
+    plot_results(model, mris['pial'], mris['ras_shift'], output, angio=mris['angio'])
 
     model = remove_wires(model)
 
     measure_distances(model['grid'])
     measure_angles(model['grid'])
     out = {
-        'ref_label': ref_label,
-        'surface': str(dura_file),
+        'label': initial['label'],
+        'surface': str(mri['dura_file']),
         'vertex': int(model['vert']),
-        'pos': list(dura['pos'][model['vert'], :]),
-        'normals': list(dura['pos_norm'][model['vert'], :]),
+        'pos': list(mris['dura']['pos'][model['vert'], :]),
+        'normals': list(mris['dura']['pos_norm'][model['vert'], :]),
         'rotation': rotation,
         'percent_vasculature': model['percent_vasc'],
+        'n_included_channels': model['n_chan'],
         'corrcoef': model['cc'],
         'duration': comp_dur,
         }
@@ -121,7 +122,7 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         dump(out, f, indent=2)
 
     grid_file = output / 'electrodes'
-    export_grid(model['grid'], ras_shift, grid_file)
+    export_grid(model['grid'], mris['ras_shift'], grid_file)
     write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
     lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
 
@@ -148,6 +149,7 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
         start_vert,
         initial["label"],
         ecog['label'],
+        grid3d,
         rotation=initial['rotation'] + rotation)
 
     morpho = compute_distance(grid, mri['pial'], fit['morphology'], fit['maximum_distance'])
@@ -162,7 +164,7 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
 
     i, cc = compare_models(e, m, v, correlation=fit['correlation'])
     if not final:
-        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (vascular contribution: {100 * (1 - i):.2f}%)')
+        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)')
 
     if final:
         return {
@@ -172,6 +174,7 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
             'morpho': morpho,
             'vasc': vasc,
             'percent_vasc': 100 * (1 - i),
+            'n_chan': len(e),  # number of channels used to compute
             'cc': -1 * cc,
             }
 

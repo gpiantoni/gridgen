@@ -10,7 +10,8 @@ d_ = dtype([
 
 
 def compute_distance(grid, pial, method='minimum', max_distance=None):
-
+    """The smaller the distance, the stronger the signal
+    """
     if method == 'ray':
         distance = _distance_ray(grid, pial)
 
