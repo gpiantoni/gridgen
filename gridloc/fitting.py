@@ -282,7 +282,6 @@ def fitting_brute(func, args):
 
 
 def fitting_simplex(func, init, args):
-    print(args[9])
 
     if init is None:  # when called stand alone
         x = y = rotation = 0

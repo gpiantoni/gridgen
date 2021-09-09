@@ -70,6 +70,7 @@ DTYPE = [
     (&#39;y&#39;, &#39;double&#39;),
     (&#39;z&#39;, &#39;double&#39;),
     ]
+WIRE = &#39;wire&#39;
 
 lg = getLogger(__name__)
 
@@ -86,6 +87,8 @@ def write_grid2d(grid_file, grid2d):
     with grid_file.open(&#39;w&#39;) as f:
         for row in grid2d[&#39;label&#39;]:
             f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)
+        wires = [WIRE, ] * len(row)
+        f.write(&#39;\t&#39;.join(wires))
 
 
 def read_grid2d(grid_file):
@@ -420,7 +423,6 @@ def read_volume(volume_file, threshold=-Inf):
     output = zeros(i.sum(), dtype=d_)
 
     output[&#39;pos&#39;] = apply_affine(volume.affine, array(where(i)).T)
-    output[&#39;pos&#39;] = array(where(i)).T
     output[&#39;value&#39;] = data[i]
 
     return output
@@ -1001,7 +1003,6 @@ To get from volume to surface coordinates, substract these numbers.</p>
     output = zeros(i.sum(), dtype=d_)
 
     output[&#39;pos&#39;] = apply_affine(volume.affine, array(where(i)).T)
-    output[&#39;pos&#39;] = array(where(i)).T
     output[&#39;value&#39;] = data[i]
 
     return output</code></pre>
@@ -1064,7 +1065,9 @@ To get from volume to surface coordinates, substract these numbers.</p>
     &#34;&#34;&#34;
     with grid_file.open(&#39;w&#39;) as f:
         for row in grid2d[&#39;label&#39;]:
-            f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)</code></pre>
+            f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)
+        wires = [WIRE, ] * len(row)
+        f.write(&#39;\t&#39;.join(wires))</code></pre>
 </details>
 </dd>
 <dt id="gridloc.io.write_tsv"><code class="name flex">

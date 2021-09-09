@@ -24,8 +24,15 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from pathlib import Path
+<pre><code class="python">#!/usr/bin/env python3
+
+from pathlib import Path
 from json import JSONEncoder
+from collections.abc import Iterable
+
+PKG_PATH = Path(__file__).parents[2]
+
+DIMENSIONS = &#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;
 
 TEMPLATE = {
     &#34;output_dir&#34;: {
@@ -48,12 +55,13 @@ TEMPLATE = {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: True,
             &#39;values&#39;: [&#39;TBLR&#39;, &#39;TBRL&#39;, &#39;BTLR&#39;, &#39;BTRL&#39;, &#39;LRTB&#39;, &#39;LRBT&#39;, &#39;RLTB&#39;, &#39;RLBT&#39;],
-            &#39;help&#39;: &#39;direction of the grid&#39;,
+            &#39;help&#39;: &#39;direction of the grid (wires are by definition at the bottom)&#39;,
+            &#39;default&#39;: &#39;TBLR&#39;
             },
         &#34;chan_pattern&#34;: {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: False,
-            &#39;help&#39;: &#39;pattern to name the channels (it should match the naming pattern of the data)&#39;,
+            &#39;help&#39;: &#39;pattern to name the channels (it should match the naming pattern of the data). Examples are &#34;chan{}&#34; or &#34;chan{03d}&#39;,
             },
         },
     &#34;ecog&#34;: {
@@ -66,16 +74,17 @@ TEMPLATE = {
             &#39;type&#39;: &#39;list&#39;,
             &#39;necessary&#39;: True,
             &#39;help&#39;: &#39;low and high threshold of the frequency range of interest&#39;,
+            &#39;default&#39;: [65, 95],
             },
         &#34;begtime&#34;: {
             &#39;type&#39;: &#39;float&#39;,
             &#39;necessary&#39;: False,
-            &#39;help&#39;: &#39;start time in seconds from beginning of the file&#39;,
+            &#39;help&#39;: &#39;start time in seconds from the beginning of the file&#39;,
             },
         &#34;endtime&#34;: {
             &#39;type&#39;: &#39;float&#39;,
             &#39;necessary&#39;: False,
-            &#39;help&#39;: &#39;end time in seconds from beginning of the file&#39;,
+            &#39;help&#39;: &#39;end time in seconds from the beginning of the file&#39;,
             },
         &#34;bad_channels&#34;: {
             &#39;type&#39;: &#39;list&#39;,
@@ -83,7 +92,21 @@ TEMPLATE = {
             &#39;help&#39;: &#39;list of str, name of the channels to exclude&#39;,
             },
         },
-    &#34;fit&#34;: {
+    &#34;grid3d&#34;: {
+        &#34;interelec_distance&#34;: {
+            &#34;type&#34;: &#34;float&#34;,
+            &#34;necessary&#34;: False,
+            &#34;help&#34;: &#34;distance between the electrode centers (pitch), in mm&#34;,
+            &#34;default&#34;: 3,
+            },
+        &#34;maximum_angle&#34;: {
+            &#34;type&#34;: &#34;float&#34;,
+            &#34;necessary&#34;: False,
+            &#34;help&#34;: &#34;maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid)&#34;,
+            &#34;default&#34;: 5,
+            },
+        },
+    &#34;files&#34;: {
         &#34;T1_file&#34;: {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: True,
@@ -109,50 +132,78 @@ TEMPLATE = {
             &#39;necessary&#39;: False,
             &#39;help&#39;: &#39;value to threshold the angio_file&#39;,
             },
-        &#34;initial&#34;: {
-            &#34;label&#34;: {
-                &#39;type&#39;: &#39;str&#39;,
-                &#39;necessary&#39;: True,
-                &#39;help&#39;: &#39;label for the reference electrode&#39;,
-                },
-            &#34;RAS&#34;: {
-                &#39;type&#39;: &#39;list&#39;,
-                &#39;necessary&#39;: True,
-                &#39;help&#39;: &#39;initial location for the reference electrode (coordinates in MRI space)&#39;,
-                },
-            &#34;rotation&#34;: {
-                &#39;type&#39;: &#39;float&#39;,
-                &#39;necessary&#39;: True,
-                &#39;help&#39;: &#39;degree of rotation of the grid (in degrees, 0° is roughly pointing up)&#39;,
-                },
+        },
+    &#34;initial&#34;: {
+        &#34;label&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;label for the reference electrode&#39;,
             },
+        &#34;RAS&#34;: {
+            &#39;type&#39;: &#39;list&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;initial location for the reference electrode (coordinates in MRI space)&#39;,
+            },
+        &#34;rotation&#34;: {
+            &#39;type&#39;: &#39;float&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;degree of rotation of the grid (in degrees, 0° is roughly pointing up)&#39;,
+            },
+        },
+    &#34;fit&#34;: {
         &#34;method&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: True,
             &#34;values&#34;: [&#39;brute&#39;, &#39;simplex&#39;],
             &#34;help&#34;: &#34;method to use (brute includes simplex as a second step)&#34;,
+            &#34;default&#34;: &#34;brute&#34;,
         },
         &#34;correlation&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
             &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
-            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson) or &#39;nonparametric&#39; (rank)&#34;,
+            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank)&#34;,
+            &#34;default&#34;: &#34;parametric&#34;,
+        },
+        &#34;morphology&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;ray&#39;, &#39;minimum&#39;, &#39;view&#39;, &#39;cylinder&#39;, &#39;pdf&#39;],
+            &#34;help&#34;: &#34;how to compute the distance of the morphology&#34;,
+            &#34;default&#34;: &#34;ray&#34;,
+        },
+        &#34;steps&#34;: {
+            &#34;x&#34;: {
+                &#34;type&#34;: &#34;float&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Step size in mm for x-direction, for method simplex&#34;,
+            },
+            &#34;y&#34;: {
+                &#34;type&#34;: &#34;float&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Step size in mm for y-direction, for method simplex&#34;,
+            },
+            &#34;rotation&#34;: {
+                &#34;type&#34;: &#34;float&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Step size in degrees for rotation, for method simplex&#34;,
+            },
         },
         &#34;ranges&#34;: {
             &#34;x&#34;: {
                 &#34;type&#34;: &#34;list&#34;,
-                &#34;necessary&#34;: True,
-                &#34;help&#34;: &#34;Range in mm for x-direction, in format [low, step, high]&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Range in mm for x-direction, in format [low, step, high], for method brute&#34;,
             },
             &#34;y&#34;: {
                 &#34;type&#34;: &#34;list&#34;,
-                &#34;necessary&#34;: True,
-                &#34;help&#34;: &#34;Range in mm for y-direction, in format [low, step, high]&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Range in mm for y-direction, in format [low, step, high], for method brute&#34;,
             },
             &#34;rotation&#34;: {
                 &#34;type&#34;: &#34;list&#34;,
-                &#34;necessary&#34;: True,
-                &#34;help&#34;: &#34;Range in degrees for rotation, in format [low, step, high]&#34;,
+                &#34;necessary&#34;: False,
+                &#34;help&#34;: &#34;Range in degrees for rotation, in format [low, step, high], for method brute&#34;,
             },
         },
     },
@@ -227,16 +278,16 @@ def prepare_template(temp):
                 out[k] = None
 
             elif v[&#39;type&#39;] == &#39;int&#39;:
-                out[k] = 0
+                out[k] = v.get(&#39;default&#39;, 0)
 
             elif v[&#39;type&#39;] == &#39;float&#39;:
-                out[k] = 0.0
+                out[k] = v.get(&#39;default&#39;, 0.0)
 
             elif v[&#39;type&#39;] == &#39;str&#39;:
-                out[k] = &#39;&#39;
+                out[k] = v.get(&#39;default&#39;, &#39;&#39;)
 
             elif v[&#39;type&#39;] == &#39;list&#39;:
-                out[k] = []
+                out[k] = v.get(&#39;default&#39;, [])
 
         else:
             out[k] = prepare_template(v)
@@ -247,19 +298,19 @@ def help_template(temp):
     out = []
     for k, v in temp.items():
         if &#39;type&#39; in v:
-            out_ = k
+            out_ = f&#39;- **{k}**: &#39;
 
             if v[&#39;type&#39;] == &#39;int&#39;:
-                out_ += &#39;\t(int&#39;
+                out_ += &#39;(int&#39;
 
             elif v[&#39;type&#39;] == &#39;float&#39;:
-                out_ += &#39;\t(float&#39;
+                out_ += &#39;(float&#39;
 
             elif v[&#39;type&#39;] == &#39;str&#39;:
-                out_ += &#39;\t(str&#39;
+                out_ += &#39;(str&#39;
 
             elif v[&#39;type&#39;] == &#39;list&#39;:
-                out_ += &#39;\t(list&#39;
+                out_ += &#39;(list&#39;
 
             if v[&#39;necessary&#39;]:
                 out_ += &#39;) &#39;
@@ -269,13 +320,17 @@ def help_template(temp):
             out_ += v[&#39;help&#39;]
 
             if &#39;values&#39; in v:
-                out_ += &#39; [&#39; + &#39;, &#39;.join(v[&#39;values&#39;]) + &#39;]&#39;
+                out_ += &#39;. Values: [&#39; + &#39;, &#39;.join(v[&#39;values&#39;]) + &#39;]&#39;
+
+            if &#39;default&#39; in v:
+                out_ += f&#39;. Default: {v[&#34;default&#34;]}&#39;
+
             out.append(out_)
 
         else:
             out_ = help_template(v)
-            out.append(k)
-            out.extend([f&#39;\t{x}&#39; for x in out_])
+            out.append(f&#39;- **{k}**&#39;)
+            out.extend([f&#39;  {x}&#39; for x in out_])
 
     return out
 
@@ -283,12 +338,32 @@ def help_template(temp):
 def validate_template(temp, d):
     out = {}
     for k, v in temp.items():
-        if k not in d or d[k] is None:
-            continue
 
-        if &#39;type&#39; in v:
-            if v[&#39;necessary&#39;] and k not in d:
-                raise ValueError(f&#39;{k} should be defined&#39;)
+        if &#39;method&#39; in d:
+            if d[&#39;method&#39;] == &#39;brute&#39;:
+                for dim in DIMENSIONS:
+                    if d.get(&#39;ranges&#39;, {}).get(dim, None) is None:
+                        raise ValueError(f&#39;{dim} should be defined in &#34;ranges&#34; with method &#34;brute&#34;&#39;)
+
+                d.pop(&#39;steps&#39;, None)
+
+            if d[&#39;method&#39;] == &#39;simplex&#39;:
+                for dim in DIMENSIONS:
+                    if d.get(&#39;steps&#39;, {}).get(dim, None) is None:
+                        raise ValueError(f&#39;{dim} should be defined in &#34;steps&#34; with method &#34;simplex&#34;&#39;)
+
+                d.pop(&#39;ranges&#39;, None)
+
+        if k not in d or d[k] is None:
+            if v.get(&#39;default&#39;, False):
+                out[k] = v[&#39;default&#39;]
+
+        elif &#39;type&#39; in v:
+            if v[&#39;necessary&#39;]:
+                if k not in d:
+                    raise ValueError(f&#39;{k} should be defined&#39;)
+                if isinstance(d[k], Iterable) and len(d[k]) == 0:
+                    raise ValueError(f&#39;{k} should be defined&#39;)
 
             if &#39;values&#39; in v and d[k] not in v[&#39;values&#39;]:
                 values = &#39;, &#39;.join(f&#39;{x}&#39; for x in v[&#39;values&#39;])
@@ -305,7 +380,17 @@ def validate_template(temp, d):
 class JSONEncoder_path(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Path):
-            return str(obj)</code></pre>
+            return str(obj)
+
+
+if __name__ == &#39;__main__&#39;:
+
+    md = &#39;## Parameters\n&#39; + &#39;\n&#39;.join(help_template(TEMPLATE))
+
+    parameters_file = PKG_PATH / &#39;docs&#39; / &#39;parameters.md&#39;
+
+    with parameters_file.open(&#39;w&#39;) as f:
+        f.write(md)</code></pre>
 </details>
 </section>
 <section>
@@ -379,19 +464,19 @@ it absolute in reference to "parent"</p>
     out = []
     for k, v in temp.items():
         if &#39;type&#39; in v:
-            out_ = k
+            out_ = f&#39;- **{k}**: &#39;
 
             if v[&#39;type&#39;] == &#39;int&#39;:
-                out_ += &#39;\t(int&#39;
+                out_ += &#39;(int&#39;
 
             elif v[&#39;type&#39;] == &#39;float&#39;:
-                out_ += &#39;\t(float&#39;
+                out_ += &#39;(float&#39;
 
             elif v[&#39;type&#39;] == &#39;str&#39;:
-                out_ += &#39;\t(str&#39;
+                out_ += &#39;(str&#39;
 
             elif v[&#39;type&#39;] == &#39;list&#39;:
-                out_ += &#39;\t(list&#39;
+                out_ += &#39;(list&#39;
 
             if v[&#39;necessary&#39;]:
                 out_ += &#39;) &#39;
@@ -401,13 +486,17 @@ it absolute in reference to "parent"</p>
             out_ += v[&#39;help&#39;]
 
             if &#39;values&#39; in v:
-                out_ += &#39; [&#39; + &#39;, &#39;.join(v[&#39;values&#39;]) + &#39;]&#39;
+                out_ += &#39;. Values: [&#39; + &#39;, &#39;.join(v[&#39;values&#39;]) + &#39;]&#39;
+
+            if &#39;default&#39; in v:
+                out_ += f&#39;. Default: {v[&#34;default&#34;]}&#39;
+
             out.append(out_)
 
         else:
             out_ = help_template(v)
-            out.append(k)
-            out.extend([f&#39;\t{x}&#39; for x in out_])
+            out.append(f&#39;- **{k}**&#39;)
+            out.extend([f&#39;  {x}&#39; for x in out_])
 
     return out</code></pre>
 </details>
@@ -429,16 +518,16 @@ it absolute in reference to "parent"</p>
                 out[k] = None
 
             elif v[&#39;type&#39;] == &#39;int&#39;:
-                out[k] = 0
+                out[k] = v.get(&#39;default&#39;, 0)
 
             elif v[&#39;type&#39;] == &#39;float&#39;:
-                out[k] = 0.0
+                out[k] = v.get(&#39;default&#39;, 0.0)
 
             elif v[&#39;type&#39;] == &#39;str&#39;:
-                out[k] = &#39;&#39;
+                out[k] = v.get(&#39;default&#39;, &#39;&#39;)
 
             elif v[&#39;type&#39;] == &#39;list&#39;:
-                out[k] = []
+                out[k] = v.get(&#39;default&#39;, [])
 
         else:
             out[k] = prepare_template(v)
@@ -457,12 +546,32 @@ it absolute in reference to "parent"</p>
 <pre><code class="python">def validate_template(temp, d):
     out = {}
     for k, v in temp.items():
-        if k not in d or d[k] is None:
-            continue
 
-        if &#39;type&#39; in v:
-            if v[&#39;necessary&#39;] and k not in d:
-                raise ValueError(f&#39;{k} should be defined&#39;)
+        if &#39;method&#39; in d:
+            if d[&#39;method&#39;] == &#39;brute&#39;:
+                for dim in DIMENSIONS:
+                    if d.get(&#39;ranges&#39;, {}).get(dim, None) is None:
+                        raise ValueError(f&#39;{dim} should be defined in &#34;ranges&#34; with method &#34;brute&#34;&#39;)
+
+                d.pop(&#39;steps&#39;, None)
+
+            if d[&#39;method&#39;] == &#39;simplex&#39;:
+                for dim in DIMENSIONS:
+                    if d.get(&#39;steps&#39;, {}).get(dim, None) is None:
+                        raise ValueError(f&#39;{dim} should be defined in &#34;steps&#34; with method &#34;simplex&#34;&#39;)
+
+                d.pop(&#39;ranges&#39;, None)
+
+        if k not in d or d[k] is None:
+            if v.get(&#39;default&#39;, False):
+                out[k] = v[&#39;default&#39;]
+
+        elif &#39;type&#39; in v:
+            if v[&#39;necessary&#39;]:
+                if k not in d:
+                    raise ValueError(f&#39;{k} should be defined&#39;)
+                if isinstance(d[k], Iterable) and len(d[k]) == 0:
+                    raise ValueError(f&#39;{k} should be defined&#39;)
 
             if &#39;values&#39; in v and d[k] not in v[&#39;values&#39;]:
                 values = &#39;, &#39;.join(f&#39;{x}&#39; for x in v[&#39;values&#39;])

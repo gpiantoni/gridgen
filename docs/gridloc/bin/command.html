@@ -36,7 +36,6 @@ from datetime import datetime
 
 from .parameters import (
     convert_to_path,
-    help_template,
     JSONEncoder_path,
     prepare_template,
     validate_template,
@@ -54,8 +53,6 @@ from ..io import (
     export_transform,
     )
 
-PKG_PATH = Path(__file__).parent
-
 lg = getLogger(&#39;gridloc&#39;)
 
 set_printoptions(suppress=True, precision=3)
@@ -66,10 +63,27 @@ def create_arguments():
     parser = ArgumentParser(
         description=&#39;Tools to calculate the position of ECoG grid on brain based on the neuronal activity&#39;,
         formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument(
+        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+        Path to file with the parameters for the analysis. The file with parameters
+        should be formatted as a json file.&#34;&#34;&#34;))
     list_functions = parser.add_subparsers(
         title=&#39;Functions&#39;)
+    parser.add_argument(
+        &#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
+        help=&#39;Logging level: info (default), debug&#39;)
+    parser.add_argument(
+        &#39;-o&#39;, &#39;--output_dir&#39;,
+        help=dedent(&#34;&#34;&#34;\
+        Output directory. Default is the current directory.
+        You can also specify it in the parameters.
 
-    # grid
+        Parameters:
+          output_dir :
+        &#34;&#34;&#34;))
+
+    # create parameters
     subparam = list_functions.add_parser(
         &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
         Generate an empty parameters json file. Fields with `null` are optional.
@@ -78,13 +92,8 @@ def create_arguments():
           parameters.json
 
         &#34;&#34;&#34;),
-        description=&#39;\n&#39;.join(help_template(TEMPLATE)),
-        formatter_class=RawTextHelpFormatter,
         )
     subparam.set_defaults(function=&#39;parameters&#39;)
-    subparam.add_argument(
-        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
-        Path to file to write with the parameters for the analysis.&#34;&#34;&#34;))
 
     # grid
     subfun0 = list_functions.add_parser(
@@ -109,19 +118,27 @@ def create_arguments():
         &#34;&#34;&#34;))
     subfun1.set_defaults(function=&#39;ecog&#39;)
 
-    # fit
     subfun2 = list_functions.add_parser(
-        &#39;fit&#39;, help=dedent(&#34;&#34;&#34;\
-        Generate the grid, with the correct labels.
+        &#39;init&#39;, help=dedent(&#34;&#34;&#34;\
+        Fit the ecog values to the surface
 
         Output:
-          bestfit_vert{}_rot{}.label : electrode locations in freesurfer format
-          bestfit_vert{}_rot{}.html : estimated activity of the best fit based on brain surface
+            ???
 
         &#34;&#34;&#34;))
-    subfun2.set_defaults(function=&#39;fit&#39;)
+    subfun2.set_defaults(function=&#39;init&#39;)
 
     subfun3 = list_functions.add_parser(
+        &#39;fit&#39;, help=dedent(&#34;&#34;&#34;\
+        Fit the ecog values to the surface
+
+        Output:
+            ???
+
+        &#34;&#34;&#34;))
+    subfun3.set_defaults(function=&#39;fit&#39;)
+
+    subfun4 = list_functions.add_parser(
         &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;\
         Compute values based on a conversion of the matlab code and compare the
         values with those computed by matlab
@@ -129,25 +146,7 @@ def create_arguments():
         Output:
           ???
         &#34;&#34;&#34;))
-    subfun3.set_defaults(function=&#39;matlab&#39;)
-
-    for subfun in (subfun0, subfun1, subfun2, subfun3):
-        subfun.add_argument(
-            &#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
-            help=&#39;Logging level: info (default), debug&#39;)
-        subfun.add_argument(
-            &#39;-o&#39;, &#39;--output_dir&#39;,
-            help=dedent(&#34;&#34;&#34;\
-            Output directory. Default is the current directory.
-            You can also specify it in the parameters.
-
-            Parameters:
-              output_dir :
-            &#34;&#34;&#34;))
-        subfun.add_argument(
-            &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
-            Path to file with the parameters for the analysis. The file with parameters
-            should be formatted as a json file.&#34;&#34;&#34;))
+    subfun4.set_defaults(function=&#39;matlab&#39;)
 
     return parser
 
@@ -156,8 +155,11 @@ def main(arguments=None):
     &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
+    func = args.function
+    if func == &#39;init&#39;:
+        func = &#39;fit&#39;
 
-    if args.function == &#39;parameters&#39;:
+    if func == &#39;parameters&#39;:
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
         with p_json.open(&#39;w&#39;) as f:
@@ -184,7 +186,8 @@ def main(arguments=None):
     p_json = Path(args.parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
-    parameters = validate_template(TEMPLATE, parameters)
+
+    parameters[func] = validate_template(TEMPLATE[func], parameters[func])
 
     if args.output_dir is not None:
         output = args.output_dir
@@ -203,14 +206,14 @@ def main(arguments=None):
     ecog_fig = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.html&#39;
     transform_file = parameters[&#39;output_dir&#39;] / &#39;tkras&#39;
 
-    if args.function in (&#39;grid2d&#39;, ):
+    if args.function == &#39;grid2d&#39;:
         from ..construct import make_grid_with_labels
 
         grid2d = make_grid_with_labels(**parameters[&#39;grid2d&#39;])
         lg.info(f&#39;Writing labels to {grid2d_tsv}&#39;)
         write_grid2d(grid2d_tsv, grid2d)
 
-    if args.function in (&#39;ecog&#39;, ):
+    if args.function == &#39;ecog&#39;:
         from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
 
         lg.info(f&#39;Reading 2d grid from {grid2d_tsv}&#39;)
@@ -226,25 +229,33 @@ def main(arguments=None):
         fig = plot_2d(ecog2d, &#39;ecog&#39;)
         to_html([to_div(fig), ], ecog_fig)
 
-    if args.function in (&#39;fit&#39;, ):
+    if args.function in (&#39;init&#39;, &#39;fit&#39;):
 
         offset = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
+        if args.function == &#39;fit&#39;:
+            start_time = datetime.now()
+            output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + parameters[&#39;fit&#39;][&#39;method&#39;] + &#39;_&#39; + parameters[&#39;fit&#39;][&#39;correlation&#39;] + &#39;_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+            output_dir.mkdir(parents=True)
+
+            parameters[&#39;timestamp&#39;] = start_time.isoformat()
+            parameters_json = output_dir / &#39;parameters.json&#39;
+            with parameters_json.open(&#39;w&#39;) as f:
+                dump(parameters, f, indent=2, cls=JSONEncoder_path)
+        else:
+            output_dir = parameters[&#39;output_dir&#39;]
+
         fitting(
             ecog=ecog2d,
-            output=parameters[&#39;output_dir&#39;],
+            output=output_dir,
+            init=args.function == &#39;init&#39;,
             **parameters[&#39;fit&#39;])
 
     if args.function == &#39;matlab&#39;:
-        compare_to_matlab(parameters)
-
-    parameters[&#39;timestamp&#39;] = datetime.now().isoformat()
-    parameters_json = parameters[&#39;output_dir&#39;] / &#39;parameters.json&#39;
-    with parameters_json.open(&#39;w&#39;) as f:
-        dump(parameters, f, indent=2, cls=JSONEncoder_path)</code></pre>
+        compare_to_matlab(parameters)</code></pre>
 </details>
 </section>
 <section>
@@ -268,10 +279,27 @@ def main(arguments=None):
     parser = ArgumentParser(
         description=&#39;Tools to calculate the position of ECoG grid on brain based on the neuronal activity&#39;,
         formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument(
+        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
+        Path to file with the parameters for the analysis. The file with parameters
+        should be formatted as a json file.&#34;&#34;&#34;))
     list_functions = parser.add_subparsers(
         title=&#39;Functions&#39;)
+    parser.add_argument(
+        &#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
+        help=&#39;Logging level: info (default), debug&#39;)
+    parser.add_argument(
+        &#39;-o&#39;, &#39;--output_dir&#39;,
+        help=dedent(&#34;&#34;&#34;\
+        Output directory. Default is the current directory.
+        You can also specify it in the parameters.
 
-    # grid
+        Parameters:
+          output_dir :
+        &#34;&#34;&#34;))
+
+    # create parameters
     subparam = list_functions.add_parser(
         &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
         Generate an empty parameters json file. Fields with `null` are optional.
@@ -280,13 +308,8 @@ def main(arguments=None):
           parameters.json
 
         &#34;&#34;&#34;),
-        description=&#39;\n&#39;.join(help_template(TEMPLATE)),
-        formatter_class=RawTextHelpFormatter,
         )
     subparam.set_defaults(function=&#39;parameters&#39;)
-    subparam.add_argument(
-        &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
-        Path to file to write with the parameters for the analysis.&#34;&#34;&#34;))
 
     # grid
     subfun0 = list_functions.add_parser(
@@ -311,19 +334,27 @@ def main(arguments=None):
         &#34;&#34;&#34;))
     subfun1.set_defaults(function=&#39;ecog&#39;)
 
-    # fit
     subfun2 = list_functions.add_parser(
-        &#39;fit&#39;, help=dedent(&#34;&#34;&#34;\
-        Generate the grid, with the correct labels.
+        &#39;init&#39;, help=dedent(&#34;&#34;&#34;\
+        Fit the ecog values to the surface
 
         Output:
-          bestfit_vert{}_rot{}.label : electrode locations in freesurfer format
-          bestfit_vert{}_rot{}.html : estimated activity of the best fit based on brain surface
+            ???
 
         &#34;&#34;&#34;))
-    subfun2.set_defaults(function=&#39;fit&#39;)
+    subfun2.set_defaults(function=&#39;init&#39;)
 
     subfun3 = list_functions.add_parser(
+        &#39;fit&#39;, help=dedent(&#34;&#34;&#34;\
+        Fit the ecog values to the surface
+
+        Output:
+            ???
+
+        &#34;&#34;&#34;))
+    subfun3.set_defaults(function=&#39;fit&#39;)
+
+    subfun4 = list_functions.add_parser(
         &#39;matlab&#39;, help=dedent(&#34;&#34;&#34;\
         Compute values based on a conversion of the matlab code and compare the
         values with those computed by matlab
@@ -331,25 +362,7 @@ def main(arguments=None):
         Output:
           ???
         &#34;&#34;&#34;))
-    subfun3.set_defaults(function=&#39;matlab&#39;)
-
-    for subfun in (subfun0, subfun1, subfun2, subfun3):
-        subfun.add_argument(
-            &#39;-l&#39;, &#39;--log&#39;, default=&#39;info&#39;,
-            help=&#39;Logging level: info (default), debug&#39;)
-        subfun.add_argument(
-            &#39;-o&#39;, &#39;--output_dir&#39;,
-            help=dedent(&#34;&#34;&#34;\
-            Output directory. Default is the current directory.
-            You can also specify it in the parameters.
-
-            Parameters:
-              output_dir :
-            &#34;&#34;&#34;))
-        subfun.add_argument(
-            &#39;parameters&#39;, help=dedent(&#34;&#34;&#34;\
-            Path to file with the parameters for the analysis. The file with parameters
-            should be formatted as a json file.&#34;&#34;&#34;))
+    subfun4.set_defaults(function=&#39;matlab&#39;)
 
     return parser</code></pre>
 </details>
@@ -367,8 +380,11 @@ def main(arguments=None):
     &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
+    func = args.function
+    if func == &#39;init&#39;:
+        func = &#39;fit&#39;
 
-    if args.function == &#39;parameters&#39;:
+    if func == &#39;parameters&#39;:
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
         with p_json.open(&#39;w&#39;) as f:
@@ -395,7 +411,8 @@ def main(arguments=None):
     p_json = Path(args.parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
-    parameters = validate_template(TEMPLATE, parameters)
+
+    parameters[func] = validate_template(TEMPLATE[func], parameters[func])
 
     if args.output_dir is not None:
         output = args.output_dir
@@ -414,14 +431,14 @@ def main(arguments=None):
     ecog_fig = parameters[&#39;output_dir&#39;] / &#39;grid2d_ecog.html&#39;
     transform_file = parameters[&#39;output_dir&#39;] / &#39;tkras&#39;
 
-    if args.function in (&#39;grid2d&#39;, ):
+    if args.function == &#39;grid2d&#39;:
         from ..construct import make_grid_with_labels
 
         grid2d = make_grid_with_labels(**parameters[&#39;grid2d&#39;])
         lg.info(f&#39;Writing labels to {grid2d_tsv}&#39;)
         write_grid2d(grid2d_tsv, grid2d)
 
-    if args.function in (&#39;ecog&#39;, ):
+    if args.function == &#39;ecog&#39;:
         from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
 
         lg.info(f&#39;Reading 2d grid from {grid2d_tsv}&#39;)
@@ -437,25 +454,33 @@ def main(arguments=None):
         fig = plot_2d(ecog2d, &#39;ecog&#39;)
         to_html([to_div(fig), ], ecog_fig)
 
-    if args.function in (&#39;fit&#39;, ):
+    if args.function in (&#39;init&#39;, &#39;fit&#39;):
 
         offset = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
+        if args.function == &#39;fit&#39;:
+            start_time = datetime.now()
+            output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + parameters[&#39;fit&#39;][&#39;method&#39;] + &#39;_&#39; + parameters[&#39;fit&#39;][&#39;correlation&#39;] + &#39;_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+            output_dir.mkdir(parents=True)
+
+            parameters[&#39;timestamp&#39;] = start_time.isoformat()
+            parameters_json = output_dir / &#39;parameters.json&#39;
+            with parameters_json.open(&#39;w&#39;) as f:
+                dump(parameters, f, indent=2, cls=JSONEncoder_path)
+        else:
+            output_dir = parameters[&#39;output_dir&#39;]
+
         fitting(
             ecog=ecog2d,
-            output=parameters[&#39;output_dir&#39;],
+            output=output_dir,
+            init=args.function == &#39;init&#39;,
             **parameters[&#39;fit&#39;])
 
     if args.function == &#39;matlab&#39;:
-        compare_to_matlab(parameters)
-
-    parameters[&#39;timestamp&#39;] = datetime.now().isoformat()
-    parameters_json = parameters[&#39;output_dir&#39;] / &#39;parameters.json&#39;
-    with parameters_json.open(&#39;w&#39;) as f:
-        dump(parameters, f, indent=2, cls=JSONEncoder_path)</code></pre>
+        compare_to_matlab(parameters)</code></pre>
 </details>
 </dd>
 </dl>

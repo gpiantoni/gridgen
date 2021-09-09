@@ -9,7 +9,6 @@ from datetime import datetime
 
 from .parameters import (
     convert_to_path,
-    help_template,
     JSONEncoder_path,
     prepare_template,
     validate_template,
@@ -26,8 +25,6 @@ from ..io import (
     read_surface_ras_shift,
     export_transform,
     )
-
-PKG_PATH = Path(__file__).parent
 
 lg = getLogger('gridloc')
 
@@ -68,13 +65,8 @@ def create_arguments():
           parameters.json
 
         """),
-        description='\n'.join(help_template(TEMPLATE)),
-        formatter_class=RawTextHelpFormatter,
         )
     subparam.set_defaults(function='parameters')
-    subparam.add_argument(
-        'parameters', help=dedent("""\
-        Path to file to write with the parameters for the analysis."""))
 
     # grid
     subfun0 = list_functions.add_parser(

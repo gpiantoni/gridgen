@@ -36,11 +36,7 @@ from scipy.spatial.transform import Rotation
 
 from .geometry import calc_plane_to_axis
 
-interelec_distance = 3
-&#34;&#34;&#34;float : distance between electrodes, in mm&#34;&#34;&#34;
-MAX_ANGLE = 5
-&#34;&#34;&#34;float : maximum angle that the grid can flex (elasticity of the grid), between two neighboring electrodes&#34;&#34;&#34;
-POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
+# POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
 
 lg = getLogger(__name__)
 lg.propagate = False
@@ -266,17 +262,6 @@ def find_new_pos_2d(grid, neighbors, surf, x, y):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-variables">Global variables</h2>
-<dl>
-<dt id="gridloc.search.MAX_ANGLE"><code class="name">var <span class="ident">MAX_ANGLE</span></code></dt>
-<dd>
-<div class="desc"><p>float : maximum angle that the grid can flex (elasticity of the grid), between two neighboring electrodes</p></div>
-</dd>
-<dt id="gridloc.search.interelec_distance"><code class="name">var <span class="ident">interelec_distance</span></code></dt>
-<dd>
-<div class="desc"><p>float : distance between electrodes, in mm</p></div>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
@@ -623,12 +608,6 @@ position and normal of the new electrode included</dd>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="gridloc" href="index.html">gridloc</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-variables">Global variables</a></h3>
-<ul class="">
-<li><code><a title="gridloc.search.MAX_ANGLE" href="#gridloc.search.MAX_ANGLE">MAX_ANGLE</a></code></li>
-<li><code><a title="gridloc.search.interelec_distance" href="#gridloc.search.interelec_distance">interelec_distance</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>

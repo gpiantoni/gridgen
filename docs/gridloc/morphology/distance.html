@@ -24,18 +24,23 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import dot, arccos, pi, zeros, cross, dtype
+<pre><code class="python">from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
+from ..matlab.geometry import intersect_ray_triangle
 
 d_ = dtype([
     (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
     (&#39;morphology&#39;, &#39;f4&#39;),
     ])
 
+
 def compute_distance(grid, pial, method=&#39;minimum&#39;):
 
-    if method == &#39;minimum&#39;:
+    if method == &#39;ray&#39;:
+        distance = _distance_ray(grid, pial)
+
+    elif method == &#39;minimum&#39;:
         distance = _distance_minimum(grid, pial)
 
     elif method == &#39;view&#39;:
@@ -47,6 +52,26 @@ def compute_distance(grid, pial, method=&#39;minimum&#39;):
     elif method == &#39;pdf&#39;:
         distance = _distance_pdf(grid, pial)
 
+    return distance
+
+
+def _distance_ray(grid, pial):
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            dist = intersect_ray_triangle(
+                pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 0], :],
+                pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 1], :],
+                pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 2], :],
+                grid[&#39;pos&#39;][i_x, i_y],
+                -1 * grid[&#39;norm&#39;][i_x, i_y],
+                line=True
+                )
+
+            distance[&#39;morphology&#39;][i_x, i_y] = nanmin(dist)
+
+    distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance
 
 
@@ -134,7 +159,10 @@ def _distance_pdf(grid, pial):
 </summary>
 <pre><code class="python">def compute_distance(grid, pial, method=&#39;minimum&#39;):
 
-    if method == &#39;minimum&#39;:
+    if method == &#39;ray&#39;:
+        distance = _distance_ray(grid, pial)
+
+    elif method == &#39;minimum&#39;:
         distance = _distance_minimum(grid, pial)
 
     elif method == &#39;view&#39;:

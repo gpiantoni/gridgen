@@ -7,11 +7,7 @@ from scipy.spatial.transform import Rotation
 
 from .geometry import calc_plane_to_axis
 
-interelec_distance = 3
-"""float : distance between electrodes, in mm"""
-MAX_ANGLE = 5
-"""float : maximum angle that the grid can flex (elasticity of the grid), between two neighboring electrodes"""
-POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
+# POSSIBLE_DEGREES = arange(-MAX_ANGLE, MAX_ANGLE, 0.2)
 
 lg = getLogger(__name__)
 lg.propagate = False

@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 from pathlib import Path
 from json import JSONEncoder
 from collections.abc import Iterable
 
+PKG_PATH = Path(__file__).parents[2]
 
 DIMENSIONS = 'x', 'y', 'rotation'
 
@@ -50,12 +53,12 @@ TEMPLATE = {
         "begtime": {
             'type': 'float',
             'necessary': False,
-            'help': 'start time in seconds from beginning of the file',
+            'help': 'start time in seconds from the beginning of the file',
             },
         "endtime": {
             'type': 'float',
             'necessary': False,
-            'help': 'end time in seconds from beginning of the file',
+            'help': 'end time in seconds from the beginning of the file',
             },
         "bad_channels": {
             'type': 'list',
@@ -63,7 +66,21 @@ TEMPLATE = {
             'help': 'list of str, name of the channels to exclude',
             },
         },
-    "fit": {
+    "grid3d": {
+        "interelec_distance": {
+            "type": "float",
+            "necessary": False,
+            "help": "distance between the electrode centers (pitch), in mm",
+            "default": 3,
+            },
+        "maximum_angle": {
+            "type": "float",
+            "necessary": False,
+            "help": "maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid)",
+            "default": 5,
+            },
+        },
+    "files": {
         "T1_file": {
             'type': 'str',
             'necessary': True,
@@ -89,23 +106,25 @@ TEMPLATE = {
             'necessary': False,
             'help': 'value to threshold the angio_file',
             },
-        "initial": {
-            "label": {
-                'type': 'str',
-                'necessary': True,
-                'help': 'label for the reference electrode',
-                },
-            "RAS": {
-                'type': 'list',
-                'necessary': True,
-                'help': 'initial location for the reference electrode (coordinates in MRI space)',
-                },
-            "rotation": {
-                'type': 'float',
-                'necessary': True,
-                'help': 'degree of rotation of the grid (in degrees, 0° is roughly pointing up)',
-                },
+        },
+    "initial": {
+        "label": {
+            'type': 'str',
+            'necessary': True,
+            'help': 'label for the reference electrode',
             },
+        "RAS": {
+            'type': 'list',
+            'necessary': True,
+            'help': 'initial location for the reference electrode (coordinates in MRI space)',
+            },
+        "rotation": {
+            'type': 'float',
+            'necessary': True,
+            'help': 'degree of rotation of the grid (in degrees, 0° is roughly pointing up)',
+            },
+        },
+    "fit": {
         "method": {
             "type": "str",
             "necessary": True,
@@ -124,7 +143,7 @@ TEMPLATE = {
             "type": "str",
             "necessary": False,
             "values": ['ray', 'minimum', 'view', 'cylinder', 'pdf'],
-            "help": "",
+            "help": "how to compute the distance of the morphology",
             "default": "ray",
         },
         "steps": {
@@ -253,19 +272,19 @@ def help_template(temp):
     out = []
     for k, v in temp.items():
         if 'type' in v:
-            out_ = k
+            out_ = f'- **{k}**: '
 
             if v['type'] == 'int':
-                out_ += '\t(int'
+                out_ += '(int'
 
             elif v['type'] == 'float':
-                out_ += '\t(float'
+                out_ += '(float'
 
             elif v['type'] == 'str':
-                out_ += '\t(str'
+                out_ += '(str'
 
             elif v['type'] == 'list':
-                out_ += '\t(list'
+                out_ += '(list'
 
             if v['necessary']:
                 out_ += ') '
@@ -275,13 +294,17 @@ def help_template(temp):
             out_ += v['help']
 
             if 'values' in v:
-                out_ += ' [' + ', '.join(v['values']) + ']'
+                out_ += '. Values: [' + ', '.join(v['values']) + ']'
+
+            if 'default' in v:
+                out_ += f'. Default: {v["default"]}'
+
             out.append(out_)
 
         else:
             out_ = help_template(v)
-            out.append(k)
-            out.extend([f'\t{x}' for x in out_])
+            out.append(f'- **{k}**')
+            out.extend([f'  {x}' for x in out_])
 
     return out
 
@@ -332,3 +355,13 @@ class JSONEncoder_path(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Path):
             return str(obj)
+
+
+if __name__ == '__main__':
+
+    md = '## Parameters\n' + '\n'.join(help_template(TEMPLATE))
+
+    parameters_file = PKG_PATH / 'docs' / 'parameters.md'
+
+    with parameters_file.open('w') as f:
+        f.write(md)
