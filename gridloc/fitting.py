@@ -258,9 +258,6 @@ def corrcoef_match(ecog, estimate, field='morphology'):
 
 def fitting_brute(func, args):
 
-    # shift rotation by initial value
-    # for x and y, the default value MUST be zero, because we start at
-    # the reference vertex
     ranges = (
         slice(*args[9]['x']),
         slice(*args[9]['y']),
@@ -274,7 +271,7 @@ def fitting_brute(func, args):
         res = brute(
             corr_ecog_model,
             ranges,
-            args=args,
+            args=args[:-1],
             disp=True,
             workers=p.map,
             full_output=True,
@@ -285,6 +282,7 @@ def fitting_brute(func, args):
 
 
 def fitting_simplex(func, init, args):
+    print(args[9])
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
@@ -306,7 +304,7 @@ def fitting_simplex(func, init, args):
         func,
         array([0, 0, 0]),  # ignored
         method='Nelder-Mead',
-        args=args,
+        args=args[:-1],
         options=dict(
             maxiter=100,
             initial_simplex=simplex,
