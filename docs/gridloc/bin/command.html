@@ -29,17 +29,16 @@
 from pathlib import Path
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG
 from argparse import ArgumentParser, RawTextHelpFormatter
-from json import load, dump
+from json import dump
 from textwrap import dedent
 from numpy import set_printoptions
 from datetime import datetime
 
 from .parameters import (
-    convert_to_path,
-    JSONEncoder_path,
     prepare_template,
-    validate_template,
+    parse_parameters,
     TEMPLATE,
+    _JSONEncoder_path
     )
 from ..fitting import fitting
 from ..matlab.comparison import compare_to_matlab
@@ -155,11 +154,8 @@ def main(arguments=None):
     &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
-    func = args.function
-    if func == &#39;init&#39;:
-        func = &#39;fit&#39;
 
-    if func == &#39;parameters&#39;:
+    if args.function == &#39;parameters&#39;:
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
         with p_json.open(&#39;w&#39;) as f:
@@ -183,22 +179,7 @@ def main(arguments=None):
     lg.handlers = []
     lg.addHandler(handler)
 
-    p_json = Path(args.parameters).resolve()
-    with p_json.open() as f:
-        parameters = load(f)
-
-    parameters[func] = validate_template(TEMPLATE[func], parameters[func])
-
-    if args.output_dir is not None:
-        output = args.output_dir
-    elif &#39;output_dir&#39; in parameters:
-        output = parameters[&#39;output_dir&#39;]
-    else:
-        output = &#39;gridloc_output&#39;
-
-    parameters[&#39;output_dir&#39;] = output
-    parameters = convert_to_path(parameters, p_json.parent)
-    parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
+    parameters = parse_parameters(args.parameters, args.function, args.output)
 
     # outputs
     grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
@@ -231,7 +212,7 @@ def main(arguments=None):
 
     if args.function in (&#39;init&#39;, &#39;fit&#39;):
 
-        offset = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
+        offset = read_surface_ras_shift(parameters[&#39;mri&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
@@ -244,7 +225,7 @@ def main(arguments=None):
             parameters[&#39;timestamp&#39;] = start_time.isoformat()
             parameters_json = output_dir / &#39;parameters.json&#39;
             with parameters_json.open(&#39;w&#39;) as f:
-                dump(parameters, f, indent=2, cls=JSONEncoder_path)
+                dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
             output_dir = parameters[&#39;output_dir&#39;]
 
@@ -380,11 +361,8 @@ def main(arguments=None):
     &#34;&#34;&#34;Main function which is called from the command line&#34;&#34;&#34;
     parser = create_arguments()
     args = parser.parse_args(arguments)
-    func = args.function
-    if func == &#39;init&#39;:
-        func = &#39;fit&#39;
 
-    if func == &#39;parameters&#39;:
+    if args.function == &#39;parameters&#39;:
         parameters = prepare_template(TEMPLATE)
         p_json = Path(args.parameters).resolve().with_suffix(&#39;.json&#39;)
         with p_json.open(&#39;w&#39;) as f:
@@ -408,22 +386,7 @@ def main(arguments=None):
     lg.handlers = []
     lg.addHandler(handler)
 
-    p_json = Path(args.parameters).resolve()
-    with p_json.open() as f:
-        parameters = load(f)
-
-    parameters[func] = validate_template(TEMPLATE[func], parameters[func])
-
-    if args.output_dir is not None:
-        output = args.output_dir
-    elif &#39;output_dir&#39; in parameters:
-        output = parameters[&#39;output_dir&#39;]
-    else:
-        output = &#39;gridloc_output&#39;
-
-    parameters[&#39;output_dir&#39;] = output
-    parameters = convert_to_path(parameters, p_json.parent)
-    parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
+    parameters = parse_parameters(args.parameters, args.function, args.output)
 
     # outputs
     grid2d_tsv = parameters[&#39;output_dir&#39;] / &#39;grid2d_labels.tsv&#39;
@@ -456,7 +419,7 @@ def main(arguments=None):
 
     if args.function in (&#39;init&#39;, &#39;fit&#39;):
 
-        offset = read_surface_ras_shift(parameters[&#39;fit&#39;][&#39;T1_file&#39;])
+        offset = read_surface_ras_shift(parameters[&#39;mri&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
 
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
@@ -469,7 +432,7 @@ def main(arguments=None):
             parameters[&#39;timestamp&#39;] = start_time.isoformat()
             parameters_json = output_dir / &#39;parameters.json&#39;
             with parameters_json.open(&#39;w&#39;) as f:
-                dump(parameters, f, indent=2, cls=JSONEncoder_path)
+                dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
             output_dir = parameters[&#39;output_dir&#39;]
 

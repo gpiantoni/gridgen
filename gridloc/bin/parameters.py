@@ -1,12 +1,36 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from json import JSONEncoder
+from json import JSONEncoder, load
 from collections.abc import Iterable
 
 PKG_PATH = Path(__file__).parents[2]
 
 DIMENSIONS = 'x', 'y', 'rotation'
+
+REQUIRED = {
+    'grid2d': [
+        'grid2d',
+        ],
+    'ecog': [
+        'ecog',
+        ],
+    'init': [
+        'grid3d',
+        'mri',
+        'initial',
+        ],
+    'fit': [
+        'grid3d',
+        'mri',
+        'fit',
+        ],
+    'matlab': [
+        'mri',
+        'matlab',
+        ]
+    }
+
 
 TEMPLATE = {
     "output_dir": {
@@ -80,7 +104,7 @@ TEMPLATE = {
             "default": 5,
             },
         },
-    "files": {
+    "mri": {
         "T1_file": {
             'type': 'str',
             'necessary': True,
@@ -269,6 +293,8 @@ def prepare_template(temp):
 
 
 def help_template(temp):
+    modules = _invert_dict(REQUIRED)
+
     out = []
     for k, v in temp.items():
         if 'type' in v:
@@ -303,7 +329,11 @@ def help_template(temp):
 
         else:
             out_ = help_template(v)
-            out.append(f'- **{k}**')
+            if k in modules:
+                extra = ' (required by command ' + ', '.join(f'`{x}`' for x in modules[k]) + ')'
+            else:
+                extra = ''
+            out.append(f'- **{k}**' + extra)
             out.extend([f'  {x}' for x in out_])
 
     return out
@@ -351,10 +381,43 @@ def validate_template(temp, d):
     return out
 
 
-class JSONEncoder_path(JSONEncoder):
+class _JSONEncoder_path(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Path):
             return str(obj)
+
+
+def _invert_dict(d):
+    new_dict = {}
+    for k, v in d.items():
+        for x in v:
+            new_dict.setdefault(x, []).append(k)
+    return new_dict
+
+
+def parse_parameters(parameters, function, output_dir=None):
+    p_json = Path(parameters).resolve()
+    with p_json.open() as f:
+        parameters = load(f)
+
+    for k in REQUIRED[function]:
+        if k not in parameters:
+            raise ValueError(f'You need to specify "{k}" when running {function}')
+        else:
+            parameters[k] = validate_template(TEMPLATE[k], parameters[k])
+
+    if output_dir is not None:
+        output = output_dir
+    elif 'output_dir' in parameters:
+        output = parameters['output_dir']
+    else:
+        output = 'gridloc_output'
+
+    parameters['output_dir'] = output
+    parameters = convert_to_path(parameters, p_json.parent)
+    parameters['output_dir'].mkdir(exist_ok=True, parents=True)
+
+    return parameters
 
 
 if __name__ == '__main__':

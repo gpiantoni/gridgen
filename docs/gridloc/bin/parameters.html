@@ -27,12 +27,36 @@
 <pre><code class="python">#!/usr/bin/env python3
 
 from pathlib import Path
-from json import JSONEncoder
+from json import JSONEncoder, load
 from collections.abc import Iterable
 
 PKG_PATH = Path(__file__).parents[2]
 
 DIMENSIONS = &#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;
+
+REQUIRED = {
+    &#39;grid2d&#39;: [
+        &#39;grid2d&#39;,
+        ],
+    &#39;ecog&#39;: [
+        &#39;ecog&#39;,
+        ],
+    &#39;init&#39;: [
+        &#39;grid3d&#39;,
+        &#39;mri&#39;,
+        &#39;initial&#39;,
+        ],
+    &#39;fit&#39;: [
+        &#39;grid3d&#39;,
+        &#39;mri&#39;,
+        &#39;fit&#39;,
+        ],
+    &#39;matlab&#39;: [
+        &#39;mri&#39;,
+        &#39;matlab&#39;,
+        ]
+    }
+
 
 TEMPLATE = {
     &#34;output_dir&#34;: {
@@ -106,7 +130,7 @@ TEMPLATE = {
             &#34;default&#34;: 5,
             },
         },
-    &#34;files&#34;: {
+    &#34;mri&#34;: {
         &#34;T1_file&#34;: {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: True,
@@ -295,6 +319,8 @@ def prepare_template(temp):
 
 
 def help_template(temp):
+    modules = _invert_dict(REQUIRED)
+
     out = []
     for k, v in temp.items():
         if &#39;type&#39; in v:
@@ -329,7 +355,11 @@ def help_template(temp):
 
         else:
             out_ = help_template(v)
-            out.append(f&#39;- **{k}**&#39;)
+            if k in modules:
+                extra = &#39; (required by command &#39; + &#39;, &#39;.join(f&#39;`{x}`&#39; for x in modules[k]) + &#39;)&#39;
+            else:
+                extra = &#39;&#39;
+            out.append(f&#39;- **{k}**&#39; + extra)
             out.extend([f&#39;  {x}&#39; for x in out_])
 
     return out
@@ -377,10 +407,43 @@ def validate_template(temp, d):
     return out
 
 
-class JSONEncoder_path(JSONEncoder):
+class _JSONEncoder_path(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Path):
             return str(obj)
+
+
+def _invert_dict(d):
+    new_dict = {}
+    for k, v in d.items():
+        for x in v:
+            new_dict.setdefault(x, []).append(k)
+    return new_dict
+
+
+def parse_parameters(parameters, function, output_dir=None):
+    p_json = Path(parameters).resolve()
+    with p_json.open() as f:
+        parameters = load(f)
+
+    for k in REQUIRED[function]:
+        if k not in parameters:
+            raise ValueError(f&#39;You need to specify &#34;{k}&#34; when running {function}&#39;)
+        else:
+            parameters[k] = validate_template(TEMPLATE[k], parameters[k])
+
+    if output_dir is not None:
+        output = output_dir
+    elif &#39;output_dir&#39; in parameters:
+        output = parameters[&#39;output_dir&#39;]
+    else:
+        output = &#39;gridloc_output&#39;
+
+    parameters[&#39;output_dir&#39;] = output
+    parameters = convert_to_path(parameters, p_json.parent)
+    parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
+
+    return parameters
 
 
 if __name__ == &#39;__main__&#39;:
@@ -468,6 +531,8 @@ it absolute in reference to "parent"</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def help_template(temp):
+    modules = _invert_dict(REQUIRED)
+
     out = []
     for k, v in temp.items():
         if &#39;type&#39; in v:
@@ -502,10 +567,48 @@ it absolute in reference to "parent"</p>
 
         else:
             out_ = help_template(v)
-            out.append(f&#39;- **{k}**&#39;)
+            if k in modules:
+                extra = &#39; (required by command &#39; + &#39;, &#39;.join(f&#39;`{x}`&#39; for x in modules[k]) + &#39;)&#39;
+            else:
+                extra = &#39;&#39;
+            out.append(f&#39;- **{k}**&#39; + extra)
             out.extend([f&#39;  {x}&#39; for x in out_])
 
     return out</code></pre>
+</details>
+</dd>
+<dt id="gridloc.bin.parameters.parse_parameters"><code class="name flex">
+<span>def <span class="ident">parse_parameters</span></span>(<span>parameters, function, output_dir=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_parameters(parameters, function, output_dir=None):
+    p_json = Path(parameters).resolve()
+    with p_json.open() as f:
+        parameters = load(f)
+
+    for k in REQUIRED[function]:
+        if k not in parameters:
+            raise ValueError(f&#39;You need to specify &#34;{k}&#34; when running {function}&#39;)
+        else:
+            parameters[k] = validate_template(TEMPLATE[k], parameters[k])
+
+    if output_dir is not None:
+        output = output_dir
+    elif &#39;output_dir&#39; in parameters:
+        output = parameters[&#39;output_dir&#39;]
+    else:
+        output = &#39;gridloc_output&#39;
+
+    parameters[&#39;output_dir&#39;] = output
+    parameters = convert_to_path(parameters, p_json.parent)
+    parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
+
+    return parameters</code></pre>
 </details>
 </dd>
 <dt id="gridloc.bin.parameters.prepare_template"><code class="name flex">
@@ -595,134 +698,6 @@ it absolute in reference to "parent"</p>
 </dl>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="gridloc.bin.parameters.JSONEncoder_path"><code class="flex name class">
-<span>class <span class="ident">JSONEncoder_path</span></span>
-<span>(</span><span>*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Extensible JSON <a href="http://json.org">http://json.org</a> encoder for Python data structures.</p>
-<p>Supports the following objects and types by default:</p>
-<p>+-------------------+---------------+
-| Python
-| JSON
-|
-+===================+===============+
-| dict
-| object
-|
-+-------------------+---------------+
-| list, tuple
-| array
-|
-+-------------------+---------------+
-| str
-| string
-|
-+-------------------+---------------+
-| int, float
-| number
-|
-+-------------------+---------------+
-| True
-| true
-|
-+-------------------+---------------+
-| False
-| false
-|
-+-------------------+---------------+
-| None
-| null
-|
-+-------------------+---------------+</p>
-<p>To extend this to recognize other objects, subclass and implement a
-<code>.default()</code> method with another method that returns a serializable
-object for <code>o</code> if possible, otherwise it should call the superclass
-implementation (to raise <code>TypeError</code>).</p>
-<p>Constructor for JSONEncoder, with sensible defaults.</p>
-<p>If skipkeys is false, then it is a TypeError to attempt
-encoding of keys that are not str, int, float or None.
-If
-skipkeys is True, such items are simply skipped.</p>
-<p>If ensure_ascii is true, the output is guaranteed to be str
-objects with all incoming non-ASCII characters escaped.
-If
-ensure_ascii is false, the output can contain non-ASCII characters.</p>
-<p>If check_circular is true, then lists, dicts, and custom encoded
-objects will be checked for circular references during encoding to
-prevent an infinite recursion (which would cause an OverflowError).
-Otherwise, no such check takes place.</p>
-<p>If allow_nan is true, then NaN, Infinity, and -Infinity will be
-encoded as such.
-This behavior is not JSON specification compliant,
-but is consistent with most JavaScript based encoders and decoders.
-Otherwise, it will be a ValueError to encode such floats.</p>
-<p>If sort_keys is true, then the output of dictionaries will be
-sorted by key; this is useful for regression tests to ensure
-that JSON serializations can be compared on a day-to-day basis.</p>
-<p>If indent is a non-negative integer, then JSON array
-elements and object members will be pretty-printed with that
-indent level.
-An indent level of 0 will only insert newlines.
-None is the most compact representation.</p>
-<p>If specified, separators should be an (item_separator, key_separator)
-tuple.
-The default is (', ', ': ') if <em>indent</em> is <code>None</code> and
-(',', ': ') otherwise.
-To get the most compact JSON representation,
-you should specify (',', ':') to eliminate whitespace.</p>
-<p>If specified, default is a function that gets called for objects
-that can't otherwise be serialized.
-It should return a JSON encodable
-version of the object or raise a <code>TypeError</code>.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class JSONEncoder_path(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Path):
-            return str(obj)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>json.encoder.JSONEncoder</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="gridloc.bin.parameters.JSONEncoder_path.default"><code class="name flex">
-<span>def <span class="ident">default</span></span>(<span>self, obj)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Implement this method in a subclass such that it returns
-a serializable object for <code>o</code>, or calls the base implementation
-(to raise a <code>TypeError</code>).</p>
-<p>For example, to support arbitrary iterators, you could
-implement default like this::</p>
-<pre><code>def default(self, o):
-    try:
-        iterable = iter(o)
-    except TypeError:
-        pass
-    else:
-        return list(iterable)
-    # Let the base class default method raise the TypeError
-    return JSONEncoder.default(self, o)
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def default(self, obj):
-    if isinstance(obj, Path):
-        return str(obj)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -740,18 +715,9 @@ implement default like this::</p>
 <ul class="">
 <li><code><a title="gridloc.bin.parameters.convert_to_path" href="#gridloc.bin.parameters.convert_to_path">convert_to_path</a></code></li>
 <li><code><a title="gridloc.bin.parameters.help_template" href="#gridloc.bin.parameters.help_template">help_template</a></code></li>
+<li><code><a title="gridloc.bin.parameters.parse_parameters" href="#gridloc.bin.parameters.parse_parameters">parse_parameters</a></code></li>
 <li><code><a title="gridloc.bin.parameters.prepare_template" href="#gridloc.bin.parameters.prepare_template">prepare_template</a></code></li>
 <li><code><a title="gridloc.bin.parameters.validate_template" href="#gridloc.bin.parameters.validate_template">validate_template</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="gridloc.bin.parameters.JSONEncoder_path" href="#gridloc.bin.parameters.JSONEncoder_path">JSONEncoder_path</a></code></h4>
-<ul class="">
-<li><code><a title="gridloc.bin.parameters.JSONEncoder_path.default" href="#gridloc.bin.parameters.JSONEncoder_path.default">default</a></code></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
