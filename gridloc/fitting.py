@@ -156,10 +156,10 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
 
     if mri['angio'] is not None:
         vasc = compute_vasculature(grid, mri['angio'])
-        e, m, v = match_labels(ecog, morpho, vasc)
+        e, m, v = match_labels(ecog, morpho, vasc)[1:]
 
     else:
-        e, m = match_labels(ecog, morpho)
+        e, m = match_labels(ecog, morpho)[1:]
         v = vasc = None
 
     i, cc = compare_models(e, m, v, correlation=fit['correlation'])

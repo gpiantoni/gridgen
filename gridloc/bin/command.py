@@ -15,7 +15,7 @@ from .parameters import (
     )
 from ..fitting import fitting
 from ..matlab.comparison import compare_to_matlab
-from ..viz import to_html, to_div, plot_2d
+from ..viz import to_html, to_div, plot_grid2d
 from ..io import (
     read_grid2d,
     write_grid2d,
@@ -180,7 +180,7 @@ def main(arguments=None):
         write_ecog2d(ecog_tsv, ecog2d)
 
         lg.info(f'Writing ECoG image to {ecog_fig}')
-        fig = plot_2d(ecog2d, 'ecog')
+        fig = plot_grid2d(ecog2d, 'ecog')
         to_html([to_div(fig), ], ecog_fig)
 
     if args.function in ('init', 'fit'):

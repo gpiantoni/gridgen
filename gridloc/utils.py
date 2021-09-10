@@ -22,7 +22,7 @@ def match_labels(*args):
     for i, arg in enumerate(args):
         labels = labels & set(arg['label'][~isnan(arg[FIELDS[i]])])
 
-    out = []
+    out = [list(labels), ]
     for i, arg in enumerate(args):
         i_chan = intersect1d(arg['label'], array(list(labels)), assume_unique=False, return_indices=True)[1]
         out.append(arg[FIELDS[i]][i_chan])

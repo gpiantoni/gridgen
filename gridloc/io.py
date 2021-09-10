@@ -448,6 +448,7 @@ def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
     if angio_file is not None and angio_file:
         lg.debug(f'Reading angiogram from {angio_file} and thresholding at {angio_threshold}')
         angio = read_volume(angio_file, angio_threshold)
+        angio['value'] = 1  # set the value of each voxel above threshold to 1
     else:
         angio = None
 
