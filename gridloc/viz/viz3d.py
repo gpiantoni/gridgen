@@ -33,13 +33,13 @@ def plot_results(model, pial, output, angio=None):
     lg.debug(f'Exported merged model to {grid_file}')
 
     grid_file = output / 'morphology'
-    fig0 = plot_grid2d(model['morpho'], 'morphology')
+    fig0 = plot_grid2d(model['morphology'], 'morphology')
     fig1 = plot_electrodes(pial, model, 'morphology')
     to_html([to_div(fig0), to_div(fig1)], grid_file)
 
-    if model['vasc'] is not None:
+    if model['vasculature'] is not None:
         grid_file = output / 'vascular'
-        fig0 = plot_grid2d(model['vasc'], 'vasculature')
+        fig0 = plot_grid2d(model['vasculature'], 'vasculature')
         fig1 = plot_electrodes(pial, model, 'vasculature', angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported vascular to {grid_file}')
@@ -53,7 +53,7 @@ def plot_results(model, pial, output, angio=None):
 
 def plot_electrodes(pial, model, value=None, ref_label=None, angio=None):
     grid = model['grid']
-    values = model[value]
+    values = model[value]['value']
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
     norm = grid['norm'].reshape(-1, 3)
