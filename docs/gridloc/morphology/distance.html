@@ -24,20 +24,20 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN
+<pre><code class="python">from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
+
 from ..matlab.geometry import intersect_ray_triangle
+from ..io import WIRE
 
 d_ = dtype([
     (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-    (&#39;morphology&#39;, &#39;f4&#39;),
+    (&#39;value&#39;, &#39;f4&#39;),
     ])
 
 
 def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
-    &#34;&#34;&#34;The smaller the distance, the stronger the signal
-    &#34;&#34;&#34;
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
@@ -54,26 +54,29 @@ def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
         distance = _distance_pdf(grid, pial)
 
     if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
-        distance[&#39;morphology&#39;][distance[&#39;morphology&#39;] &gt; max_distance] = NaN
+        i = isnan(distance[&#39;value&#39;]) | (distance[&#39;value&#39;] &gt; max_distance)
+        distance[&#39;value&#39;][i] = NaN
 
     return distance
 
 
 def _distance_ray(grid, pial):
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;value&#39;].fill(NaN)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            dist = intersect_ray_triangle(
-                pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 0], :],
-                pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 1], :],
-                pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 2], :],
-                grid[&#39;pos&#39;][i_x, i_y],
-                -1 * grid[&#39;norm&#39;][i_x, i_y],
-                line=True
-                )
+            if grid[&#39;label&#39;][i_x, i_y] != WIRE:
+                dist = intersect_ray_triangle(
+                    pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 0], :],
+                    pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 1], :],
+                    pial[&#39;pos&#39;][pial[&#39;tri&#39;][:, 2], :],
+                    grid[&#39;pos&#39;][i_x, i_y],
+                    -1 * grid[&#39;norm&#39;][i_x, i_y],
+                    line=True
+                    )
 
-            distance[&#39;morphology&#39;][i_x, i_y] = nanmin(dist)
+                distance[&#39;value&#39;][i_x, i_y] = nanmin(dist)
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance
@@ -94,7 +97,7 @@ def _distance_view(grid, pial):
     max_dist = 8
     max_angle = 15
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    distance[&#39;morphology&#39;][:, :] = max_dist
+    distance[&#39;value&#39;][:, :] = max_dist
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
@@ -107,7 +110,7 @@ def _distance_view(grid, pial):
             x = arccos(dot(directions, norm0 * -1)) / pi * 180
             if x.min() &gt;= max_angle:
                 continue
-            distance[&#39;morphology&#39;][i_x, i_y] = norm(points[x &lt;= max_angle, :] - pos, axis=1).min()
+            distance[&#39;value&#39;][i_x, i_y] = norm(points[x &lt;= max_angle, :] - pos, axis=1).min()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance
@@ -117,7 +120,7 @@ def _distance_cylinder(grid, pial):
     max_dist_to_elec = 100
     max_dist_to_line = 5
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    distance[&#39;morphology&#39;][:, :] = max_dist_to_elec
+    distance[&#39;value&#39;][:, :] = max_dist_to_elec
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
@@ -128,7 +131,7 @@ def _distance_cylinder(grid, pial):
             d = norm(pial[&#39;pos&#39;] - pos, axis=1)
             points = pial[&#39;pos&#39;][d &lt; max_dist_to_elec, :]
             dist_to_line = norm(cross(norm0, pos - pial[&#39;pos&#39;]), axis=1)
-            distance[&#39;morphology&#39;][i_x, i_y] = d[dist_to_line &lt; max_dist_to_line].min()
+            distance[&#39;value&#39;][i_x, i_y] = d[dist_to_line &lt; max_dist_to_line].min()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance
@@ -139,7 +142,7 @@ def _distance_pdf(grid, pial):
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance[&#39;morphology&#39;][i_x, i_y] = normal_dist.pdf(norm(pial[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2).sum()
+            distance[&#39;value&#39;][i_x, i_y] = normal_dist.pdf(norm(pial[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2).sum()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance</code></pre>
@@ -156,14 +159,12 @@ def _distance_pdf(grid, pial):
 <span>def <span class="ident">compute_distance</span></span>(<span>grid, pial, method='minimum', max_distance=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The smaller the distance, the stronger the signal</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
-    &#34;&#34;&#34;The smaller the distance, the stronger the signal
-    &#34;&#34;&#34;
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
@@ -180,7 +181,8 @@ def _distance_pdf(grid, pial):
         distance = _distance_pdf(grid, pial)
 
     if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
-        distance[&#39;morphology&#39;][distance[&#39;morphology&#39;] &gt; max_distance] = NaN
+        i = isnan(distance[&#39;value&#39;]) | (distance[&#39;value&#39;] &gt; max_distance)
+        distance[&#39;value&#39;][i] = NaN
 
     return distance</code></pre>
 </details>

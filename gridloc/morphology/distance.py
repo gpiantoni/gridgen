@@ -1,17 +1,17 @@
-from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN
+from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
+
 from ..matlab.geometry import intersect_ray_triangle
+from ..io import WIRE
 
 d_ = dtype([
     ('label', '<U256'),   # labels cannot be longer than 256 char
-    ('morphology', 'f4'),
+    ('value', 'f4'),
     ])
 
 
 def compute_distance(grid, pial, method='minimum', max_distance=None):
-    """The smaller the distance, the stronger the signal
-    """
     if method == 'ray':
         distance = _distance_ray(grid, pial)
 
@@ -28,26 +28,29 @@ def compute_distance(grid, pial, method='minimum', max_distance=None):
         distance = _distance_pdf(grid, pial)
 
     if max_distance and method in ('ray', 'minimum'):
-        distance['morphology'][distance['morphology'] > max_distance] = NaN
+        i = isnan(distance['value']) | (distance['value'] > max_distance)
+        distance['value'][i] = NaN
 
     return distance
 
 
 def _distance_ray(grid, pial):
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance['value'].fill(NaN)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            dist = intersect_ray_triangle(
-                pial['pos'][pial['tri'][:, 0], :],
-                pial['pos'][pial['tri'][:, 1], :],
-                pial['pos'][pial['tri'][:, 2], :],
-                grid['pos'][i_x, i_y],
-                -1 * grid['norm'][i_x, i_y],
-                line=True
-                )
+            if grid['label'][i_x, i_y] != WIRE:
+                dist = intersect_ray_triangle(
+                    pial['pos'][pial['tri'][:, 0], :],
+                    pial['pos'][pial['tri'][:, 1], :],
+                    pial['pos'][pial['tri'][:, 2], :],
+                    grid['pos'][i_x, i_y],
+                    -1 * grid['norm'][i_x, i_y],
+                    line=True
+                    )
 
-            distance['morphology'][i_x, i_y] = -1 / nanmin(dist)
+                distance['value'][i_x, i_y] = nanmin(dist)
 
     distance['label'] = grid['label']
     return distance
@@ -68,7 +71,7 @@ def _distance_view(grid, pial):
     max_dist = 8
     max_angle = 15
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    distance['morphology'][:, :] = max_dist
+    distance['value'][:, :] = max_dist
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
@@ -81,7 +84,7 @@ def _distance_view(grid, pial):
             x = arccos(dot(directions, norm0 * -1)) / pi * 180
             if x.min() >= max_angle:
                 continue
-            distance['morphology'][i_x, i_y] = norm(points[x <= max_angle, :] - pos, axis=1).min()
+            distance['value'][i_x, i_y] = norm(points[x <= max_angle, :] - pos, axis=1).min()
 
     distance['label'] = grid['label']
     return distance
@@ -91,7 +94,7 @@ def _distance_cylinder(grid, pial):
     max_dist_to_elec = 100
     max_dist_to_line = 5
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    distance['morphology'][:, :] = max_dist_to_elec
+    distance['value'][:, :] = max_dist_to_elec
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
@@ -102,7 +105,7 @@ def _distance_cylinder(grid, pial):
             d = norm(pial['pos'] - pos, axis=1)
             points = pial['pos'][d < max_dist_to_elec, :]
             dist_to_line = norm(cross(norm0, pos - pial['pos']), axis=1)
-            distance['morphology'][i_x, i_y] = d[dist_to_line < max_dist_to_line].min()
+            distance['value'][i_x, i_y] = d[dist_to_line < max_dist_to_line].min()
 
     distance['label'] = grid['label']
     return distance
@@ -113,7 +116,7 @@ def _distance_pdf(grid, pial):
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance['morphology'][i_x, i_y] = normal_dist.pdf(norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1), scale=2).sum()
+            distance['value'][i_x, i_y] = normal_dist.pdf(norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1), scale=2).sum()
 
     distance['label'] = grid['label']
     return distance

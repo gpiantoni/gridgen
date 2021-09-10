@@ -28,30 +28,32 @@ def plot_results(model, pial, output, angio=None):
     to_html(divs, scatter_file)
 
     grid_file = output / 'projected'
-    fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'], 'ecog', angio=angio)
+    fig = plot_electrodes(pial, model, 'ecog', angio=angio)
     to_html([to_div(fig), ], grid_file)
     lg.debug(f'Exported merged model to {grid_file}')
 
     grid_file = output / 'morphology'
     fig0 = plot_grid2d(model['morpho'], 'morphology')
-    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'], 'morphology')
+    fig1 = plot_electrodes(pial, model, 'morphology')
     to_html([to_div(fig0), to_div(fig1)], grid_file)
 
     if model['vasc'] is not None:
         grid_file = output / 'vascular'
         fig0 = plot_grid2d(model['vasc'], 'vasculature')
-        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'], 'vasculature', angio=angio)
+        fig1 = plot_electrodes(pial, model, 'vasculature', angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported vascular to {grid_file}')
 
         grid_file = output / 'merged'
         fig0 = plot_grid2d(model['merged'], 'merged')
-        fig1 = plot_electrodes(pial, model['grid'], model['merged']['merged'], 'merged', angio=angio)
+        fig1 = plot_electrodes(pial, model, 'merged', angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported merged model to {grid_file}')
 
 
-def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=None):
+def plot_electrodes(pial, model, value=None, ref_label=None, angio=None):
+    grid = model['grid']
+    values = model[value]
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
     norm = grid['norm'].reshape(-1, 3)
@@ -72,14 +74,13 @@ def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=N
 
     else:
 
-        colorbar, reversescale = default_colorbar(value)
+        colorbar = default_colorbar(value)
         values = values.reshape(-1)
         marker = dict(
             size=MARKER_SIZE,
             color=values,
             colorscale=COLORSCALE,
             showscale=True,
-            reversescale=reversescale,
             cmin=nanmin(values),
             cmax=nanmax(values),
             colorbar=dict(

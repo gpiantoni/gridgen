@@ -170,7 +170,7 @@ TEMPLATE = {
             "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
             "default": "parametric",
             },
-        "morphology": {
+        "distance": {
             "type": "str",
             "necessary": False,
             "values": ['ray', 'minimum', 'view', 'cylinder', 'pdf'],
@@ -182,6 +182,12 @@ TEMPLATE = {
             'necessary': False,
             'help': 'maximum distance between electrode and pial surface. Exact interpretation depends on the type of `morphology`',
             'default': 10,
+            },
+        "penalty": {
+            "type": float,
+            "necessary": False,
+            "help": "exponent when computing the penalty from the distance. Morphology = 1 / distance ** penalty. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance",
+            "default": 1,
             },
         "steps": {
             "x": {

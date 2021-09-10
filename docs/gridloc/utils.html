@@ -41,17 +41,15 @@ def match_labels(*args):
     ecog, also getting rid of bad channels&#34;&#34;&#34;
     args = [x.flatten(&#39;C&#39;) for x in args]
 
-    FIELDS = &#39;ecog&#39;, &#39;morphology&#39;, &#39;vasculature&#39;
-
     labels = set(args[0][&#39;label&#39;])
 
-    for i, arg in enumerate(args):
-        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[FIELDS[i]])])
+    for arg in args:
+        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[&#39;value&#39;])])
 
     out = [list(labels), ]
-    for i, arg in enumerate(args):
+    for arg in args:
         i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
-        out.append(arg[FIELDS[i]][i_chan])
+        out.append(arg[&#39;value&#39;][i_chan])
 
     return out</code></pre>
 </details>
@@ -91,17 +89,15 @@ ecog, also getting rid of bad channels</p></div>
     ecog, also getting rid of bad channels&#34;&#34;&#34;
     args = [x.flatten(&#39;C&#39;) for x in args]
 
-    FIELDS = &#39;ecog&#39;, &#39;morphology&#39;, &#39;vasculature&#39;
-
     labels = set(args[0][&#39;label&#39;])
 
-    for i, arg in enumerate(args):
-        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[FIELDS[i]])])
+    for arg in args:
+        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[&#39;value&#39;])])
 
     out = [list(labels), ]
-    for i, arg in enumerate(args):
+    for arg in args:
         i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
-        out.append(arg[FIELDS[i]][i_chan])
+        out.append(arg[&#39;value&#39;][i_chan])
 
     return out</code></pre>
 </details>

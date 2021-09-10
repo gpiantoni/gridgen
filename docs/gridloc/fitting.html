@@ -31,7 +31,7 @@ from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
 from multiprocessing import Pool
 from numpy.linalg import norm
-from numpy import arange, array, argmin, intersect1d, corrcoef
+from numpy import arange, array, argmin, corrcoef, zeros, dtype, intersect1d, NaN, unravel_index
 from logging import getLogger
 from datetime import datetime
 from json import dump
@@ -124,7 +124,7 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vert&#34;]: 6d}) = {model[&#34;cc&#34;]:+8.3f} (# included channels:{model[&#34;n_chan&#34;]: 4d}, vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
+    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
 
     plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
 
@@ -135,13 +135,13 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     out = {
         &#39;label&#39;: initial[&#39;label&#39;],
         &#39;surface&#39;: str(mri[&#39;dura_file&#39;]),
-        &#39;vertex&#39;: int(model[&#39;vert&#39;]),
-        &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vert&#39;], :]),
-        &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vert&#39;], :]),
+        &#39;vertex&#39;: int(model[&#39;vertex&#39;]),
+        &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
+        &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
         &#39;percent_vasculature&#39;: model[&#39;percent_vasc&#39;],
-        &#39;n_included_channels&#39;: model[&#39;n_chan&#39;],
-        &#39;corrcoef&#39;: model[&#39;cc&#39;],
+        &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
+        &#39;corr_coef&#39;: model[&#39;corr_coef&#39;],
         &#39;duration&#39;: comp_dur,
         }
     results_file = output / &#39;results.json&#39;
@@ -179,7 +179,8 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
         grid3d,
         rotation=initial[&#39;rotation&#39;] + rotation)
 
-    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;morphology&#39;], fit[&#39;maximum_distance&#39;])
+    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;distance&#39;], fit[&#39;maximum_distance&#39;])
+    morpho[&#39;value&#39;] = morpho[&#39;value&#39;] ** (-1 * fit[&#39;penalty&#39;])
 
     if mri[&#39;angio&#39;] is not None:
         vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
@@ -194,19 +195,21 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
         lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
     if final:
-        return {
+        model = {
             &#39;ecog&#39;: ecog,
-            &#39;vert&#39;: start_vert,
+            &#39;vertex&#39;: start_vert,
             &#39;grid&#39;: grid,
-            &#39;morpho&#39;: morpho,
-            &#39;vasc&#39;: vasc,
+            &#39;morphology&#39;: morpho,
+            &#39;vasculature&#39;: vasc,
             &#39;percent_vasc&#39;: 100 * (1 - i),
-            &#39;n_chan&#39;: len(e),  # number of channels used to compute
-            &#39;cc&#39;: -1 * cc,
+            &#39;n_channels&#39;: len(e),  # number of channels used to compute
+            &#39;corr_coef&#39;: cc,
             }
+        model[&#39;merged&#39;] = merge_models(model)
+        return model
 
     else:
-        return cc
+        return -1 * cc  # value to minimize
 
 
 def compare_models(E, M, V=None, correlation=&#39;parametric&#39;):
@@ -241,6 +244,8 @@ def compare_models(E, M, V=None, correlation=&#39;parametric&#39;):
 def corrcoef_match(ecog, estimate, field=&#39;morphology&#39;):
     &#34;&#34;&#34;correlation but make sure that the labels match
     &#34;&#34;&#34;
+    raise NotImplementedError
+
     good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
     ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
     a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
@@ -325,7 +330,39 @@ def remove_wires(model):
         if model[field] is not None:
             model[field] = model[field][i_keep, :]
 
-    return model</code></pre>
+    return model
+
+
+def merge_models(model):
+
+    d_ = dtype([
+        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
+        (&#39;value&#39;, &#39;f4&#39;),
+        ])
+    merged = zeros((model[&#39;ecog&#39;].shape[0], model[&#39;ecog&#39;].shape[1]), dtype=d_)
+    merged[&#39;label&#39;] = model[&#39;ecog&#39;][&#39;label&#39;]
+
+    if model[&#39;vasculature&#39;] is None:
+        merged[&#39;value&#39;] = normalize(model[&#39;ecog&#39;][&#39;value&#39;])
+
+    else:
+        merged[&#39;value&#39;].fill(NaN)
+
+        labels, e, m, v = match_labels(
+            model[&#39;ecog&#39;],
+            model[&#39;morphology&#39;],
+            model[&#39;vasculature&#39;]
+            )
+        percent_vasc = model[&#39;percent_vasc&#39;]
+        M = normalize(m)
+        V = normalize(v)
+        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
+
+        [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
+        i0r, i0c = unravel_index(i0, merged.shape)
+        merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
+
+    return merged</code></pre>
 </details>
 </section>
 <section>
@@ -413,7 +450,8 @@ reading)</p>
         grid3d,
         rotation=initial[&#39;rotation&#39;] + rotation)
 
-    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;morphology&#39;], fit[&#39;maximum_distance&#39;])
+    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;distance&#39;], fit[&#39;maximum_distance&#39;])
+    morpho[&#39;value&#39;] = morpho[&#39;value&#39;] ** (-1 * fit[&#39;penalty&#39;])
 
     if mri[&#39;angio&#39;] is not None:
         vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
@@ -428,19 +466,21 @@ reading)</p>
         lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
     if final:
-        return {
+        model = {
             &#39;ecog&#39;: ecog,
-            &#39;vert&#39;: start_vert,
+            &#39;vertex&#39;: start_vert,
             &#39;grid&#39;: grid,
-            &#39;morpho&#39;: morpho,
-            &#39;vasc&#39;: vasc,
+            &#39;morphology&#39;: morpho,
+            &#39;vasculature&#39;: vasc,
             &#39;percent_vasc&#39;: 100 * (1 - i),
-            &#39;n_chan&#39;: len(e),  # number of channels used to compute
-            &#39;cc&#39;: -1 * cc,
+            &#39;n_channels&#39;: len(e),  # number of channels used to compute
+            &#39;corr_coef&#39;: cc,
             }
+        model[&#39;merged&#39;] = merge_models(model)
+        return model
 
     else:
-        return cc</code></pre>
+        return -1 * cc  # value to minimize</code></pre>
 </details>
 </dd>
 <dt id="gridloc.fitting.corrcoef_match"><code class="name flex">
@@ -455,6 +495,8 @@ reading)</p>
 <pre><code class="python">def corrcoef_match(ecog, estimate, field=&#39;morphology&#39;):
     &#34;&#34;&#34;correlation but make sure that the labels match
     &#34;&#34;&#34;
+    raise NotImplementedError
+
     good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
     ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
     a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
@@ -565,7 +607,7 @@ reading)</p>
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vert&#34;]: 6d}) = {model[&#34;cc&#34;]:+8.3f} (# included channels:{model[&#34;n_chan&#34;]: 4d}, vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
+    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
 
     plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
 
@@ -576,13 +618,13 @@ reading)</p>
     out = {
         &#39;label&#39;: initial[&#39;label&#39;],
         &#39;surface&#39;: str(mri[&#39;dura_file&#39;]),
-        &#39;vertex&#39;: int(model[&#39;vert&#39;]),
-        &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vert&#39;], :]),
-        &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vert&#39;], :]),
+        &#39;vertex&#39;: int(model[&#39;vertex&#39;]),
+        &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
+        &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
         &#39;percent_vasculature&#39;: model[&#39;percent_vasc&#39;],
-        &#39;n_included_channels&#39;: model[&#39;n_chan&#39;],
-        &#39;corrcoef&#39;: model[&#39;cc&#39;],
+        &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
+        &#39;corr_coef&#39;: model[&#39;corr_coef&#39;],
         &#39;duration&#39;: comp_dur,
         }
     results_file = output / &#39;results.json&#39;
@@ -680,6 +722,47 @@ reading)</p>
     return m</code></pre>
 </details>
 </dd>
+<dt id="gridloc.fitting.merge_models"><code class="name flex">
+<span>def <span class="ident">merge_models</span></span>(<span>model)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def merge_models(model):
+
+    d_ = dtype([
+        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
+        (&#39;value&#39;, &#39;f4&#39;),
+        ])
+    merged = zeros((model[&#39;ecog&#39;].shape[0], model[&#39;ecog&#39;].shape[1]), dtype=d_)
+    merged[&#39;label&#39;] = model[&#39;ecog&#39;][&#39;label&#39;]
+
+    if model[&#39;vasculature&#39;] is None:
+        merged[&#39;value&#39;] = normalize(model[&#39;ecog&#39;][&#39;value&#39;])
+
+    else:
+        merged[&#39;value&#39;].fill(NaN)
+
+        labels, e, m, v = match_labels(
+            model[&#39;ecog&#39;],
+            model[&#39;morphology&#39;],
+            model[&#39;vasculature&#39;]
+            )
+        percent_vasc = model[&#39;percent_vasc&#39;]
+        M = normalize(m)
+        V = normalize(v)
+        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
+
+        [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
+        i0r, i0c = unravel_index(i0, merged.shape)
+        merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
+
+    return merged</code></pre>
+</details>
+</dd>
 <dt id="gridloc.fitting.remove_wires"><code class="name flex">
 <span>def <span class="ident">remove_wires</span></span>(<span>model)</span>
 </code></dt>
@@ -725,6 +808,7 @@ reading)</p>
 <li><code><a title="gridloc.fitting.fitting" href="#gridloc.fitting.fitting">fitting</a></code></li>
 <li><code><a title="gridloc.fitting.fitting_brute" href="#gridloc.fitting.fitting_brute">fitting_brute</a></code></li>
 <li><code><a title="gridloc.fitting.fitting_simplex" href="#gridloc.fitting.fitting_simplex">fitting_simplex</a></code></li>
+<li><code><a title="gridloc.fitting.merge_models" href="#gridloc.fitting.merge_models">merge_models</a></code></li>
 <li><code><a title="gridloc.fitting.remove_wires" href="#gridloc.fitting.remove_wires">remove_wires</a></code></li>
 </ul>
 </li>

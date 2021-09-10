@@ -24,23 +24,28 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import zeros, dtype
+<pre><code class="python">from numpy import zeros, dtype, NaN
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
+from ..io import WIRE
+
 
 def compute_vasculature(grid, angio):
-
+    &#34;&#34;&#34;The lower the value (negative), the more suppression due to blood vessels
+    &#34;&#34;&#34;
     d_ = dtype([
         (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;vasculature&#39;, &#39;f4&#39;),
+        (&#39;value&#39;, &#39;f4&#39;),
         ])
 
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;value&#39;].fill(NaN)
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            weights = normal_dist.pdf(norm(angio[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2)
-            distance[&#39;vasculature&#39;][i_x, i_y] = (weights * angio[&#39;value&#39;]).sum()
+            if grid[&#39;label&#39;][i_x, i_y] != WIRE:
+                weights = normal_dist.pdf(norm(angio[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2)
+                distance[&#39;value&#39;][i_x, i_y] = -1 * (weights * angio[&#39;value&#39;]).sum()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance</code></pre>
@@ -57,23 +62,26 @@ def compute_vasculature(grid, angio):
 <span>def <span class="ident">compute_vasculature</span></span>(<span>grid, angio)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The lower the value (negative), the more suppression due to blood vessels</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compute_vasculature(grid, angio):
-
+    &#34;&#34;&#34;The lower the value (negative), the more suppression due to blood vessels
+    &#34;&#34;&#34;
     d_ = dtype([
         (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;vasculature&#39;, &#39;f4&#39;),
+        (&#39;value&#39;, &#39;f4&#39;),
         ])
 
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;value&#39;].fill(NaN)
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            weights = normal_dist.pdf(norm(angio[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2)
-            distance[&#39;vasculature&#39;][i_x, i_y] = (weights * angio[&#39;value&#39;]).sum()
+            if grid[&#39;label&#39;][i_x, i_y] != WIRE:
+                weights = normal_dist.pdf(norm(angio[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2)
+                distance[&#39;value&#39;][i_x, i_y] = -1 * (weights * angio[&#39;value&#39;]).sum()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance</code></pre>

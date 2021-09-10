@@ -99,7 +99,7 @@ def write_ecog2d(ecog_file, ecog2d):
     ecog2d : 2d ndarray
         ecog (n_rows, n_columns) with fields (label, ecog, good)
     """
-    savetxt(ecog_file, ecog2d['ecog'], fmt='%.8f', delimiter='\t')
+    savetxt(ecog_file, ecog2d['value'], fmt='%.8f', delimiter='\t')
 
 
 def read_ecog2d(ecog_file, grid_file):
@@ -121,11 +121,11 @@ def read_ecog2d(ecog_file, grid_file):
 
     d_ = dtype([
         ('label', '<U256'),
-        ('ecog', 'f8'),
+        ('value', 'f8'),
         ('good', 'bool'),
         ])
     ecog_on_grid = zeros(ecog.shape, dtype=d_)
-    ecog_on_grid['ecog'] = ecog
+    ecog_on_grid['value'] = ecog
     ecog_on_grid['good'] = ~isnan(ecog)
     ecog_on_grid['label'] = read_grid2d(grid_file)['label']
 
@@ -154,13 +154,13 @@ def read_ecog2d_matlab(gamma_file, grid_file):
 
     d_ = dtype([
         ('label', '<U256'),
-        ('ecog', 'f8'),
+        ('value', 'f8'),
         ('good', 'bool'),
         ])
     ecog_on_grid = zeros(grid2d.shape, dtype=d_)
     ecog_on_grid['label'] = grid2d['label']
-    ecog_on_grid['ecog'] = gamma_mean.reshape(grid2d.shape, order='F')
-    ecog_on_grid['good'] = ~isnan(ecog_on_grid['ecog'])
+    ecog_on_grid['value'] = gamma_mean.reshape(grid2d.shape, order='F')
+    ecog_on_grid['good'] = ~isnan(ecog_on_grid['value'])
 
     return ecog_on_grid
 

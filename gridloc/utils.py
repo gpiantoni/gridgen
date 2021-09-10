@@ -15,16 +15,14 @@ def match_labels(*args):
     ecog, also getting rid of bad channels"""
     args = [x.flatten('C') for x in args]
 
-    FIELDS = 'ecog', 'morphology', 'vasculature'
-
     labels = set(args[0]['label'])
 
-    for i, arg in enumerate(args):
-        labels = labels & set(arg['label'][~isnan(arg[FIELDS[i]])])
+    for arg in args:
+        labels = labels & set(arg['label'][~isnan(arg['value'])])
 
     out = [list(labels), ]
-    for i, arg in enumerate(args):
+    for arg in args:
         i_chan = intersect1d(arg['label'], array(list(labels)), assume_unique=False, return_indices=True)[1]
-        out.append(arg[FIELDS[i]][i_chan])
+        out.append(arg['value'][i_chan])
 
     return out

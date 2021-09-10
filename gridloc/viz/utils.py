@@ -9,19 +9,15 @@ COLORSCALE = 'Viridis'
 
 def default_colorbar(value):
     if value == 'ecog':
-        reversescale = False
         colorbar = 'PSD (Hz<sup>-1</sup>)'
     elif value == 'morphology':
-        colorbar = 'Distance (mm)'
-        reversescale = True
+        colorbar = 'Distance Penalty (1 / mm<sup>PENALTY</sup>)'
     elif value == 'vasculature':
         colorbar = 'Vascular suppression (weighted average of neighboring voxels)'
-        reversescale = True
     elif value == 'merged':
         colorbar = 'estimated ecog activity (a.u.)'
-        reversescale = False
 
-    return colorbar, reversescale
+    return colorbar
 
 
 def to_div(fig):

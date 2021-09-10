@@ -27,14 +27,14 @@
 <pre><code class="python">from logging import getLogger
 import plotly.graph_objects as go
 
-from .utils import to_div, default_colorbar
+from .utils import to_div, default_colorbar, COLORSCALE
 from ..utils import match_labels, normalize
 
 
 lg = getLogger(__name__)
 
 
-def plot_grid2d(grid2d, value=&#39;ecog&#39;):
+def plot_grid2d(grid2d, value):
     &#34;&#34;&#34;Plot the 2D grid to a plotly html
 
     Parameters
@@ -42,18 +42,17 @@ def plot_grid2d(grid2d, value=&#39;ecog&#39;):
     grid2d :
 
     value : str
-        ecog
+        ecog, morphology, vasculature, merged
     &#34;&#34;&#34;
-    colorbar, reversescale = default_colorbar(value)
+    colorbar = default_colorbar(value)
 
     n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
-            z=grid2d[value],
+            z=grid2d[&#39;value&#39;],
             text=grid2d[&#39;label&#39;],
             hoverinfo=&#39;text+z&#39;,
-            colorscale=&#39;Hot&#39;,
-            reversescale=reversescale,
+            colorscale=COLORSCALE,
             colorbar=dict(
                 title=dict(
                     text=colorbar.replace(&#39; &#39;, &#39;&lt;br&gt;&#39;),
@@ -96,8 +95,8 @@ def plot_scatter(model):
 
     labels, e, m, v = match_labels(
         model[&#39;ecog&#39;],
-        model[&#39;morpho&#39;],
-        model[&#39;vasc&#39;]
+        model[&#39;morphology&#39;],
+        model[&#39;vasculature&#39;]
         )
 
     divs = []
@@ -133,10 +132,10 @@ def plot_correlation(labels, x, y, xname, yname):
         width=700,
         title=f&#39;Correlation between {xname} and {yname} (not normalized)&#39;,
         xaxis=dict(
-            title=default_colorbar(xname)[0],
+            title=default_colorbar(xname),
             ),
         yaxis=dict(
-            title=default_colorbar(yname)[0],
+            title=default_colorbar(yname),
             ),
         )
 
@@ -157,7 +156,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 
     traces = [
         go.Scatter(
-            y=1 - 1 * prediction,
+            y=prediction,
             x=E,
             mode=&#39;markers&#39;,
             text=labels,
@@ -219,10 +218,10 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
         width=700,
         title=f&#39;Correlation between {xname} and {yname} (not normalized)&#39;,
         xaxis=dict(
-            title=default_colorbar(xname)[0],
+            title=default_colorbar(xname),
             ),
         yaxis=dict(
-            title=default_colorbar(yname)[0],
+            title=default_colorbar(yname),
             ),
         )
 
@@ -230,7 +229,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 </details>
 </dd>
 <dt id="gridloc.viz.viz2d.plot_grid2d"><code class="name flex">
-<span>def <span class="ident">plot_grid2d</span></span>(<span>grid2d, value='ecog')</span>
+<span>def <span class="ident">plot_grid2d</span></span>(<span>grid2d, value)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Plot the 2D grid to a plotly html</p>
@@ -238,13 +237,13 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 <p>grid2d :</p>
 <dl>
 <dt><strong><code>value</code></strong> :&ensp;<code>str</code></dt>
-<dd>ecog</dd>
+<dd>ecog, morphology, vasculature, merged</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_grid2d(grid2d, value=&#39;ecog&#39;):
+<pre><code class="python">def plot_grid2d(grid2d, value):
     &#34;&#34;&#34;Plot the 2D grid to a plotly html
 
     Parameters
@@ -252,18 +251,17 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
     grid2d :
 
     value : str
-        ecog
+        ecog, morphology, vasculature, merged
     &#34;&#34;&#34;
-    colorbar, reversescale = default_colorbar(value)
+    colorbar = default_colorbar(value)
 
     n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
-            z=grid2d[value],
+            z=grid2d[&#39;value&#39;],
             text=grid2d[&#39;label&#39;],
             hoverinfo=&#39;text+z&#39;,
-            colorscale=&#39;Hot&#39;,
-            reversescale=reversescale,
+            colorscale=COLORSCALE,
             colorbar=dict(
                 title=dict(
                     text=colorbar.replace(&#39; &#39;, &#39;&lt;br&gt;&#39;),
@@ -325,7 +323,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 
     traces = [
         go.Scatter(
-            y=1 - 1 * prediction,
+            y=prediction,
             x=E,
             mode=&#39;markers&#39;,
             text=labels,
@@ -365,8 +363,8 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 
     labels, e, m, v = match_labels(
         model[&#39;ecog&#39;],
-        model[&#39;morpho&#39;],
-        model[&#39;vasc&#39;]
+        model[&#39;morphology&#39;],
+        model[&#39;vasculature&#39;]
         )
 
     divs = []

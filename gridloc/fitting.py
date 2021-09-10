@@ -97,7 +97,7 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (# included channels:{model["n_chan"]: 4d}, vascular contribution: {model["percent_vasc"]:.2f}%)')
+    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vertex"]: 6d}) = {model["corr_coef"]:+8.3f} (# included channels:{model["n_channels"]: 4d}, vascular contribution: {model["percent_vasc"]:.2f}%)')
 
     plot_results(model, mris['pial'], output, angio=mris['angio'])
 
@@ -108,13 +108,13 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     out = {
         'label': initial['label'],
         'surface': str(mri['dura_file']),
-        'vertex': int(model['vert']),
-        'pos': list(mris['dura']['pos'][model['vert'], :]),
-        'normals': list(mris['dura']['pos_norm'][model['vert'], :]),
+        'vertex': int(model['vertex']),
+        'pos': list(mris['dura']['pos'][model['vertex'], :]),
+        'normals': list(mris['dura']['pos_norm'][model['vertex'], :]),
         'rotation': rotation,
         'percent_vasculature': model['percent_vasc'],
-        'n_included_channels': model['n_chan'],
-        'corrcoef': model['cc'],
+        'n_included_channels': model['n_channels'],
+        'corr_coef': model['corr_coef'],
         'duration': comp_dur,
         }
     results_file = output / 'results.json'
@@ -152,7 +152,8 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
         grid3d,
         rotation=initial['rotation'] + rotation)
 
-    morpho = compute_distance(grid, mri['pial'], fit['morphology'], fit['maximum_distance'])
+    morpho = compute_distance(grid, mri['pial'], fit['distance'], fit['maximum_distance'])
+    morpho['value'] = morpho['value'] ** (-1 * fit['penalty'])
 
     if mri['angio'] is not None:
         vasc = compute_vasculature(grid, mri['angio'])
@@ -169,19 +170,19 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
     if final:
         model = {
             'ecog': ecog,
-            'vert': start_vert,
+            'vertex': start_vert,
             'grid': grid,
-            'morpho': morpho,
-            'vasc': vasc,
+            'morphology': morpho,
+            'vasculature': vasc,
             'percent_vasc': 100 * (1 - i),
-            'n_chan': len(e),  # number of channels used to compute
-            'cc': -1 * cc,
+            'n_channels': len(e),  # number of channels used to compute
+            'corr_coef': cc,
             }
         model['merged'] = merge_models(model)
         return model
 
     else:
-        return cc
+        return -1 * cc  # value to minimize
 
 
 def compare_models(E, M, V=None, correlation='parametric'):
@@ -216,6 +217,8 @@ def compare_models(E, M, V=None, correlation='parametric'):
 def corrcoef_match(ecog, estimate, field='morphology'):
     """correlation but make sure that the labels match
     """
+    raise NotImplementedError
+
     good = ecog['label'][ecog['good']]
     ecog_id = intersect1d(ecog['label'], good, return_indices=True)[1]
     a = ecog['ecog'].flatten('C')[ecog_id]
@@ -307,21 +310,21 @@ def merge_models(model):
 
     d_ = dtype([
         ('label', '<U256'),   # labels cannot be longer than 256 char
-        ('merged', 'f4'),
+        ('value', 'f4'),
         ])
     merged = zeros((model['ecog'].shape[0], model['ecog'].shape[1]), dtype=d_)
     merged['label'] = model['ecog']['label']
 
-    if model['vasc'] is None:
-        merged['merged'] = normalize(model['ecog']['ecog'])
+    if model['vasculature'] is None:
+        merged['value'] = normalize(model['ecog']['value'])
 
     else:
-        merged['merged'].fill(NaN)
+        merged['value'].fill(NaN)
 
         labels, e, m, v = match_labels(
             model['ecog'],
-            model['morpho'],
-            model['vasc']
+            model['morphology'],
+            model['vasculature']
             )
         percent_vasc = model['percent_vasc']
         M = normalize(m)
@@ -330,6 +333,6 @@ def merge_models(model):
 
         [i0, i1] = intersect1d(merged['label'], labels, return_indices=True)[1:]
         i0r, i0c = unravel_index(i0, merged.shape)
-        merged['merged'][i0r, i0c] = 1 - prediction[i1]
+        merged['value'][i0r, i0c] = prediction[i1]
 
     return merged

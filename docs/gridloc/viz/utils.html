@@ -30,22 +30,20 @@ from textwrap import dedent
 
 lg = getLogger(__name__)
 
+COLORSCALE = &#39;Viridis&#39;
+
 
 def default_colorbar(value):
     if value == &#39;ecog&#39;:
-        reversescale = False
         colorbar = &#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;
     elif value == &#39;morphology&#39;:
-        colorbar = &#39;Distance (mm)&#39;
-        reversescale = True
+        colorbar = &#39;Distance Penalty (1 / mm&lt;sup&gt;PENALTY&lt;/sup&gt;)&#39;
     elif value == &#39;vasculature&#39;:
         colorbar = &#39;Vascular suppression (weighted average of neighboring voxels)&#39;
-        reversescale = True
     elif value == &#39;merged&#39;:
         colorbar = &#39;estimated ecog activity (a.u.)&#39;
-        reversescale = True
 
-    return colorbar, reversescale
+    return colorbar
 
 
 def to_div(fig):
@@ -115,19 +113,15 @@ def to_html(divs, filename):
 </summary>
 <pre><code class="python">def default_colorbar(value):
     if value == &#39;ecog&#39;:
-        reversescale = False
         colorbar = &#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;
     elif value == &#39;morphology&#39;:
-        colorbar = &#39;Distance (mm)&#39;
-        reversescale = True
+        colorbar = &#39;Distance Penalty (1 / mm&lt;sup&gt;PENALTY&lt;/sup&gt;)&#39;
     elif value == &#39;vasculature&#39;:
         colorbar = &#39;Vascular suppression (weighted average of neighboring voxels)&#39;
-        reversescale = True
     elif value == &#39;merged&#39;:
         colorbar = &#39;estimated ecog activity (a.u.)&#39;
-        reversescale = True
 
-    return colorbar, reversescale</code></pre>
+    return colorbar</code></pre>
 </details>
 </dd>
 <dt id="gridloc.viz.utils.to_div"><code class="name flex">
