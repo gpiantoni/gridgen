@@ -22,35 +22,36 @@ MARKER_SIZE = 3
 lg = getLogger(__name__)
 
 
-def plot_results(model, pial, ras_shift, output, angio=None):
+def plot_results(model, pial, output, angio=None):
 
     grid_file = output / 'bestfit'
-    fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'], angio=angio)
+    fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'], 'ecog', angio=angio)
     to_html([to_div(fig), ], grid_file)
     lg.debug(f'Exported merged model to {grid_file}')
 
     grid_file = output / 'morphology'
     fig0 = plot_2d(model['morpho'], 'morphology')
-    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'], angio=angio)
+    fig1 = plot_electrodes(pial, model['grid'], model['morpho']['morphology'], 'morphology')
     to_html([to_div(fig0), to_div(fig1)], grid_file)
 
     if model['vasc'] is not None:
         grid_file = output / 'vascular'
         fig0 = plot_2d(model['vasc'], 'vasculature')
-        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'], angio=angio)
+        fig1 = plot_electrodes(pial, model['grid'], model['vasc']['vasculature'], 'vasculature', angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported vascular to {grid_file}')
 
         merged = (model['percent_vasc'] * normalize(model['vasc']['vasculature']) + (100 - model['percent_vasc']) * normalize(model['morpho']['morphology'])) / 100
         grid_file = output / 'merged'
-        fig = plot_electrodes(pial, model['grid'], merged, angio=angio)
+        fig = plot_electrodes(pial, model['grid'], merged, 'merged', angio=angio)
         to_html([to_div(fig), ], grid_file)
         lg.debug(f'Exported merged model to {grid_file}')
 
 
-def plot_electrodes(pial, grid, values=None, ref_label=None, angio=None):
+def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=None):
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
+    norm = grid['norm'].reshape(-1, 3)
     labels = grid['label'].reshape(-1)
 
     if values is None:
@@ -66,17 +67,49 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, angio=None):
             )
 
     else:
+
+        colorbar, reversescale = default_colorbar(value)
         values = values.reshape(-1)
         marker = dict(
             size=MARKER_SIZE,
             color=values,
             colorscale='Hot',
             showscale=True,
+            reversescale=reversescale,
             cmin=nanmin(values),
             cmax=nanmax(values),
+            colorbar=dict(
+                title=dict(
+                    text=colorbar,
+                    )
+                ),
             )
 
-    traces = [
+    if value == 'morphology':
+        traces = [
+            go.Cone(
+                x=pos[:, 0],
+                y=pos[:, 1],
+                z=pos[:, 2],
+                u=norm[:, 0] * -1,
+                v=norm[:, 1] * -1,
+                w=norm[:, 2] * -1,
+                sizeref=1,
+                sizemode='absolute',
+                anchor='tail',
+                text=labels,
+                showscale=False,
+                colorscale=[
+                    [0, 'rgb(0, 0, 0)'],
+                    [1, 'rgb(0, 0, 0)'],
+                    ],
+                hoverinfo='skip',
+                ),
+            ]
+    else:
+        traces = []
+
+    traces.append(
         go.Mesh3d(
             x=pial['pos'][:, 0],
             y=pial['pos'][:, 1],
@@ -99,7 +132,10 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, angio=None):
                 y=0,
                 z=-1,
                 ),
-            ),
+            )
+        )
+
+    traces.append(
         go.Scatter3d(
             x=pos[:, 0],
             y=pos[:, 1],
@@ -108,8 +144,8 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, angio=None):
             mode='markers',
             hoverinfo='text',
             marker=marker,
-            ),
-        ]
+            )
+        )
 
     if angio is not None:
         traces.append(
@@ -130,6 +166,7 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, angio=None):
     fig = go.Figure(
         data=traces,
         layout=go.Layout(
+            showlegend=False,
             scene=dict(
                 xaxis=AXIS,
                 yaxis=AXIS,
@@ -157,11 +194,11 @@ def plot_2d(grid2d, value='ecog'):
     Parameters
     ----------
     grid2d :
+
+    value : str
+        ecog
     """
-    if not value == 'ecog':
-        reversescale = True
-    else:
-        reversescale = False
+    colorbar, reversescale = default_colorbar(value)
 
     n_rows, n_cols = grid2d.shape
     traces = [
@@ -173,7 +210,7 @@ def plot_2d(grid2d, value='ecog'):
             reversescale=reversescale,
             colorbar=dict(
                 title=dict(
-                    text='PSD (Hz<sup>-1</sup>)',
+                    text=colorbar,
                     )
                 ),
             ),
@@ -207,6 +244,23 @@ def plot_2d(grid2d, value='ecog'):
     fig = go.Figure(traces, layout=layout)
 
     return fig
+
+
+def default_colorbar(value):
+    if value == 'ecog':
+        reversescale = False
+        colorbar = 'PSD<br>(Hz<sup>-1</sup>)'
+    elif value == 'morphology':
+        colorbar = 'Distance (mm)'
+        reversescale = True
+    elif value == 'vasculature':
+        colorbar = 'Vascular<br>suppression<br>(weighted<br>angiogram<br>voxels)'
+        reversescale = True
+    elif value == 'merged':
+        colorbar = 'estimated<br>ecog<br>activity<br>(a.u.)'
+        reversescale = True
+
+    return colorbar, reversescale
 
 
 def to_div(fig):
