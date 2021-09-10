@@ -35,7 +35,7 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
   - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
   - **distance**: (str, optional) how to compute the distance of the morphology. Values: [ray, minimum, view, cylinder, pdf]. Default: ray
   - **maximum_distance**: (float, optional) maximum distance between electrode and pial surface. Exact interpretation depends on the type of `morphology`. Default: 10
-  - **penalty**: , optional) exponent when computing the penalty from the distance. Morphology = 1 / distance ** penalty. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance. Default: 1
+  - **penalty**: (float, optional) exponent when computing the penalty from the distance. Morphology = 1 / distance<sup>penalty</sup>. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance. Default: 1
   - **steps**
     - **x**: (float, optional) Step size in mm for x-direction, for method simplex
     - **y**: (float, optional) Step size in mm for y-direction, for method simplex
