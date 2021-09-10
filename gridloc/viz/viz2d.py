@@ -1,7 +1,7 @@
 from logging import getLogger
 import plotly.graph_objects as go
 
-from .utils import to_div, default_colorbar
+from .utils import to_div, default_colorbar, COLORSCALE
 from ..utils import match_labels, normalize
 
 
@@ -26,7 +26,7 @@ def plot_grid2d(grid2d, value='ecog'):
             z=grid2d[value],
             text=grid2d['label'],
             hoverinfo='text+z',
-            colorscale='Hot',
+            colorscale=COLORSCALE,
             reversescale=reversescale,
             colorbar=dict(
                 title=dict(
@@ -131,7 +131,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 
     traces = [
         go.Scatter(
-            y=1 - 1 * prediction,
+            y=1 - prediction,
             x=E,
             mode='markers',
             text=labels,

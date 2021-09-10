@@ -4,6 +4,8 @@ from textwrap import dedent
 
 lg = getLogger(__name__)
 
+COLORSCALE = 'Viridis'
+
 
 def default_colorbar(value):
     if value == 'ecog':
@@ -17,7 +19,7 @@ def default_colorbar(value):
         reversescale = True
     elif value == 'merged':
         colorbar = 'estimated ecog activity (a.u.)'
-        reversescale = True
+        reversescale = False
 
     return colorbar, reversescale
 

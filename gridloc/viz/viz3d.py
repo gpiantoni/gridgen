@@ -3,8 +3,7 @@ from numpy import mean, sign, nanmin, nanmax, log10
 import plotly.graph_objects as go
 
 from ..io import WIRE
-from ..utils import normalize
-from .utils import to_html, to_div, default_colorbar
+from .utils import to_html, to_div, default_colorbar, COLORSCALE
 from .viz2d import plot_scatter, plot_grid2d
 
 
@@ -28,7 +27,7 @@ def plot_results(model, pial, output, angio=None):
     divs = plot_scatter(model)
     to_html(divs, scatter_file)
 
-    grid_file = output / 'bestfit'
+    grid_file = output / 'projected'
     fig = plot_electrodes(pial, model['grid'], model['ecog']['ecog'], 'ecog', angio=angio)
     to_html([to_div(fig), ], grid_file)
     lg.debug(f'Exported merged model to {grid_file}')
@@ -45,10 +44,10 @@ def plot_results(model, pial, output, angio=None):
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported vascular to {grid_file}')
 
-        merged = (model['percent_vasc'] * normalize(model['vasc']['vasculature']) + (100 - model['percent_vasc']) * normalize(model['morpho']['morphology'])) / 100
         grid_file = output / 'merged'
-        fig = plot_electrodes(pial, model['grid'], merged, 'merged', angio=angio)
-        to_html([to_div(fig), ], grid_file)
+        fig0 = plot_grid2d(model['merged'], 'merged')
+        fig1 = plot_electrodes(pial, model['grid'], model['merged']['merged'], 'merged', angio=angio)
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f'Exported merged model to {grid_file}')
 
 
@@ -69,6 +68,7 @@ def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=N
             size=MARKER_SIZE,
             color=colors,
             )
+        hovertext = labels
 
     else:
 
@@ -77,7 +77,7 @@ def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=N
         marker = dict(
             size=MARKER_SIZE,
             color=values,
-            colorscale='Hot',
+            colorscale=COLORSCALE,
             showscale=True,
             reversescale=reversescale,
             cmin=nanmin(values),
@@ -88,6 +88,7 @@ def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=N
                     )
                 ),
             )
+        hovertext = [f'{x0}<br>{x1:0.3f}' for x0, x1 in zip(labels, values)]
 
     if value == 'morphology':
         traces = [
@@ -146,6 +147,7 @@ def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=N
             z=pos[:, 2],
             text=labels,
             mode='markers',
+            hovertext=hovertext,
             hoverinfo='text',
             marker=marker,
             )
@@ -158,6 +160,7 @@ def plot_electrodes(pial, grid, values=None, value=None, ref_label=None, angio=N
                 y=angio['pos'][:, 1],
                 z=angio['pos'][:, 2],
                 mode='markers',
+                hoverinfo='skip',
                 marker=dict(
                     size=5,
                     color=log10(angio['value']),

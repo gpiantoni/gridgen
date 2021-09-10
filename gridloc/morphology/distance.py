@@ -47,7 +47,7 @@ def _distance_ray(grid, pial):
                 line=True
                 )
 
-            distance['morphology'][i_x, i_y] = nanmin(dist)
+            distance['morphology'][i_x, i_y] = -1 / nanmin(dist)
 
     distance['label'] = grid['label']
     return distance

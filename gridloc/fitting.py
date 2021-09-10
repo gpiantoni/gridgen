@@ -4,7 +4,7 @@ from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
 from multiprocessing import Pool
 from numpy.linalg import norm
-from numpy import arange, array, argmin, intersect1d, corrcoef
+from numpy import arange, array, argmin, corrcoef, zeros, dtype, intersect1d, NaN, unravel_index
 from logging import getLogger
 from datetime import datetime
 from json import dump
@@ -167,7 +167,7 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
         lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)')
 
     if final:
-        return {
+        model = {
             'ecog': ecog,
             'vert': start_vert,
             'grid': grid,
@@ -177,6 +177,8 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
             'n_chan': len(e),  # number of channels used to compute
             'cc': -1 * cc,
             }
+        model['merged'] = merge_models(model)
+        return model
 
     else:
         return cc
@@ -299,3 +301,35 @@ def remove_wires(model):
             model[field] = model[field][i_keep, :]
 
     return model
+
+
+def merge_models(model):
+
+    d_ = dtype([
+        ('label', '<U256'),   # labels cannot be longer than 256 char
+        ('merged', 'f4'),
+        ])
+    merged = zeros((model['ecog'].shape[0], model['ecog'].shape[1]), dtype=d_)
+    merged['label'] = model['ecog']['label']
+
+    if model['vasc'] is None:
+        merged['merged'] = normalize(model['ecog']['ecog'])
+
+    else:
+        merged['merged'].fill(NaN)
+
+        labels, e, m, v = match_labels(
+            model['ecog'],
+            model['morpho'],
+            model['vasc']
+            )
+        percent_vasc = model['percent_vasc']
+        M = normalize(m)
+        V = normalize(v)
+        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
+
+        [i0, i1] = intersect1d(merged['label'], labels, return_indices=True)[1:]
+        i0r, i0c = unravel_index(i0, merged.shape)
+        merged['merged'][i0r, i0c] = 1 - prediction[i1]
+
+    return merged
