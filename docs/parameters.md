@@ -19,7 +19,7 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
 - **grid3d** (required by command `init`, `fit`)
   - **interelec_distance**: (float, optional) distance between the electrode centers (pitch), in mm. Default: 3
   - **maximum_angle**: (float, optional) maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid). Default: 5
-  - **step_angle**: (float, optional) step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid.. Default: 0.25
+  - **step_angle**: (float, optional) step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid. Default: 0.25
 - **mri** (required by command `init`, `fit`, `matlab`)
   - **T1_file**: (str) path to T1 image (in particular, the T1.mgz from freesurfer)
   - **pial_file**: (str) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
@@ -32,7 +32,7 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
   - **rotation**: (float) degree of rotation of the grid (in degrees, 0° is roughly pointing up)
 - **fit** (required by command `fit`)
   - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
-  - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank).. Values: [parametric, nonparametric]. Default: parametric
+  - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
   - **morphology**: (str, optional) how to compute the distance of the morphology. Values: [ray, minimum, view, cylinder, pdf]. Default: ray
   - **maximum_distance**: (float, optional) maximum distance between electrode and pial surface. Exact interpretation depends on the type of `morphology`. Default: 10
   - **steps**

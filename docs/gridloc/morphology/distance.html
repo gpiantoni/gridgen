@@ -36,7 +36,8 @@ d_ = dtype([
 
 
 def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
-
+    &#34;&#34;&#34;The smaller the distance, the stronger the signal
+    &#34;&#34;&#34;
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
@@ -155,13 +156,14 @@ def _distance_pdf(grid, pial):
 <span>def <span class="ident">compute_distance</span></span>(<span>grid, pial, method='minimum', max_distance=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The smaller the distance, the stronger the signal</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
-
+    &#34;&#34;&#34;The smaller the distance, the stronger the signal
+    &#34;&#34;&#34;
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 

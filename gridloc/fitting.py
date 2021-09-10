@@ -97,7 +97,7 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (# included channels:{len(model["n_chan"]): 4d}, vascular contribution: {model["percent_vasc"]:.2f}%)')
+    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vert"]: 6d}) = {model["cc"]:+8.3f} (# included channels:{model["n_chan"]: 4d}, vascular contribution: {model["percent_vasc"]:.2f}%)')
 
     plot_results(model, mris['pial'], output, angio=mris['angio'])
 

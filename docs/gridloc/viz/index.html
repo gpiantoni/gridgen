@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>gridloc API documentation</title>
-<meta name="description" content="GRIDLOC: tools to compute the location of a grid onto the surface of the brain" />
+<title>gridloc.viz API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,72 +17,30 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>gridloc</code></h1>
+<h1 class="title">Module <code>gridloc.viz</code></h1>
 </header>
 <section id="section-intro">
-<p>GRIDLOC: tools to compute the location of a grid onto the surface of the brain</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;GRIDLOC: tools to compute the location of a grid onto the surface of the brain
-&#34;&#34;&#34;</code></pre>
+<pre><code class="python">from .viz3d import plot_electrodes, plot_results
+from .viz2d import plot_scatter, plot_grid2d
+from .utils import to_html, to_div</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="gridloc.bin" href="bin/index.html">gridloc.bin</a></code></dt>
+<dt><code class="name"><a title="gridloc.viz.utils" href="utils.html">gridloc.viz.utils</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="gridloc.construct" href="construct.html">gridloc.construct</a></code></dt>
-<dd>
-<div class="desc"><p>Function to build a grid from a starting point, in 2D or 3D</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.ecog" href="ecog/index.html">gridloc.ecog</a></code></dt>
-<dd>
-<div class="desc"><p>Functions to read and plot ECoG data</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.examine" href="examine.html">gridloc.examine</a></code></dt>
+<dt><code class="name"><a title="gridloc.viz.viz2d" href="viz2d.html">gridloc.viz.viz2d</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="gridloc.fitting" href="fitting.html">gridloc.fitting</a></code></dt>
-<dd>
-<div class="desc"><p>Functions to compute the actual fitting of the grid onto the brain surface</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.geometry" href="geometry.html">gridloc.geometry</a></code></dt>
-<dd>
-<div class="desc"><p>Functions to compute vector-based transformation and searches.</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.io" href="io.html">gridloc.io</a></code></dt>
-<dd>
-<div class="desc"><p>Functions to input and output data</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.matlab" href="matlab/index.html">gridloc.matlab</a></code></dt>
-<dd>
-<div class="desc"><p>Functions which are a copy of the matlab implementation or are necessary
-for those matlab functions.</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.morphology" href="morphology/index.html">gridloc.morphology</a></code></dt>
-<dd>
-<div class="desc"><p>Functions to compute the morphology of the brain / cortex</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.search" href="search.html">gridloc.search</a></code></dt>
-<dd>
-<div class="desc"><p>Sub-functions to find one node (electrode) at the time, based on the location
-of the previous nodes</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.utils" href="utils.html">gridloc.utils</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="gridloc.vascular" href="vascular/index.html">gridloc.vascular</a></code></dt>
-<dd>
-<div class="desc"><p>Functions related to the generation of the vascular model</p></div>
-</dd>
-<dt><code class="name"><a title="gridloc.viz" href="viz/index.html">gridloc.viz</a></code></dt>
+<dt><code class="name"><a title="gridloc.viz.viz3d" href="viz3d.html">gridloc.viz.viz3d</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -101,21 +59,16 @@ of the previous nodes</p></div>
 <ul></ul>
 </div>
 <ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc" href="../index.html">gridloc</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="gridloc.bin" href="bin/index.html">gridloc.bin</a></code></li>
-<li><code><a title="gridloc.construct" href="construct.html">gridloc.construct</a></code></li>
-<li><code><a title="gridloc.ecog" href="ecog/index.html">gridloc.ecog</a></code></li>
-<li><code><a title="gridloc.examine" href="examine.html">gridloc.examine</a></code></li>
-<li><code><a title="gridloc.fitting" href="fitting.html">gridloc.fitting</a></code></li>
-<li><code><a title="gridloc.geometry" href="geometry.html">gridloc.geometry</a></code></li>
-<li><code><a title="gridloc.io" href="io.html">gridloc.io</a></code></li>
-<li><code><a title="gridloc.matlab" href="matlab/index.html">gridloc.matlab</a></code></li>
-<li><code><a title="gridloc.morphology" href="morphology/index.html">gridloc.morphology</a></code></li>
-<li><code><a title="gridloc.search" href="search.html">gridloc.search</a></code></li>
-<li><code><a title="gridloc.utils" href="utils.html">gridloc.utils</a></code></li>
-<li><code><a title="gridloc.vascular" href="vascular/index.html">gridloc.vascular</a></code></li>
-<li><code><a title="gridloc.viz" href="viz/index.html">gridloc.viz</a></code></li>
+<li><code><a title="gridloc.viz.utils" href="utils.html">gridloc.viz.utils</a></code></li>
+<li><code><a title="gridloc.viz.viz2d" href="viz2d.html">gridloc.viz.viz2d</a></code></li>
+<li><code><a title="gridloc.viz.viz3d" href="viz3d.html">gridloc.viz.viz3d</a></code></li>
 </ul>
 </li>
 </ul>

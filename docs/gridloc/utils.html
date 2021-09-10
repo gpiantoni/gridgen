@@ -25,7 +25,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from os import nice
-from numpy import nanmax, nanmin, intersect1d
+from numpy import nanmax, nanmin, intersect1d, isnan, array
 
 
 def be_nice():
@@ -36,22 +36,24 @@ def normalize(x):
     return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
 
 
-def match_labels(ecog, *args):
+def match_labels(*args):
     &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
     ecog, also getting rid of bad channels&#34;&#34;&#34;
+    args = [x.flatten(&#39;C&#39;) for x in args]
 
-    good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
-    ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
-    a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
-    output = [a, ]
+    FIELDS = &#39;ecog&#39;, &#39;morphology&#39;, &#39;vasculature&#39;
 
-    for estimate in args:
-        field = (set(estimate.dtype.names) - {&#39;label&#39;, }).pop()
-        estimate_id = intersect1d(estimate[&#39;label&#39;], good, return_indices=True)[1]
-        b = estimate[field].flatten(&#39;C&#39;)[estimate_id]
-        output.append(b)
+    labels = set(args[0][&#39;label&#39;])
 
-    return output</code></pre>
+    for i, arg in enumerate(args):
+        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[FIELDS[i]])])
+
+    out = [list(labels), ]
+    for i, arg in enumerate(args):
+        i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
+        out.append(arg[FIELDS[i]][i_chan])
+
+    return out</code></pre>
 </details>
 </section>
 <section>
@@ -75,7 +77,7 @@ def match_labels(ecog, *args):
 </details>
 </dd>
 <dt id="gridloc.utils.match_labels"><code class="name flex">
-<span>def <span class="ident">match_labels</span></span>(<span>ecog, *args)</span>
+<span>def <span class="ident">match_labels</span></span>(<span>*args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>make sure that that the values are in the same order as the labels in
@@ -84,22 +86,24 @@ ecog, also getting rid of bad channels</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def match_labels(ecog, *args):
+<pre><code class="python">def match_labels(*args):
     &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
     ecog, also getting rid of bad channels&#34;&#34;&#34;
+    args = [x.flatten(&#39;C&#39;) for x in args]
 
-    good = ecog[&#39;label&#39;][ecog[&#39;good&#39;]]
-    ecog_id = intersect1d(ecog[&#39;label&#39;], good, return_indices=True)[1]
-    a = ecog[&#39;ecog&#39;].flatten(&#39;C&#39;)[ecog_id]
-    output = [a, ]
+    FIELDS = &#39;ecog&#39;, &#39;morphology&#39;, &#39;vasculature&#39;
 
-    for estimate in args:
-        field = (set(estimate.dtype.names) - {&#39;label&#39;, }).pop()
-        estimate_id = intersect1d(estimate[&#39;label&#39;], good, return_indices=True)[1]
-        b = estimate[field].flatten(&#39;C&#39;)[estimate_id]
-        output.append(b)
+    labels = set(args[0][&#39;label&#39;])
 
-    return output</code></pre>
+    for i, arg in enumerate(args):
+        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[FIELDS[i]])])
+
+    out = [list(labels), ]
+    for i, arg in enumerate(args):
+        i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
+        out.append(arg[FIELDS[i]][i_chan])
+
+    return out</code></pre>
 </details>
 </dd>
 <dt id="gridloc.utils.normalize"><code class="name flex">
