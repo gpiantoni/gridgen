@@ -184,9 +184,9 @@ TEMPLATE = {
             'default': 10,
             },
         "penalty": {
-            "type": float,
+            "type": "float",
             "necessary": False,
-            "help": "exponent when computing the penalty from the distance. Morphology = 1 / distance ** penalty. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance",
+            "help": "exponent when computing the penalty from the distance. Morphology = 1 / distance<sup>penalty</sup>. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance",
             "default": 1,
             },
         "steps": {
