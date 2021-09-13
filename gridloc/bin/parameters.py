@@ -131,11 +131,13 @@ TEMPLATE = {
             'type': 'str',
             'necessary': False,
             'help': 'path to angiogram (in NIfTI format)',
+            'default': None,
             },
         "angio_threshold": {
             'type': 'float',
             'necessary': False,
             'help': 'value to threshold the angio_file',
+            'default': None,
             },
         },
     "initial": {

@@ -59,15 +59,6 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     lg.debug(f'Target RAS: {init_ras}, vertex #{initial["vertex"]} RAS: {mris["dura"]["pos"][initial["vertex"]]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {initial["label"]} is vertex #{initial["vertex"]} with orientation {initial["rotation"]}')
 
-    # has to be a tuple
-    minimizer_args = (
-        ecog,  # 0
-        grid3d,  # 1
-        initial,  # 2
-        mris,  # 3
-        fit,  # 4
-        )
-
     if not fit:
         # start position
         grid = construct_grid(
@@ -81,6 +72,15 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         grid_file = output / 'start_pos.html'
         to_html([to_div(fig), ], grid_file)
         return
+
+    # has to be a tuple
+    minimizer_args = (
+        ecog,  # 0
+        grid3d,  # 1
+        initial,  # 2
+        mris,  # 3
+        fit,  # 4
+        )
 
     if fit['method'] == 'simplex':
         m = fitting_simplex(corr_ecog_model, None, minimizer_args)
@@ -165,7 +165,7 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
 
     i, cc = compare_models(e, m, v, correlation=fit['correlation'])
     if not final:
-        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)')
+        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)')
 
     if final:
         model = {
@@ -299,7 +299,7 @@ def remove_wires(model):
     """
     i_keep = model['grid']['label'] != WIRE
     i_keep = i_keep.all(axis=1)
-    for field in ['ecog', 'grid', 'morpho', 'vasc']:
+    for field in ['ecog', 'grid', 'morphology', 'vasculature']:
         if model[field] is not None:
             model[field] = model[field][i_keep, :]
 

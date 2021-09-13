@@ -188,19 +188,21 @@ def main(arguments=None):
         offset = read_surface_ras_shift(parameters['mri']['T1_file'])
         export_transform(offset, transform_file)
 
-        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
-
         if args.function == 'fit':
+            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
             start_time = datetime.now()
-            folder_name = '_'.join(parameters['fit'][k] for k in ('method', 'correlation', 'morphology'))
+            folder_name = '_'.join(str(parameters['fit'][k]) for k in ('method', 'correlation', 'distance', 'penalty'))
             output_dir = parameters['output_dir'] / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
             output_dir.mkdir(parents=True)
+            lg.info(f'Writing fitting results to {output_dir}')
 
             parameters['timestamp'] = start_time.isoformat()
             parameters_json = output_dir / 'parameters.json'
             with parameters_json.open('w') as f:
                 dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
+            ecog2d = read_grid2d(grid2d_tsv)
             output_dir = parameters['output_dir']
 
         fitting(

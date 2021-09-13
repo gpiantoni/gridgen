@@ -51,15 +51,16 @@ def plot_results(model, pial, output, angio=None):
         lg.debug(f'Exported merged model to {grid_file}')
 
 
-def plot_electrodes(pial, model, value=None, ref_label=None, angio=None):
-    grid = model['grid']
-    values = model[value]['value']
+def plot_electrodes(pial, grid, value=None, ref_label=None, angio=None):
+    """
+    grid can be grid or model
+    """
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
     norm = grid['norm'].reshape(-1, 3)
     labels = grid['label'].reshape(-1)
 
-    if values is None:
+    if value is None:
         iswire = labels == WIRE
         colors = labels.copy()
         colors[iswire] = 'red'
@@ -74,6 +75,8 @@ def plot_electrodes(pial, model, value=None, ref_label=None, angio=None):
 
     else:
 
+        grid = grid['grid']
+        values = grid[value]['value']
         colorbar = default_colorbar(value)
         values = values.reshape(-1)
         marker = dict(

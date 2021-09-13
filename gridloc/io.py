@@ -436,7 +436,7 @@ def read_elec(grid2d, elec_file):
     return grid2d
 
 
-def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
+def read_mri(T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None):
     """
     """
     ras_shift = read_surface_ras_shift(T1_file)
