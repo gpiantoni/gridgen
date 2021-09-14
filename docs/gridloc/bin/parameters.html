@@ -141,28 +141,22 @@ TEMPLATE = {
         &#34;T1_file&#34;: {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: True,
-            &#39;help&#39;: &#39;path to T1 image (in particular, the T1.mgz from freesurfer)&#39;,
-            },
-        &#34;pial_file&#34;: {
-            &#39;type&#39;: &#39;str&#39;,
-            &#39;necessary&#39;: True,
-            &#39;help&#39;: &#39;path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)&#39;,
+            &#39;help&#39;: &#39;path to T1 image (in particular, the T1.mgz from freesurfer). Only used to compute the mapping between T1 RAS space and surface RAS space&#39;,
             },
         &#34;dura_file&#34;: {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: True,
-            &#39;help&#39;: &#39;path to dura surface (for example, the smoothed pial surface)&#39;,
+            &#39;help&#39;: &#39;path to dura surface (for example, the smoothed pial surface). This surface will be used to generate the 3D grid&#39;,
             },
-        &#34;angio_file&#34;: {
+        &#34;pial_file&#34;: {
+            &#39;type&#39;: &#39;str&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`&#39;,
+            },
+        &#34;func_file&#34;: {
             &#39;type&#39;: &#39;str&#39;,
             &#39;necessary&#39;: False,
-            &#39;help&#39;: &#39;path to angiogram (in NIfTI format)&#39;,
-            &#39;default&#39;: None,
-            },
-        &#34;angio_threshold&#34;: {
-            &#39;type&#39;: &#39;float&#39;,
-            &#39;necessary&#39;: False,
-            &#39;help&#39;: &#39;value to threshold the angio_file&#39;,
+            &#39;help&#39;: &#39;path to angiogram or fMRI (in NIfTI format). You need to specify key `functional` in `parameters.json`&#39;,
             &#39;default&#39;: None,
             },
         },
@@ -183,21 +177,7 @@ TEMPLATE = {
             &#39;help&#39;: &#39;degree of rotation of the grid (in degrees, 0° is roughly pointing up)&#39;,
             },
         },
-    &#34;fit&#34;: {
-        &#34;method&#34;: {
-            &#34;type&#34;: &#34;str&#34;,
-            &#34;necessary&#34;: True,
-            &#34;values&#34;: [&#39;brute&#39;, &#39;simplex&#39;],
-            &#34;help&#34;: &#34;method to use (brute includes simplex as a second step)&#34;,
-            &#34;default&#34;: &#34;brute&#34;,
-            },
-        &#34;correlation&#34;: {
-            &#34;type&#34;: &#34;str&#34;,
-            &#34;necessary&#34;: False,
-            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
-            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank)&#34;,
-            &#34;default&#34;: &#34;parametric&#34;,
-            },
+    &#34;morphology&#34;: {
         &#34;distance&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
@@ -216,6 +196,43 @@ TEMPLATE = {
             &#34;necessary&#34;: False,
             &#34;help&#34;: &#34;exponent when computing the penalty from the distance. Morphology = 1 / distance&lt;sup&gt;penalty&lt;/sup&gt;. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance&#34;,
             &#34;default&#34;: 1,
+            },
+        },
+    &#34;functional&#34;: {
+        &#34;threshold&#34;: {
+            &#39;type&#39;: &#39;float&#39;,
+            &#39;necessary&#39;: True,
+            &#39;help&#39;: &#39;value to threshold the func_file and binarize it. If None, func_file won\&#39;t be binarized&#39;,
+            &#39;default&#39;: None,
+            },
+        &#34;distance&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;gaussian&#39;, &#39;sphere&#39;, &#39;inverse&#39;],
+            &#34;help&#34;: &#34;&#34;,
+            &#34;default&#34;: &#34;inverse&#34;,
+            },
+        &#34;kernel&#34;: {
+            &#34;type&#34;: &#34;float&#34;,
+            &#34;necessary&#34;: False,
+            &#34;help&#34;: &#34;&#34;,
+            &#34;default&#34;: 2,
+            },
+        },
+    &#34;fit&#34;: {
+        &#34;method&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: True,
+            &#34;values&#34;: [&#39;brute&#39;, &#39;simplex&#39;],
+            &#34;help&#34;: &#34;method to use (brute includes simplex as a second step)&#34;,
+            &#34;default&#34;: &#34;brute&#34;,
+            },
+        &#34;correlation&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
+            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank)&#34;,
+            &#34;default&#34;: &#34;parametric&#34;,
             },
         &#34;steps&#34;: {
             &#34;x&#34;: {
@@ -447,15 +464,18 @@ def parse_parameters(parameters, function, output_dir=None):
     with p_json.open() as f:
         parameters = load(f)
 
-    for k in REQUIRED[function]:
+    required = REQUIRED[function].copy()
+    if &#39;mri&#39; in parameters:
+        if parameters[&#39;mri&#39;].get(&#39;func_file&#39;, None) is not None:
+            required.append(&#39;functional&#39;)
+        if parameters[&#39;mri&#39;].get(&#39;pial_file&#39;, None) is not None:
+            required.append(&#39;morphology&#39;)
+
+    for k in required:
         if k not in parameters:
             raise ValueError(f&#39;You need to specify &#34;{k}&#34; when running {function}&#39;)
         else:
             parameters[k] = validate_template(TEMPLATE[k], parameters[k])
-
-    # we remove &#34;fit&#34; from parameters so that we can pass it to `fitting`
-    if function == &#39;init&#39;:
-        parameters[&#39;fit&#39;] = {}
 
     if output_dir is not None:
         output = output_dir
@@ -467,6 +487,10 @@ def parse_parameters(parameters, function, output_dir=None):
     parameters[&#39;output_dir&#39;] = output
     parameters = convert_to_path(parameters, p_json.parent)
     parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
+
+    # move one parameter to mri because it&#39;s more straightforward
+    if parameters.get(&#39;mri&#39;, {}).get(&#39;func_file&#39;, None) is not None:
+        parameters[&#39;mri&#39;][&#39;func_threshold&#39;] = parameters[&#39;functional&#39;].get(&#39;threshold&#39;, None)
 
     return parameters
 
@@ -616,15 +640,18 @@ it absolute in reference to "parent"</p>
     with p_json.open() as f:
         parameters = load(f)
 
-    for k in REQUIRED[function]:
+    required = REQUIRED[function].copy()
+    if &#39;mri&#39; in parameters:
+        if parameters[&#39;mri&#39;].get(&#39;func_file&#39;, None) is not None:
+            required.append(&#39;functional&#39;)
+        if parameters[&#39;mri&#39;].get(&#39;pial_file&#39;, None) is not None:
+            required.append(&#39;morphology&#39;)
+
+    for k in required:
         if k not in parameters:
             raise ValueError(f&#39;You need to specify &#34;{k}&#34; when running {function}&#39;)
         else:
             parameters[k] = validate_template(TEMPLATE[k], parameters[k])
-
-    # we remove &#34;fit&#34; from parameters so that we can pass it to `fitting`
-    if function == &#39;init&#39;:
-        parameters[&#39;fit&#39;] = {}
 
     if output_dir is not None:
         output = output_dir
@@ -636,6 +663,10 @@ it absolute in reference to "parent"</p>
     parameters[&#39;output_dir&#39;] = output
     parameters = convert_to_path(parameters, p_json.parent)
     parameters[&#39;output_dir&#39;].mkdir(exist_ok=True, parents=True)
+
+    # move one parameter to mri because it&#39;s more straightforward
+    if parameters.get(&#39;mri&#39;, {}).get(&#39;func_file&#39;, None) is not None:
+        parameters[&#39;mri&#39;][&#39;func_threshold&#39;] = parameters[&#39;functional&#39;].get(&#39;threshold&#39;, None)
 
     return parameters</code></pre>
 </details>

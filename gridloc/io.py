@@ -1,6 +1,7 @@
 """Functions to input and output data
 """
 from numpy import (
+    abs,
     array,
     c_,
     cross,
@@ -387,8 +388,11 @@ def read_volume(volume_file, threshold=-Inf):
     Values below the threhold are not included in the output
     """
     volume = nload(str(volume_file))
-    data = volume.get_data()
-    i = data >= threshold
+    data = volume.get_fdata()
+    if threshold is not None:
+        i = data >= threshold
+    else:
+        i = abs(data) > 0.001  # exclude small values
 
     d_ = dtype([
         ('pos', 'f4', (3, )),
@@ -436,26 +440,31 @@ def read_elec(grid2d, elec_file):
     return grid2d
 
 
-def read_mri(T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None):
+def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=None):
     """
     """
     ras_shift = read_surface_ras_shift(T1_file)
     lg.debug(f'Reading positions and computing normals of {dura_file}')
     dura = read_surf(dura_file, ras_shift=ras_shift)
-    lg.debug(f'Reading positions of {pial_file}')
-    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
 
-    if angio_file is not None and angio_file:
-        lg.debug(f'Reading angiogram from {angio_file} and thresholding at {angio_threshold}')
-        angio = read_volume(angio_file, angio_threshold)
-        angio['value'] = 1  # set the value of each voxel above threshold to 1
+    if pial_file is None:
+        pial = None
     else:
-        angio = None
+        lg.debug(f'Reading positions of {pial_file}')
+        pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
+
+    if func_file is None:
+        func = None
+    else:
+        lg.debug(f'Reading functional image from {func_file} and thresholding at {func_threshold}')
+        func = read_volume(func_file, func_threshold)
+        if func_threshold is None:
+            func['value'] = 1  # set the value of each voxel above threshold to 1
 
     out = {
         "ras_shift": ras_shift,
-        "pial": pial,
         "dura": dura,
-        "angio": angio,
+        "pial": pial,
+        "func": func,
         }
     return out

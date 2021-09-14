@@ -79,11 +79,6 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     start_time = datetime.now()
     mris = read_mri(**mri)
 
-    init_ras = array(initial[&#39;RAS&#39;])
-    initial[&#39;vertex&#39;] = argmin(norm(mris[&#39;dura&#39;][&#39;pos&#39;] - init_ras, axis=1))
-    vert_dist = norm(init_ras - mris[&#39;dura&#39;][&#39;pos&#39;][initial[&#34;vertex&#34;]])
-
-    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{initial[&#34;vertex&#34;]} RAS: {mris[&#34;dura&#34;][&#34;pos&#34;][initial[&#34;vertex&#34;]]} (distance = {vert_dist:0.3}mm)&#39;)
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
     if not fit:
@@ -362,7 +357,17 @@ def merge_models(model):
         i0r, i0c = unravel_index(i0, merged.shape)
         merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
 
-    return merged</code></pre>
+    return merged
+
+
+def find_vertex(dura, ras):
+    init_ras = array(ras)
+    vertex = argmin(norm(dura[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - dura[&#39;pos&#39;][vertex])
+
+    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {dura[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
+
+    return vertex</code></pre>
 </details>
 </section>
 <section>
@@ -507,6 +512,25 @@ reading)</p>
     return corrcoef(a, b)[0, 1]</code></pre>
 </details>
 </dd>
+<dt id="gridloc.fitting.find_vertex"><code class="name flex">
+<span>def <span class="ident">find_vertex</span></span>(<span>dura, ras)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_vertex(dura, ras):
+    init_ras = array(ras)
+    vertex = argmin(norm(dura[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - dura[&#39;pos&#39;][vertex])
+
+    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {dura[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
+
+    return vertex</code></pre>
+</details>
+</dd>
 <dt id="gridloc.fitting.fitting"><code class="name flex">
 <span>def <span class="ident">fitting</span></span>(<span>output, ecog, grid3d, initial, mri, fit)</span>
 </code></dt>
@@ -562,11 +586,6 @@ reading)</p>
     start_time = datetime.now()
     mris = read_mri(**mri)
 
-    init_ras = array(initial[&#39;RAS&#39;])
-    initial[&#39;vertex&#39;] = argmin(norm(mris[&#39;dura&#39;][&#39;pos&#39;] - init_ras, axis=1))
-    vert_dist = norm(init_ras - mris[&#39;dura&#39;][&#39;pos&#39;][initial[&#34;vertex&#34;]])
-
-    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{initial[&#34;vertex&#34;]} RAS: {mris[&#34;dura&#34;][&#34;pos&#34;][initial[&#34;vertex&#34;]]} (distance = {vert_dist:0.3}mm)&#39;)
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
     if not fit:
@@ -805,6 +824,7 @@ reading)</p>
 <li><code><a title="gridloc.fitting.compare_models" href="#gridloc.fitting.compare_models">compare_models</a></code></li>
 <li><code><a title="gridloc.fitting.corr_ecog_model" href="#gridloc.fitting.corr_ecog_model">corr_ecog_model</a></code></li>
 <li><code><a title="gridloc.fitting.corrcoef_match" href="#gridloc.fitting.corrcoef_match">corrcoef_match</a></code></li>
+<li><code><a title="gridloc.fitting.find_vertex" href="#gridloc.fitting.find_vertex">find_vertex</a></code></li>
 <li><code><a title="gridloc.fitting.fitting" href="#gridloc.fitting.fitting">fitting</a></code></li>
 <li><code><a title="gridloc.fitting.fitting_brute" href="#gridloc.fitting.fitting_brute">fitting_brute</a></code></li>
 <li><code><a title="gridloc.fitting.fitting_simplex" href="#gridloc.fitting.fitting_simplex">fitting_simplex</a></code></li>

@@ -28,6 +28,7 @@
 <pre><code class="python">&#34;&#34;&#34;Functions to input and output data
 &#34;&#34;&#34;
 from numpy import (
+    abs,
     array,
     c_,
     cross,
@@ -414,8 +415,11 @@ def read_volume(volume_file, threshold=-Inf):
     Values below the threhold are not included in the output
     &#34;&#34;&#34;
     volume = nload(str(volume_file))
-    data = volume.get_data()
-    i = data &gt;= threshold
+    data = volume.get_fdata()
+    if threshold is not None:
+        i = data &gt;= threshold
+    else:
+        i = abs(data) &gt; 0.001  # exclude small values
 
     d_ = dtype([
         (&#39;pos&#39;, &#39;f4&#39;, (3, )),
@@ -463,27 +467,32 @@ def read_elec(grid2d, elec_file):
     return grid2d
 
 
-def read_mri(T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None):
+def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=None):
     &#34;&#34;&#34;
     &#34;&#34;&#34;
     ras_shift = read_surface_ras_shift(T1_file)
     lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
     dura = read_surf(dura_file, ras_shift=ras_shift)
-    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
-    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
 
-    if angio_file is not None and angio_file:
-        lg.debug(f&#39;Reading angiogram from {angio_file} and thresholding at {angio_threshold}&#39;)
-        angio = read_volume(angio_file, angio_threshold)
-        angio[&#39;value&#39;] = 1  # set the value of each voxel above threshold to 1
+    if pial_file is None:
+        pial = None
     else:
-        angio = None
+        lg.debug(f&#39;Reading positions of {pial_file}&#39;)
+        pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
+
+    if func_file is None:
+        func = None
+    else:
+        lg.debug(f&#39;Reading functional image from {func_file} and thresholding at {func_threshold}&#39;)
+        func = read_volume(func_file, func_threshold)
+        if func_threshold is None:
+            func[&#39;value&#39;] = 1  # set the value of each voxel above threshold to 1
 
     out = {
         &#34;ras_shift&#34;: ras_shift,
-        &#34;pial&#34;: pial,
         &#34;dura&#34;: dura,
-        &#34;angio&#34;: angio,
+        &#34;pial&#34;: pial,
+        &#34;func&#34;: func,
         }
     return out</code></pre>
 </details>
@@ -828,7 +837,7 @@ imports them)</p></div>
 </details>
 </dd>
 <dt id="gridloc.io.read_mri"><code class="name flex">
-<span>def <span class="ident">read_mri</span></span>(<span>T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None)</span>
+<span>def <span class="ident">read_mri</span></span>(<span>T1_file, dura_file, pial_file=None, func_file=None, func_threshold=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -836,27 +845,32 @@ imports them)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_mri(T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None):
+<pre><code class="python">def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=None):
     &#34;&#34;&#34;
     &#34;&#34;&#34;
     ras_shift = read_surface_ras_shift(T1_file)
     lg.debug(f&#39;Reading positions and computing normals of {dura_file}&#39;)
     dura = read_surf(dura_file, ras_shift=ras_shift)
-    lg.debug(f&#39;Reading positions of {pial_file}&#39;)
-    pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
 
-    if angio_file is not None and angio_file:
-        lg.debug(f&#39;Reading angiogram from {angio_file} and thresholding at {angio_threshold}&#39;)
-        angio = read_volume(angio_file, angio_threshold)
-        angio[&#39;value&#39;] = 1  # set the value of each voxel above threshold to 1
+    if pial_file is None:
+        pial = None
     else:
-        angio = None
+        lg.debug(f&#39;Reading positions of {pial_file}&#39;)
+        pial = read_surf(pial_file, normals=False, ras_shift=ras_shift)
+
+    if func_file is None:
+        func = None
+    else:
+        lg.debug(f&#39;Reading functional image from {func_file} and thresholding at {func_threshold}&#39;)
+        func = read_volume(func_file, func_threshold)
+        if func_threshold is None:
+            func[&#39;value&#39;] = 1  # set the value of each voxel above threshold to 1
 
     out = {
         &#34;ras_shift&#34;: ras_shift,
-        &#34;pial&#34;: pial,
         &#34;dura&#34;: dura,
-        &#34;angio&#34;: angio,
+        &#34;pial&#34;: pial,
+        &#34;func&#34;: func,
         }
     return out</code></pre>
 </details>
@@ -1053,8 +1067,11 @@ To get from volume to surface coordinates, substract these numbers.</p>
     Values below the threhold are not included in the output
     &#34;&#34;&#34;
     volume = nload(str(volume_file))
-    data = volume.get_data()
-    i = data &gt;= threshold
+    data = volume.get_fdata()
+    if threshold is not None:
+        i = data &gt;= threshold
+    else:
+        i = abs(data) &gt; 0.001  # exclude small values
 
     d_ = dtype([
         (&#39;pos&#39;, &#39;f4&#39;, (3, )),

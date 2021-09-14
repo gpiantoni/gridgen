@@ -55,6 +55,10 @@ def plot_electrodes(pial, grid, value=None, ref_label=None, angio=None):
     """
     grid can be grid or model
     """
+    if value is not None:
+        values = grid[value]['value']
+        grid = grid['grid']
+
     right_or_left = sign(mean(pial['pos'][:, 0]))
     pos = grid['pos'].reshape(-1, 3)
     norm = grid['norm'].reshape(-1, 3)
@@ -75,8 +79,6 @@ def plot_electrodes(pial, grid, value=None, ref_label=None, angio=None):
 
     else:
 
-        grid = grid['grid']
-        values = grid[value]['value']
         colorbar = default_colorbar(value)
         values = values.reshape(-1)
         marker = dict(

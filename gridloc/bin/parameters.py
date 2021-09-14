@@ -115,28 +115,22 @@ TEMPLATE = {
         "T1_file": {
             'type': 'str',
             'necessary': True,
-            'help': 'path to T1 image (in particular, the T1.mgz from freesurfer)',
-            },
-        "pial_file": {
-            'type': 'str',
-            'necessary': True,
-            'help': 'path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)',
+            'help': 'path to T1 image (in particular, the T1.mgz from freesurfer). Only used to compute the mapping between T1 RAS space and surface RAS space',
             },
         "dura_file": {
             'type': 'str',
             'necessary': True,
-            'help': 'path to dura surface (for example, the smoothed pial surface)',
+            'help': 'path to dura surface (for example, the smoothed pial surface). This surface will be used to generate the 3D grid',
             },
-        "angio_file": {
+        "pial_file": {
+            'type': 'str',
+            'necessary': True,
+            'help': 'path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`',
+            },
+        "func_file": {
             'type': 'str',
             'necessary': False,
-            'help': 'path to angiogram (in NIfTI format)',
-            'default': None,
-            },
-        "angio_threshold": {
-            'type': 'float',
-            'necessary': False,
-            'help': 'value to threshold the angio_file',
+            'help': 'path to angiogram or fMRI (in NIfTI format). You need to specify key `functional` in `parameters.json`',
             'default': None,
             },
         },
@@ -157,21 +151,7 @@ TEMPLATE = {
             'help': 'degree of rotation of the grid (in degrees, 0° is roughly pointing up)',
             },
         },
-    "fit": {
-        "method": {
-            "type": "str",
-            "necessary": True,
-            "values": ['brute', 'simplex'],
-            "help": "method to use (brute includes simplex as a second step)",
-            "default": "brute",
-            },
-        "correlation": {
-            "type": "str",
-            "necessary": False,
-            "values": ['parametric', 'nonparametric'],
-            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
-            "default": "parametric",
-            },
+    "morphology": {
         "distance": {
             "type": "str",
             "necessary": False,
@@ -190,6 +170,43 @@ TEMPLATE = {
             "necessary": False,
             "help": "exponent when computing the penalty from the distance. Morphology = 1 / distance<sup>penalty</sup>. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance",
             "default": 1,
+            },
+        },
+    "functional": {
+        "threshold": {
+            'type': 'float',
+            'necessary': True,
+            'help': 'value to threshold the func_file and binarize it. If None, func_file won\'t be binarized',
+            'default': None,
+            },
+        "distance": {
+            "type": "str",
+            "necessary": False,
+            "values": ['gaussian', 'sphere', 'inverse'],
+            "help": "",
+            "default": "inverse",
+            },
+        "kernel": {
+            "type": "float",
+            "necessary": False,
+            "help": "",
+            "default": 2,
+            },
+        },
+    "fit": {
+        "method": {
+            "type": "str",
+            "necessary": True,
+            "values": ['brute', 'simplex'],
+            "help": "method to use (brute includes simplex as a second step)",
+            "default": "brute",
+            },
+        "correlation": {
+            "type": "str",
+            "necessary": False,
+            "values": ['parametric', 'nonparametric'],
+            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
+            "default": "parametric",
             },
         "steps": {
             "x": {
@@ -421,15 +438,18 @@ def parse_parameters(parameters, function, output_dir=None):
     with p_json.open() as f:
         parameters = load(f)
 
-    for k in REQUIRED[function]:
+    required = REQUIRED[function].copy()
+    if 'mri' in parameters:
+        if parameters['mri'].get('func_file', None) is not None:
+            required.append('functional')
+        if parameters['mri'].get('pial_file', None) is not None:
+            required.append('morphology')
+
+    for k in required:
         if k not in parameters:
             raise ValueError(f'You need to specify "{k}" when running {function}')
         else:
             parameters[k] = validate_template(TEMPLATE[k], parameters[k])
-
-    # we remove "fit" from parameters so that we can pass it to `fitting`
-    if function == 'init':
-        parameters['fit'] = {}
 
     if output_dir is not None:
         output = output_dir
@@ -441,6 +461,10 @@ def parse_parameters(parameters, function, output_dir=None):
     parameters['output_dir'] = output
     parameters = convert_to_path(parameters, p_json.parent)
     parameters['output_dir'].mkdir(exist_ok=True, parents=True)
+
+    # move one parameter to mri because it's more straightforward
+    if parameters.get('mri', {}).get('func_file', None) is not None:
+        parameters['mri']['func_threshold'] = parameters['functional'].get('threshold', None)
 
     return parameters
 

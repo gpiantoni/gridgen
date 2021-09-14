@@ -52,11 +52,6 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     start_time = datetime.now()
     mris = read_mri(**mri)
 
-    init_ras = array(initial['RAS'])
-    initial['vertex'] = argmin(norm(mris['dura']['pos'] - init_ras, axis=1))
-    vert_dist = norm(init_ras - mris['dura']['pos'][initial["vertex"]])
-
-    lg.debug(f'Target RAS: {init_ras}, vertex #{initial["vertex"]} RAS: {mris["dura"]["pos"][initial["vertex"]]} (distance = {vert_dist:0.3}mm)')
     lg.info(f'Starting position for {initial["label"]} is vertex #{initial["vertex"]} with orientation {initial["rotation"]}')
 
     if not fit:
@@ -336,3 +331,13 @@ def merge_models(model):
         merged['value'][i0r, i0c] = prediction[i1]
 
     return merged
+
+
+def find_vertex(dura, ras):
+    init_ras = array(ras)
+    vertex = argmin(norm(dura['pos'] - init_ras, axis=1))
+    vert_dist = norm(init_ras - dura['pos'][vertex])
+
+    lg.debug(f'Target RAS: {init_ras}, vertex #{vertex} RAS: {dura["pos"][vertex]} (distance = {vert_dist:0.3}mm)')
+
+    return vertex

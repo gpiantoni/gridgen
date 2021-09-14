@@ -230,6 +230,9 @@ def main(arguments=None):
                 dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
             ecog2d = read_grid2d(grid2d_tsv)
+            output_dir = parameters[&#39;output_dir&#39;] / (&#39;init_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+            output_dir.mkdir(parents=True)
+            lg.info(f&#39;Writing init results to {output_dir}&#39;)
             output_dir = parameters[&#39;output_dir&#39;]
 
         fitting(
@@ -443,6 +446,9 @@ def main(arguments=None):
                 dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
             ecog2d = read_grid2d(grid2d_tsv)
+            output_dir = parameters[&#39;output_dir&#39;] / (&#39;init_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
+            output_dir.mkdir(parents=True)
+            lg.info(f&#39;Writing init results to {output_dir}&#39;)
             output_dir = parameters[&#39;output_dir&#39;]
 
         fitting(

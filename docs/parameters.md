@@ -21,21 +21,25 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
   - **maximum_angle**: (float, optional) maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid). Default: 5
   - **step_angle**: (float, optional) step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid. Default: 0.25
 - **mri** (required by command `init`, `fit`, `matlab`)
-  - **T1_file**: (str) path to T1 image (in particular, the T1.mgz from freesurfer)
-  - **pial_file**: (str) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
-  - **dura_file**: (str) path to dura surface (for example, the smoothed pial surface)
-  - **angio_file**: (str, optional) path to angiogram (in NIfTI format). Default: None
-  - **angio_threshold**: (float, optional) value to threshold the angio_file. Default: None
+  - **T1_file**: (str) path to T1 image (in particular, the T1.mgz from freesurfer). Only used to compute the mapping between T1 RAS space and surface RAS space
+  - **dura_file**: (str) path to dura surface (for example, the smoothed pial surface). This surface will be used to generate the 3D grid
+  - **pial_file**: (str) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`
+  - **func_file**: (str, optional) path to angiogram or fMRI (in NIfTI format). You need to specify key `functional` in `parameters.json`. Default: None
 - **initial** (required by command `init`, `fit`)
   - **label**: (str) label for the reference electrode
   - **RAS**: (list) initial location for the reference electrode (coordinates in MRI space)
   - **rotation**: (float) degree of rotation of the grid (in degrees, 0° is roughly pointing up)
-- **fit** (required by command `fit`)
-  - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
-  - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
+- **morphology**
   - **distance**: (str, optional) how to compute the distance of the morphology. Values: [ray, minimum, view, cylinder, pdf]. Default: ray
   - **maximum_distance**: (float, optional) maximum distance between electrode and pial surface. Exact interpretation depends on the type of `morphology`. Default: 10
   - **penalty**: (float, optional) exponent when computing the penalty from the distance. Morphology = 1 / distance<sup>penalty</sup>. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance. Default: 1
+- **functional**
+  - **threshold**: (float) value to threshold the func_file and binarize it. If None, func_file won't be binarized. Default: None
+  - **distance**: (str, optional) . Values: [gaussian, sphere, inverse]. Default: inverse
+  - **kernel**: (float, optional) . Default: 2
+- **fit** (required by command `fit`)
+  - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
+  - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
   - **steps**
     - **x**: (float, optional) Step size in mm for x-direction, for method simplex
     - **y**: (float, optional) Step size in mm for y-direction, for method simplex
