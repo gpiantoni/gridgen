@@ -24,8 +24,8 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
   - **T1_file**: (str) path to T1 image (in particular, the T1.mgz from freesurfer)
   - **pial_file**: (str) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer)
   - **dura_file**: (str) path to dura surface (for example, the smoothed pial surface)
-  - **angio_file**: (str, optional) path to angiogram (in NIfTI format)
-  - **angio_threshold**: (float, optional) value to threshold the angio_file
+  - **angio_file**: (str, optional) path to angiogram (in NIfTI format). Default: None
+  - **angio_threshold**: (float, optional) value to threshold the angio_file. Default: None
 - **initial** (required by command `init`, `fit`)
   - **label**: (str) label for the reference electrode
   - **RAS**: (list) initial location for the reference electrode (coordinates in MRI space)

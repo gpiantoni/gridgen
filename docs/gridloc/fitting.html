@@ -86,15 +86,6 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     lg.debug(f&#39;Target RAS: {init_ras}, vertex #{initial[&#34;vertex&#34;]} RAS: {mris[&#34;dura&#34;][&#34;pos&#34;][initial[&#34;vertex&#34;]]} (distance = {vert_dist:0.3}mm)&#39;)
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
-    # has to be a tuple
-    minimizer_args = (
-        ecog,  # 0
-        grid3d,  # 1
-        initial,  # 2
-        mris,  # 3
-        fit,  # 4
-        )
-
     if not fit:
         # start position
         grid = construct_grid(
@@ -108,6 +99,15 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         grid_file = output / &#39;start_pos.html&#39;
         to_html([to_div(fig), ], grid_file)
         return
+
+    # has to be a tuple
+    minimizer_args = (
+        ecog,  # 0
+        grid3d,  # 1
+        initial,  # 2
+        mris,  # 3
+        fit,  # 4
+        )
 
     if fit[&#39;method&#39;] == &#39;simplex&#39;:
         m = fitting_simplex(corr_ecog_model, None, minimizer_args)
@@ -192,7 +192,7 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
 
     i, cc = compare_models(e, m, v, correlation=fit[&#39;correlation&#39;])
     if not final:
-        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
+        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
     if final:
         model = {
@@ -326,7 +326,7 @@ def remove_wires(model):
     &#34;&#34;&#34;
     i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
     i_keep = i_keep.all(axis=1)
-    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morpho&#39;, &#39;vasc&#39;]:
+    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;vasculature&#39;]:
         if model[field] is not None:
             model[field] = model[field][i_keep, :]
 
@@ -463,7 +463,7 @@ reading)</p>
 
     i, cc = compare_models(e, m, v, correlation=fit[&#39;correlation&#39;])
     if not final:
-        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc * -1:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
+        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
 
     if final:
         model = {
@@ -569,15 +569,6 @@ reading)</p>
     lg.debug(f&#39;Target RAS: {init_ras}, vertex #{initial[&#34;vertex&#34;]} RAS: {mris[&#34;dura&#34;][&#34;pos&#34;][initial[&#34;vertex&#34;]]} (distance = {vert_dist:0.3}mm)&#39;)
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
 
-    # has to be a tuple
-    minimizer_args = (
-        ecog,  # 0
-        grid3d,  # 1
-        initial,  # 2
-        mris,  # 3
-        fit,  # 4
-        )
-
     if not fit:
         # start position
         grid = construct_grid(
@@ -591,6 +582,15 @@ reading)</p>
         grid_file = output / &#39;start_pos.html&#39;
         to_html([to_div(fig), ], grid_file)
         return
+
+    # has to be a tuple
+    minimizer_args = (
+        ecog,  # 0
+        grid3d,  # 1
+        initial,  # 2
+        mris,  # 3
+        fit,  # 4
+        )
 
     if fit[&#39;method&#39;] == &#39;simplex&#39;:
         m = fitting_simplex(corr_ecog_model, None, minimizer_args)
@@ -777,7 +777,7 @@ reading)</p>
     &#34;&#34;&#34;
     i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
     i_keep = i_keep.all(axis=1)
-    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morpho&#39;, &#39;vasc&#39;]:
+    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;vasculature&#39;]:
         if model[field] is not None:
             model[field] = model[field][i_keep, :]
 

@@ -215,19 +215,21 @@ def main(arguments=None):
         offset = read_surface_ras_shift(parameters[&#39;mri&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
 
-        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
-
         if args.function == &#39;fit&#39;:
+            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
             start_time = datetime.now()
-            folder_name = &#39;_&#39;.join(parameters[&#39;fit&#39;][k] for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;morphology&#39;))
+            folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;distance&#39;, &#39;penalty&#39;))
             output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
             output_dir.mkdir(parents=True)
+            lg.info(f&#39;Writing fitting results to {output_dir}&#39;)
 
             parameters[&#39;timestamp&#39;] = start_time.isoformat()
             parameters_json = output_dir / &#39;parameters.json&#39;
             with parameters_json.open(&#39;w&#39;) as f:
                 dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
+            ecog2d = read_grid2d(grid2d_tsv)
             output_dir = parameters[&#39;output_dir&#39;]
 
         fitting(
@@ -426,19 +428,21 @@ def main(arguments=None):
         offset = read_surface_ras_shift(parameters[&#39;mri&#39;][&#39;T1_file&#39;])
         export_transform(offset, transform_file)
 
-        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
-
         if args.function == &#39;fit&#39;:
+            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
             start_time = datetime.now()
-            folder_name = &#39;_&#39;.join(parameters[&#39;fit&#39;][k] for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;morphology&#39;))
+            folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;distance&#39;, &#39;penalty&#39;))
             output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
             output_dir.mkdir(parents=True)
+            lg.info(f&#39;Writing fitting results to {output_dir}&#39;)
 
             parameters[&#39;timestamp&#39;] = start_time.isoformat()
             parameters_json = output_dir / &#39;parameters.json&#39;
             with parameters_json.open(&#39;w&#39;) as f:
                 dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
+            ecog2d = read_grid2d(grid2d_tsv)
             output_dir = parameters[&#39;output_dir&#39;]
 
         fitting(

@@ -463,7 +463,7 @@ def read_elec(grid2d, elec_file):
     return grid2d
 
 
-def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
+def read_mri(T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None):
     &#34;&#34;&#34;
     &#34;&#34;&#34;
     ras_shift = read_surface_ras_shift(T1_file)
@@ -828,7 +828,7 @@ imports them)</p></div>
 </details>
 </dd>
 <dt id="gridloc.io.read_mri"><code class="name flex">
-<span>def <span class="ident">read_mri</span></span>(<span>T1_file, dura_file, pial_file, angio_file, angio_threshold)</span>
+<span>def <span class="ident">read_mri</span></span>(<span>T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -836,7 +836,7 @@ imports them)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_mri(T1_file, dura_file, pial_file, angio_file, angio_threshold):
+<pre><code class="python">def read_mri(T1_file, dura_file, pial_file, angio_file=None, angio_threshold=None):
     &#34;&#34;&#34;
     &#34;&#34;&#34;
     ras_shift = read_surface_ras_shift(T1_file)
