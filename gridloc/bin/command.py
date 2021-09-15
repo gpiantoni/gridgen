@@ -83,6 +83,9 @@ def create_arguments():
         'ecog', help=dedent("""\
         Compute values for each electrodes based on ECoG.
 
+        Input:
+          grid2d_labels.tsv (from grid2d)
+
         Output:
           grid2d_ecog.tsv : values of the power spectrum per electrode
           grid2d_ecog.html : plot of the estimated activity of the power spectrum
@@ -91,14 +94,17 @@ def create_arguments():
     subfun1.set_defaults(function='ecog')
 
     subfun2 = list_functions.add_parser(
-        'init', help=dedent("""\
-        Fit the ecog values to the surface
+        'grid3d', help=dedent("""\
+        Generate 3D grid.
+
+        Input:
+          grid2d_labels.tsv (from grid2d)
 
         Output:
-            ???
+          ???
 
         """))
-    subfun2.set_defaults(function='init')
+    subfun2.set_defaults(function='grid3d')
 
     subfun3 = list_functions.add_parser(
         'fit', help=dedent("""\
@@ -183,7 +189,7 @@ def main(arguments=None):
         fig = plot_grid2d(ecog2d, 'ecog')
         to_html([to_div(fig), ], ecog_fig)
 
-    if args.function in ('init', 'fit'):
+    if args.function in ('grid3d', 'fit'):
 
         offset = read_surface_ras_shift(parameters['mri']['T1_file'])
         export_transform(offset, transform_file)
@@ -203,9 +209,9 @@ def main(arguments=None):
                 dump(parameters, f, indent=2, cls=_JSONEncoder_path)
         else:
             ecog2d = read_grid2d(grid2d_tsv)
-            output_dir = parameters['output_dir'] / ('init_' + start_time.strftime('%Y%m%d_%H%M%S'))
+            output_dir = parameters['output_dir'] / ('grid3d_' + start_time.strftime('%Y%m%d_%H%M%S'))
             output_dir.mkdir(parents=True)
-            lg.info(f'Writing init results to {output_dir}')
+            lg.info(f'Writing grid3d to {output_dir}')
             output_dir = parameters['output_dir']
 
         fitting(
