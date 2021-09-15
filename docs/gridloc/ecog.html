@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 7.4.0" />
-    <title>gridloc.utils API documentation</title>
+    <title>gridloc.ecog API documentation</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%2244.5%202.5%2015%2015%22%3E%3Cpath%20d%3D%22M49.351%2021.041c-.233-.721-.546-2.408-.772-4.076-.042-.09-.067-.187-.046-.288-.166-1.347-.277-2.625-.241-3.351-1.378-1.008-2.271-2.586-2.271-4.362%200-.976.272-1.935.788-2.774.057-.094.122-.18.184-.268-.033-.167-.052-.339-.052-.516%200-1.477%201.202-2.679%202.679-2.679.791%200%201.496.352%201.987.9a6.3%206.3%200%200%201%201.001.029c.492-.564%201.207-.929%202.012-.929%201.477%200%202.679%201.202%202.679%202.679a2.65%202.65%200%200%201-.269%201.148c.383.747.595%201.572.595%202.41%200%202.311-1.507%204.29-3.635%205.107.037.699.147%202.27.423%203.294l.137.461c.156%202.136-4.612%205.166-5.199%203.215zm.127-4.919a4.78%204.78%200%200%200%20.775-.584c-.172-.115-.505-.254-.88-.378zm.331%202.302l.828-.502c-.202-.143-.576-.328-.984-.49zm.45%202.157l.701-.403c-.214-.115-.536-.249-.891-.376l.19.779zM49.13%204.141c0%20.152.123.276.276.276s.275-.124.275-.276-.123-.276-.276-.276-.275.124-.275.276zm.735-.389a1.15%201.15%200%200%201%20.314.783%201.16%201.16%200%200%201-1.162%201.162c-.457%200-.842-.27-1.032-.653-.026.117-.042.238-.042.362a1.68%201.68%200%200%200%201.679%201.679%201.68%201.68%200%200%200%201.679-1.679c0-.843-.626-1.535-1.436-1.654zm3.076%201.654a1.68%201.68%200%200%200%201.679%201.679%201.68%201.68%200%200%200%201.679-1.679c0-.037-.009-.072-.011-.109-.21.3-.541.508-.935.508a1.16%201.16%200%200%201-1.162-1.162%201.14%201.14%200%200%201%20.474-.912c-.015%200-.03-.005-.045-.005-.926.001-1.679.754-1.679%201.68zm1.861-1.265c0%20.152.123.276.276.276s.275-.124.275-.276-.123-.276-.276-.276-.275.124-.275.276zm1.823%204.823c0-.52-.103-1.035-.288-1.52-.466.394-1.06.64-1.717.64-1.144%200-2.116-.725-2.499-1.738-.383%201.012-1.355%201.738-2.499%201.738-.867%200-1.631-.421-2.121-1.062-.307.605-.478%201.267-.478%201.942%200%202.486%202.153%204.51%204.801%204.51s4.801-2.023%204.801-4.51zm-3.032%209.156l-.146-.492c-.276-1.02-.395-2.457-.444-3.268a6.11%206.11%200%200%201-1.18.115%206.01%206.01%200%200%201-2.536-.562l.006.175c.802.215%201.848.612%202.021%201.25.079.295-.021.601-.274.837l-.598.501c.667.304%201.243.698%201.311%201.179.02.144.022.507-.393.787l-.564.365c1.285.521%201.361.96%201.381%201.126.018.142.011.496-.427.746l-.854.489c.064-1.19%201.985-2.585%202.697-3.248zM49.34%209.925c0-.667%201-.667%201%200%200%20.653.818%201.205%201.787%201.205s1.787-.552%201.787-1.205c0-.667%201-.667%201%200%200%201.216-1.25%202.205-2.787%202.205s-2.787-.989-2.787-2.205zm-.887-7.633c-.093.077-.205.114-.317.114a.5.5%200%200%201-.318-.886L49.183.397a.5.5%200%200%201%20.703.068.5.5%200%200%201-.069.703zm7.661-.065c-.086%200-.173-.022-.253-.068l-1.523-.893c-.575-.337-.069-1.2.506-.863l1.523.892a.5.5%200%200%201%20.179.685c-.094.158-.261.247-.432.247z%22%20fill%3D%22%233bb300%22/%3E%3C/svg%3E"/>
 
 
@@ -31,13 +31,10 @@
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
-                    <a class="function" href="#be_nice">be_nice</a>
+                    <a class="function" href="#read_ecog">read_ecog</a>
             </li>
             <li>
-                    <a class="function" href="#normalize">normalize</a>
-            </li>
-            <li>
-                    <a class="function" href="#match_labels">match_labels</a>
+                    <a class="function" href="#put_ecog_on_grid2d">put_ecog_on_grid2d</a>
             </li>
     </ul>
 
@@ -53,114 +50,280 @@
     <main class="pdoc">
             <section>
                     <h1 class="modulename">
-<a href="./../gridloc.html">gridloc</a><wbr>.utils    </h1>
+<a href="./../gridloc.html">gridloc</a><wbr>.ecog    </h1>
 
-                
+                        <div class="docstring"><p>Read ECoG data from the grid and convert them to 2D</p>
+</div>
+
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">nice</span>
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">nanmax</span><span class="p">,</span> <span class="n">nanmin</span><span class="p">,</span> <span class="n">intersect1d</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">array</span>
+            <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;Read ECoG data from the grid and convert them to 2D&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">wonambi</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">NaN</span><span class="p">,</span> <span class="n">dtype</span>
+<span class="kn">from</span> <span class="nn">wonambi.trans</span> <span class="kn">import</span> <span class="n">math</span><span class="p">,</span> <span class="n">filter_</span><span class="p">,</span> <span class="n">montage</span><span class="p">,</span> <span class="n">timefrequency</span><span class="p">,</span> <span class="n">select</span>
+<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">lg</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">be_nice</span><span class="p">():</span>
-    <span class="n">nice</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">read_ecog</span><span class="p">(</span><span class="n">ecog_file</span><span class="p">,</span> <span class="n">begtime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bad_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">freq_range</span><span class="o">=</span><span class="p">(</span><span class="mi">55</span><span class="p">,</span> <span class="mi">95</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Read ECoG data</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ecog_file : path to file</span>
+<span class="sd">        Path to ECoG file</span>
+<span class="sd">    begtime : float</span>
+<span class="sd">        if specified, data will be read after this point in time (in s)</span>
+<span class="sd">    endtime : float</span>
+<span class="sd">        if specified, data will be read until this point in time (in s)</span>
+<span class="sd">    bad_channels : list of str</span>
+<span class="sd">        list of channels to exclude</span>
+<span class="sd">    freq_range : two floats</span>
+<span class="sd">        frequency range to compute the average power spectrum</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    wonambi Data</span>
+<span class="sd">        where you get one value per channels, which is the average in the</span>
+<span class="sd">        frequency range</span>
+
+<span class="sd">    TODO</span>
+<span class="sd">    ----</span>
+<span class="sd">    check whether we should use &#39;mean&#39; or &#39;median&#39; across time</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Reading </span><span class="si">{</span><span class="n">ecog_file</span><span class="si">}</span><span class="s1"> between </span><span class="si">{</span><span class="n">begtime</span><span class="si">}</span><span class="s1">s and </span><span class="si">{</span><span class="n">endtime</span><span class="si">}</span><span class="s1">s&#39;</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">ecog_file</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="n">begtime</span><span class="o">=</span><span class="n">begtime</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="n">endtime</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bad_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Excluding </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bad_channels</span><span class="p">)</span><span class="si">}</span><span class="s1"> channels&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">chan</span><span class="o">=</span><span class="n">bad_channels</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Rereference to average&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">montage</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ref_to_avg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Apply notch filter&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">filter_</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;notch&#39;</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Computing Spectrogram&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">timefrequency</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;spectrogram&#39;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">taper</span><span class="o">=</span><span class="s1">&#39;hann&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">math</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">operator_name</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">math</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">operator_name</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Selecting frequency range </span><span class="si">{</span><span class="n">freq_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s1">02.2f</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">freq_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">02.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freq_range</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">math</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">operator_name</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;freq&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tf</span>
 
 
-<span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">nanmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">put_ecog_on_grid2d</span><span class="p">(</span><span class="n">ecog</span><span class="p">,</span> <span class="n">grid2d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Arrange values of the ecog in a 2d grid, based on the 2d electrode</span>
+<span class="sd">    location</span>
 
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ecog : wonambi Data</span>
+<span class="sd">        output of read_ecog(). There should be one value per channel</span>
+<span class="sd">    grid2d : 2d array</span>
+<span class="sd">        2d array with the channel labels (input is a 2d array with one field called &#39;label&#39;)</span>
 
-<span class="k">def</span> <span class="nf">match_labels</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;make sure that that the values are in the same order as the labels in</span>
-<span class="sd">    ecog, also getting rid of bad channels&quot;&quot;&quot;</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray of shape (n_rows, n_columns) with fields:</span>
+<span class="sd">        - label : channel label</span>
+<span class="sd">        - ecog : value computed from &#39;ecog&#39;</span>
+<span class="sd">        - good : whether to include the channel or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d_</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">([</span>
+        <span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;U256&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;ecog&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;good&#39;</span><span class="p">,</span> <span class="s1">&#39;bool&#39;</span><span class="p">),</span>
+        <span class="p">])</span>
+    <span class="n">ecog_on_grid</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">grid2d</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">d_</span><span class="p">)</span>
 
-    <span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+    <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+    <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;ecog&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">NaN</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])])</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ecog_on_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ecog_on_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">ecog</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="s1">&#39;chan&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;ecog&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">ecog</span><span class="p">(</span><span class="n">trial</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">chan</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+                <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;good&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="p">]</span>
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="n">i_chan</span> <span class="o">=</span> <span class="n">intersect1d</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">)),</span> <span class="n">assume_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">][</span><span class="n">i_chan</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">out</span>
+    <span class="k">return</span> <span class="n">ecog_on_grid</span>
 </pre></div>
 
         </details>
 
             </section>
-                <section id="be_nice">
-                            <div class="attr function"><a class="headerlink" href="#be_nice">#&nbsp;&nbsp</a>
+                <section id="read_ecog">
+                            <div class="attr function"><a class="headerlink" href="#read_ecog">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">be_nice</span><span class="signature">()</span>:
+            <span class="name">read_ecog</span><span class="signature">(
+    ecog_file,
+    begtime=None,
+    endtime=None,
+    bad_channels=None,
+    freq_range=(55, 95)
+)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">be_nice</span><span class="p">():</span>
-    <span class="n">nice</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">read_ecog</span><span class="p">(</span><span class="n">ecog_file</span><span class="p">,</span> <span class="n">begtime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bad_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">freq_range</span><span class="o">=</span><span class="p">(</span><span class="mi">55</span><span class="p">,</span> <span class="mi">95</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Read ECoG data</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ecog_file : path to file</span>
+<span class="sd">        Path to ECoG file</span>
+<span class="sd">    begtime : float</span>
+<span class="sd">        if specified, data will be read after this point in time (in s)</span>
+<span class="sd">    endtime : float</span>
+<span class="sd">        if specified, data will be read until this point in time (in s)</span>
+<span class="sd">    bad_channels : list of str</span>
+<span class="sd">        list of channels to exclude</span>
+<span class="sd">    freq_range : two floats</span>
+<span class="sd">        frequency range to compute the average power spectrum</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    wonambi Data</span>
+<span class="sd">        where you get one value per channels, which is the average in the</span>
+<span class="sd">        frequency range</span>
+
+<span class="sd">    TODO</span>
+<span class="sd">    ----</span>
+<span class="sd">    check whether we should use &#39;mean&#39; or &#39;median&#39; across time</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Reading </span><span class="si">{</span><span class="n">ecog_file</span><span class="si">}</span><span class="s1"> between </span><span class="si">{</span><span class="n">begtime</span><span class="si">}</span><span class="s1">s and </span><span class="si">{</span><span class="n">endtime</span><span class="si">}</span><span class="s1">s&#39;</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">ecog_file</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="n">begtime</span><span class="o">=</span><span class="n">begtime</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="n">endtime</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bad_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Excluding </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bad_channels</span><span class="p">)</span><span class="si">}</span><span class="s1"> channels&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">chan</span><span class="o">=</span><span class="n">bad_channels</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Rereference to average&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">montage</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ref_to_avg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Apply notch filter&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">filter_</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;notch&#39;</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Computing Spectrogram&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">timefrequency</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;spectrogram&#39;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">taper</span><span class="o">=</span><span class="s1">&#39;hann&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">math</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">operator_name</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">math</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">operator_name</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">)</span>
+
+    <span class="n">lg</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Selecting frequency range </span><span class="si">{</span><span class="n">freq_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s1">02.2f</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">freq_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s1">02.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freq_range</span><span class="p">)</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="n">math</span><span class="p">(</span><span class="n">tf</span><span class="p">,</span> <span class="n">operator_name</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;freq&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tf</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>Read ECoG data</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>ecog_file : path to file
+    Path to ECoG file
+begtime : float
+    if specified, data will be read after this point in time (in s)
+endtime : float
+    if specified, data will be read until this point in time (in s)
+bad_channels : list of str
+    list of channels to exclude
+freq_range : two floats
+    frequency range to compute the average power spectrum</p>
+
+<h2 id="returns">Returns</h2>
+
+<p>wonambi Data
+    where you get one value per channels, which is the average in the
+    frequency range</p>
+
+<h2 id="todo">TODO</h2>
+
+<p>check whether we should use 'mean' or 'median' across time</p>
+</div>
+
 
                 </section>
-                <section id="normalize">
-                            <div class="attr function"><a class="headerlink" href="#normalize">#&nbsp;&nbsp</a>
+                <section id="put_ecog_on_grid2d">
+                            <div class="attr function"><a class="headerlink" href="#put_ecog_on_grid2d">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">normalize</span><span class="signature">(x)</span>:
+            <span class="name">put_ecog_on_grid2d</span><span class="signature">(ecog, grid2d)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">nanmax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">nanmin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">put_ecog_on_grid2d</span><span class="p">(</span><span class="n">ecog</span><span class="p">,</span> <span class="n">grid2d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Arrange values of the ecog in a 2d grid, based on the 2d electrode</span>
+<span class="sd">    location</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ecog : wonambi Data</span>
+<span class="sd">        output of read_ecog(). There should be one value per channel</span>
+<span class="sd">    grid2d : 2d array</span>
+<span class="sd">        2d array with the channel labels (input is a 2d array with one field called &#39;label&#39;)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray of shape (n_rows, n_columns) with fields:</span>
+<span class="sd">        - label : channel label</span>
+<span class="sd">        - ecog : value computed from &#39;ecog&#39;</span>
+<span class="sd">        - good : whether to include the channel or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d_</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">([</span>
+        <span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;U256&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;ecog&#39;</span><span class="p">,</span> <span class="s1">&#39;f8&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;good&#39;</span><span class="p">,</span> <span class="s1">&#39;bool&#39;</span><span class="p">),</span>
+        <span class="p">])</span>
+    <span class="n">ecog_on_grid</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">grid2d</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">d_</span><span class="p">)</span>
+
+    <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid2d</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+    <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;ecog&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">NaN</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ecog_on_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ecog_on_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">ecog</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="s1">&#39;chan&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;ecog&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">ecog</span><span class="p">(</span><span class="n">trial</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">chan</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+                <span class="n">ecog_on_grid</span><span class="p">[</span><span class="s1">&#39;good&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="n">ecog_on_grid</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>Arrange values of the ecog in a 2d grid, based on the 2d electrode
+location</p>
 
-                </section>
-                <section id="match_labels">
-                            <div class="attr function"><a class="headerlink" href="#match_labels">#&nbsp;&nbsp</a>
+<h2 id="parameters">Parameters</h2>
 
-        
-            <span class="def">def</span>
-            <span class="name">match_labels</span><span class="signature">(*args)</span>:
-    </div>
+<p>ecog : wonambi Data
+    output of read_ecog(). There should be one value per channel
+grid2d : 2d array
+    2d array with the channel labels (input is a 2d array with one field called 'label')</p>
 
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">match_labels</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;make sure that that the values are in the same order as the labels in</span>
-<span class="sd">    ecog, also getting rid of bad channels&quot;&quot;&quot;</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+<h2 id="returns">Returns</h2>
 
-    <span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
-
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])])</span>
-
-    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="p">]</span>
-    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="n">i_chan</span> <span class="o">=</span> <span class="n">intersect1d</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">)),</span> <span class="n">assume_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">][</span><span class="n">i_chan</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">out</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>make sure that that the values are in the same order as the labels in
-ecog, also getting rid of bad channels</p>
+<p>ndarray of shape (n_rows, n_columns) with fields:
+    - label : channel label
+    - ecog : value computed from 'ecog'
+    - good : whether to include the channel or not</p>
 </div>
 
 

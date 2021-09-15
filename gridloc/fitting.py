@@ -209,21 +209,6 @@ def compare_models(E, M, V=None, correlation='parametric'):
     return WEIGHTS[i], x[i]
 
 
-def corrcoef_match(ecog, estimate, field='morphology'):
-    """correlation but make sure that the labels match
-    """
-    raise NotImplementedError
-
-    good = ecog['label'][ecog['good']]
-    ecog_id = intersect1d(ecog['label'], good, return_indices=True)[1]
-    a = ecog['ecog'].flatten('C')[ecog_id]
-
-    estimate_id = intersect1d(estimate['label'], good, return_indices=True)[1]
-    b = estimate[field].flatten('C')[estimate_id]
-
-    return corrcoef(a, b)[0, 1]
-
-
 def fitting_brute(func, args):
 
     ranges = args[4]['ranges']
@@ -289,18 +274,6 @@ def fitting_simplex(func, init, args):
     return m
 
 
-def remove_wires(model):
-    """We select rows with WIRE, so that we keep the 2d shape of the models
-    """
-    i_keep = model['grid']['label'] != WIRE
-    i_keep = i_keep.all(axis=1)
-    for field in ['ecog', 'grid', 'morphology', 'vasculature']:
-        if model[field] is not None:
-            model[field] = model[field][i_keep, :]
-
-    return model
-
-
 def merge_models(model):
 
     d_ = dtype([
@@ -331,13 +304,3 @@ def merge_models(model):
         merged['value'][i0r, i0c] = prediction[i1]
 
     return merged
-
-
-def find_vertex(dura, ras):
-    init_ras = array(ras)
-    vertex = argmin(norm(dura['pos'] - init_ras, axis=1))
-    vert_dist = norm(init_ras - dura['pos'][vertex])
-
-    lg.debug(f'Target RAS: {init_ras}, vertex #{vertex} RAS: {dura["pos"][vertex]} (distance = {vert_dist:0.3}mm)')
-
-    return vertex
