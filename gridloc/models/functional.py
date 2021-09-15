@@ -13,12 +13,14 @@ from numpy import (ndindex,
                    isfinite,
                    nansum,
                    isnan,
+                   dtype,
                    where,
                    )
 from numpy.linalg import norm, inv
 from scipy.stats import norm as normdistr
 from nibabel.affines import apply_affine
 from nibabel import load as nload
+from ..io import WIRE
 
 lg = getLogger(__name__)
 
@@ -27,73 +29,45 @@ lg = getLogger(__name__)
 
 def compute_functional(grid, func, distance=None, kernel=None):
 
+    d_ = dtype([
+        ('label', '<U256'),   # labels cannot be longer than 256 char
+        ('value', 'f4'),
+        ])
+
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance['label'] = grid['label']
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            if grid['label'][i_x, i_y] == WIRE:
+                continue
+
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance['value'].fill(NaN)
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            if grid['label'][i_x, i_y] == WIRE:
+                continue
+            distance['value'][i_x, i_y] = compute_value_at_elec(
+                grid['pos'][i_x, i_y], func, distance, kernel)
+
+    return distance
+
+
+def compute_value_at_elec(pos, func, distance='gaussian', kernel=8):
     """
-    Calculate the (weighted) average of fMRI values at electrode locations
+
+    TODO
+    ----
+    How to normalize:
+    You need to think hard if you need to normalize value (because we only
+    include voxels > 0
     """
+    distance = norm(func['pos'] - pos, axis=1)
 
-    img = nload(str(measure_nii))
-    mri = img.get_data()
-    mri[mri == 0] = NaN
-
-    labels = electrodes.electrodes.get(map_lambda=lambda x: x['name'])
-    chan_xyz = array(electrodes.get_xyz())
-
-    nd = array(list(ndindex(mri.shape)))
-    ndi = from_mrifile_to_chan(img, nd)
-
-    if graymatter:
-        gm_mri = nload(str(graymatter)).get_data().astype(bool)
-        mri[~gm_mri] = NaN
-
-    lg.debug(f'Computing fMRI values for {measure_nii.name} at {len(labels)} electrodes and {len(kernels)} "{distance}" kernels')
-    fmri_vals, n_voxels = compute_kernels(kernels, chan_xyz, mri, ndi, distance)
-
-    fmri_vals_tsv = output_dir / replace_underscore(measure_nii.name, 'compare.tsv')
-    n_voxels_tsv = output_dir / replace_underscore(measure_nii.name, 'nvoxels.tsv')
-
-    with fmri_vals_tsv.open('w') as f:
-        f.write('channel\t' + '\t'.join(str(one_k) for one_k in kernels) + '\n')
-        for one_label, val_at_elec in zip(labels, fmri_vals):
-            f.write(one_label + '\t' + '\t'.join(str(one_val) for one_val in val_at_elec) + '\n')
-
-    with n_voxels_tsv.open('w') as f:
-        f.write('channel\t' + '\t'.join(str(one_k) for one_k in kernels) + '\n')
-        for one_label, val_at_elec in zip(labels, n_voxels):
-            f.write(one_label + '\t' + '\t'.join(str(one_val) for one_val in val_at_elec) + '\n')
-
-    return fmri_vals_tsv, n_voxels_tsv
-
-
-def from_chan_to_mrifile(img, xyz):
-    return apply_affine(inv(img.affine), xyz).astype(int)
-
-
-def from_mrifile_to_chan(img, xyz):
-    return apply_affine(img.affine, xyz)
-
-
-def compute_kernels(kernels, chan_xyz, mri, ndi, distance, n_cpu=None):
-    partial_compute_chan = partial(compute_chan, ndi=ndi, mri=mri, distance=distance)
-
-    args = product(chan_xyz, kernels)
-    if n_cpu is None:
-        fmri_vals = [partial_compute_chan(*arg) for arg in args]
-    else:
-        lg.debug(f'Number of CPU: {n_cpu}')
-        with Pool(n_cpu) as p:
-            fmri_vals = p.starmap(partial_compute_chan, args)
-
-    fmri_vals = array(fmri_vals).reshape(-1, len(kernels))
-
-    return fmri_vals
-
-
-def compute_chan(pos, KERNEL, ndi, mri, distance):
-    dist_chan = norm(ndi - pos, axis=1)
-
-    if distance == 'gaussian':
-        m = normdistr.pdf(dist_chan, scale=KERNEL)
-        m /= normdistr.pdf(0, scale=KERNEL)  # normalize so that peak is at 1, so that it's easier to count voxels
+    if True or distance == 'gaussian':
+        m = normdistr.pdf(distance, scale=kernel)
 
     elif distance == 'sphere':
         m = zeros(dist_chan.shape)
@@ -102,12 +76,5 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
     elif distance == 'inverse':
         m = power(dist_chan, -1 * KERNEL)
 
-    m = m.reshape(mri.shape)
-    m[isnan(mri)] = NaN
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        m /= sum(m[isfinite(m)])  # normalize so that the sum of the finite numbers is 1
-
-    mq = m * mri
-    return nansum(mq)
+    v = func['value'] * m
+    return nansum(v)

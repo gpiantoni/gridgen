@@ -12,8 +12,8 @@ def default_colorbar(value):
         colorbar = 'PSD (Hz<sup>-1</sup>)'
     elif value == 'morphology':
         colorbar = 'Distance Penalty (1 / mm<sup>PENALTY</sup>)'
-    elif value == 'vasculature':
-        colorbar = 'Vascular suppression (weighted average of neighboring voxels)'
+    elif value == 'functional':
+        colorbar = 'Functional Value (weighted average of neighboring voxels)'
     elif value == 'merged':
         colorbar = 'estimated ecog activity (a.u.)'
 

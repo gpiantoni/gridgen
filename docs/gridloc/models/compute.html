@@ -37,12 +37,12 @@ lg = getLogger(__name__)
 
 def compute_model(grid, mri, morphology={}, functional={}):
 
-    if mri[&#39;pial&#39;] is None:
+    if mri[&#39;pial&#39;] is None or morphology is None:
         morpho = None
     else:
         morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
 
-    if mri[&#39;functional&#39;] is None:
+    if mri[&#39;func&#39;] is None or functional is None:
         func = None
     else:
         func = compute_functional(grid, mri[&#39;func&#39;], **functional)
@@ -74,12 +74,12 @@ def compute_model(grid, mri, morphology={}, functional={}):
 </summary>
 <pre><code class="python">def compute_model(grid, mri, morphology={}, functional={}):
 
-    if mri[&#39;pial&#39;] is None:
+    if mri[&#39;pial&#39;] is None or morphology is None:
         morpho = None
     else:
         morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
 
-    if mri[&#39;functional&#39;] is None:
+    if mri[&#39;func&#39;] is None or functional is None:
         func = None
     else:
         func = compute_functional(grid, mri[&#39;func&#39;], **functional)

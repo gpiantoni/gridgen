@@ -63,10 +63,10 @@ def plot_results(model, pial, output, angio=None):
     fig1 = plot_electrodes(pial, model, &#39;morphology&#39;)
     to_html([to_div(fig0), to_div(fig1)], grid_file)
 
-    if model[&#39;vasculature&#39;] is not None:
-        grid_file = output / &#39;vascular&#39;
-        fig0 = plot_grid2d(model[&#39;vasculature&#39;], &#39;vasculature&#39;)
-        fig1 = plot_electrodes(pial, model, &#39;vasculature&#39;, angio=angio)
+    if model[&#39;functional&#39;] is not None:
+        grid_file = output / &#39;functional&#39;
+        fig0 = plot_grid2d(model[&#39;functional&#39;], &#39;functional&#39;)
+        fig1 = plot_electrodes(pial, model, &#39;functional&#39;, angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
 
@@ -418,10 +418,10 @@ def plot_electrodes(pial, grid, value=None, ref_label=None, angio=None):
     fig1 = plot_electrodes(pial, model, &#39;morphology&#39;)
     to_html([to_div(fig0), to_div(fig1)], grid_file)
 
-    if model[&#39;vasculature&#39;] is not None:
-        grid_file = output / &#39;vascular&#39;
-        fig0 = plot_grid2d(model[&#39;vasculature&#39;], &#39;vasculature&#39;)
-        fig1 = plot_electrodes(pial, model, &#39;vasculature&#39;, angio=angio)
+    if model[&#39;functional&#39;] is not None:
+        grid_file = output / &#39;functional&#39;
+        fig0 = plot_grid2d(model[&#39;functional&#39;], &#39;functional&#39;)
+        fig1 = plot_electrodes(pial, model, &#39;functional&#39;, angio=angio)
         to_html([to_div(fig0), to_div(fig1)], grid_file)
         lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
 

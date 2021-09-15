@@ -39,12 +39,14 @@ from numpy import (ndindex,
                    isfinite,
                    nansum,
                    isnan,
+                   dtype,
                    where,
                    )
 from numpy.linalg import norm, inv
 from scipy.stats import norm as normdistr
 from nibabel.affines import apply_affine
 from nibabel import load as nload
+from ..io import WIRE
 
 lg = getLogger(__name__)
 
@@ -53,73 +55,45 @@ lg = getLogger(__name__)
 
 def compute_functional(grid, func, distance=None, kernel=None):
 
+    d_ = dtype([
+        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
+        (&#39;value&#39;, &#39;f4&#39;),
+        ])
+
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;label&#39;] = grid[&#39;label&#39;]
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
+                continue
+
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;value&#39;].fill(NaN)
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
+                continue
+            distance[&#39;value&#39;][i_x, i_y] = compute_value_at_elec(
+                grid[&#39;pos&#39;][i_x, i_y], func, distance, kernel)
+
+    return distance
+
+
+def compute_value_at_elec(pos, func, distance=&#39;gaussian&#39;, kernel=8):
     &#34;&#34;&#34;
-    Calculate the (weighted) average of fMRI values at electrode locations
+
+    TODO
+    ----
+    How to normalize:
+    You need to think hard if you need to normalize value (because we only
+    include voxels &gt; 0
     &#34;&#34;&#34;
+    distance = norm(func[&#39;pos&#39;] - pos, axis=1)
 
-    img = nload(str(measure_nii))
-    mri = img.get_data()
-    mri[mri == 0] = NaN
-
-    labels = electrodes.electrodes.get(map_lambda=lambda x: x[&#39;name&#39;])
-    chan_xyz = array(electrodes.get_xyz())
-
-    nd = array(list(ndindex(mri.shape)))
-    ndi = from_mrifile_to_chan(img, nd)
-
-    if graymatter:
-        gm_mri = nload(str(graymatter)).get_data().astype(bool)
-        mri[~gm_mri] = NaN
-
-    lg.debug(f&#39;Computing fMRI values for {measure_nii.name} at {len(labels)} electrodes and {len(kernels)} &#34;{distance}&#34; kernels&#39;)
-    fmri_vals, n_voxels = compute_kernels(kernels, chan_xyz, mri, ndi, distance)
-
-    fmri_vals_tsv = output_dir / replace_underscore(measure_nii.name, &#39;compare.tsv&#39;)
-    n_voxels_tsv = output_dir / replace_underscore(measure_nii.name, &#39;nvoxels.tsv&#39;)
-
-    with fmri_vals_tsv.open(&#39;w&#39;) as f:
-        f.write(&#39;channel\t&#39; + &#39;\t&#39;.join(str(one_k) for one_k in kernels) + &#39;\n&#39;)
-        for one_label, val_at_elec in zip(labels, fmri_vals):
-            f.write(one_label + &#39;\t&#39; + &#39;\t&#39;.join(str(one_val) for one_val in val_at_elec) + &#39;\n&#39;)
-
-    with n_voxels_tsv.open(&#39;w&#39;) as f:
-        f.write(&#39;channel\t&#39; + &#39;\t&#39;.join(str(one_k) for one_k in kernels) + &#39;\n&#39;)
-        for one_label, val_at_elec in zip(labels, n_voxels):
-            f.write(one_label + &#39;\t&#39; + &#39;\t&#39;.join(str(one_val) for one_val in val_at_elec) + &#39;\n&#39;)
-
-    return fmri_vals_tsv, n_voxels_tsv
-
-
-def from_chan_to_mrifile(img, xyz):
-    return apply_affine(inv(img.affine), xyz).astype(int)
-
-
-def from_mrifile_to_chan(img, xyz):
-    return apply_affine(img.affine, xyz)
-
-
-def compute_kernels(kernels, chan_xyz, mri, ndi, distance, n_cpu=None):
-    partial_compute_chan = partial(compute_chan, ndi=ndi, mri=mri, distance=distance)
-
-    args = product(chan_xyz, kernels)
-    if n_cpu is None:
-        fmri_vals = [partial_compute_chan(*arg) for arg in args]
-    else:
-        lg.debug(f&#39;Number of CPU: {n_cpu}&#39;)
-        with Pool(n_cpu) as p:
-            fmri_vals = p.starmap(partial_compute_chan, args)
-
-    fmri_vals = array(fmri_vals).reshape(-1, len(kernels))
-
-    return fmri_vals
-
-
-def compute_chan(pos, KERNEL, ndi, mri, distance):
-    dist_chan = norm(ndi - pos, axis=1)
-
-    if distance == &#39;gaussian&#39;:
-        m = normdistr.pdf(dist_chan, scale=KERNEL)
-        m /= normdistr.pdf(0, scale=KERNEL)  # normalize so that peak is at 1, so that it&#39;s easier to count voxels
+    if True or distance == &#39;gaussian&#39;:
+        m = normdistr.pdf(distance, scale=kernel)
 
     elif distance == &#39;sphere&#39;:
         m = zeros(dist_chan.shape)
@@ -128,15 +102,8 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
     elif distance == &#39;inverse&#39;:
         m = power(dist_chan, -1 * KERNEL)
 
-    m = m.reshape(mri.shape)
-    m[isnan(mri)] = NaN
-
-    with warnings.catch_warnings():
-        warnings.simplefilter(&#34;ignore&#34;)
-        m /= sum(m[isfinite(m)])  # normalize so that the sum of the finite numbers is 1
-
-    mq = m * mri
-    return nansum(mq)</code></pre>
+    v = func[&#39;value&#39;] * m
+    return nansum(v)</code></pre>
 </details>
 </section>
 <section>
@@ -146,8 +113,8 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridloc.models.functional.compute_chan"><code class="name flex">
-<span>def <span class="ident">compute_chan</span></span>(<span>pos, KERNEL, ndi, mri, distance)</span>
+<dt id="gridloc.models.functional.compute_functional"><code class="name flex">
+<span>def <span class="ident">compute_functional</span></span>(<span>grid, func, distance=None, kernel=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -155,12 +122,59 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_chan(pos, KERNEL, ndi, mri, distance):
-    dist_chan = norm(ndi - pos, axis=1)
+<pre><code class="python">def compute_functional(grid, func, distance=None, kernel=None):
 
-    if distance == &#39;gaussian&#39;:
-        m = normdistr.pdf(dist_chan, scale=KERNEL)
-        m /= normdistr.pdf(0, scale=KERNEL)  # normalize so that peak is at 1, so that it&#39;s easier to count voxels
+    d_ = dtype([
+        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
+        (&#39;value&#39;, &#39;f4&#39;),
+        ])
+
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;label&#39;] = grid[&#39;label&#39;]
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
+                continue
+
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance[&#39;value&#39;].fill(NaN)
+
+    for i_x in range(grid.shape[0]):
+        for i_y in range(grid.shape[1]):
+            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
+                continue
+            distance[&#39;value&#39;][i_x, i_y] = compute_value_at_elec(
+                grid[&#39;pos&#39;][i_x, i_y], func, distance, kernel)
+
+    return distance</code></pre>
+</details>
+</dd>
+<dt id="gridloc.models.functional.compute_value_at_elec"><code class="name flex">
+<span>def <span class="ident">compute_value_at_elec</span></span>(<span>pos, func, distance='gaussian', kernel=8)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="todo">Todo</h2>
+<p>How to normalize:
+You need to think hard if you need to normalize value (because we only
+include voxels &gt; 0</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_value_at_elec(pos, func, distance=&#39;gaussian&#39;, kernel=8):
+    &#34;&#34;&#34;
+
+    TODO
+    ----
+    How to normalize:
+    You need to think hard if you need to normalize value (because we only
+    include voxels &gt; 0
+    &#34;&#34;&#34;
+    distance = norm(func[&#39;pos&#39;] - pos, axis=1)
+
+    if True or distance == &#39;gaussian&#39;:
+        m = normdistr.pdf(distance, scale=kernel)
 
     elif distance == &#39;sphere&#39;:
         m = zeros(dist_chan.shape)
@@ -169,114 +183,8 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
     elif distance == &#39;inverse&#39;:
         m = power(dist_chan, -1 * KERNEL)
 
-    m = m.reshape(mri.shape)
-    m[isnan(mri)] = NaN
-
-    with warnings.catch_warnings():
-        warnings.simplefilter(&#34;ignore&#34;)
-        m /= sum(m[isfinite(m)])  # normalize so that the sum of the finite numbers is 1
-
-    mq = m * mri
-    return nansum(mq)</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.functional.compute_functional"><code class="name flex">
-<span>def <span class="ident">compute_functional</span></span>(<span>grid, func, distance=None, kernel=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Calculate the (weighted) average of fMRI values at electrode locations</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compute_functional(grid, func, distance=None, kernel=None):
-
-    &#34;&#34;&#34;
-    Calculate the (weighted) average of fMRI values at electrode locations
-    &#34;&#34;&#34;
-
-    img = nload(str(measure_nii))
-    mri = img.get_data()
-    mri[mri == 0] = NaN
-
-    labels = electrodes.electrodes.get(map_lambda=lambda x: x[&#39;name&#39;])
-    chan_xyz = array(electrodes.get_xyz())
-
-    nd = array(list(ndindex(mri.shape)))
-    ndi = from_mrifile_to_chan(img, nd)
-
-    if graymatter:
-        gm_mri = nload(str(graymatter)).get_data().astype(bool)
-        mri[~gm_mri] = NaN
-
-    lg.debug(f&#39;Computing fMRI values for {measure_nii.name} at {len(labels)} electrodes and {len(kernels)} &#34;{distance}&#34; kernels&#39;)
-    fmri_vals, n_voxels = compute_kernels(kernels, chan_xyz, mri, ndi, distance)
-
-    fmri_vals_tsv = output_dir / replace_underscore(measure_nii.name, &#39;compare.tsv&#39;)
-    n_voxels_tsv = output_dir / replace_underscore(measure_nii.name, &#39;nvoxels.tsv&#39;)
-
-    with fmri_vals_tsv.open(&#39;w&#39;) as f:
-        f.write(&#39;channel\t&#39; + &#39;\t&#39;.join(str(one_k) for one_k in kernels) + &#39;\n&#39;)
-        for one_label, val_at_elec in zip(labels, fmri_vals):
-            f.write(one_label + &#39;\t&#39; + &#39;\t&#39;.join(str(one_val) for one_val in val_at_elec) + &#39;\n&#39;)
-
-    with n_voxels_tsv.open(&#39;w&#39;) as f:
-        f.write(&#39;channel\t&#39; + &#39;\t&#39;.join(str(one_k) for one_k in kernels) + &#39;\n&#39;)
-        for one_label, val_at_elec in zip(labels, n_voxels):
-            f.write(one_label + &#39;\t&#39; + &#39;\t&#39;.join(str(one_val) for one_val in val_at_elec) + &#39;\n&#39;)
-
-    return fmri_vals_tsv, n_voxels_tsv</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.functional.compute_kernels"><code class="name flex">
-<span>def <span class="ident">compute_kernels</span></span>(<span>kernels, chan_xyz, mri, ndi, distance, n_cpu=None)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compute_kernels(kernels, chan_xyz, mri, ndi, distance, n_cpu=None):
-    partial_compute_chan = partial(compute_chan, ndi=ndi, mri=mri, distance=distance)
-
-    args = product(chan_xyz, kernels)
-    if n_cpu is None:
-        fmri_vals = [partial_compute_chan(*arg) for arg in args]
-    else:
-        lg.debug(f&#39;Number of CPU: {n_cpu}&#39;)
-        with Pool(n_cpu) as p:
-            fmri_vals = p.starmap(partial_compute_chan, args)
-
-    fmri_vals = array(fmri_vals).reshape(-1, len(kernels))
-
-    return fmri_vals</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.functional.from_chan_to_mrifile"><code class="name flex">
-<span>def <span class="ident">from_chan_to_mrifile</span></span>(<span>img, xyz)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def from_chan_to_mrifile(img, xyz):
-    return apply_affine(inv(img.affine), xyz).astype(int)</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.functional.from_mrifile_to_chan"><code class="name flex">
-<span>def <span class="ident">from_mrifile_to_chan</span></span>(<span>img, xyz)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def from_mrifile_to_chan(img, xyz):
-    return apply_affine(img.affine, xyz)</code></pre>
+    v = func[&#39;value&#39;] * m
+    return nansum(v)</code></pre>
 </details>
 </dd>
 </dl>
@@ -297,11 +205,8 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridloc.models.functional.compute_chan" href="#gridloc.models.functional.compute_chan">compute_chan</a></code></li>
 <li><code><a title="gridloc.models.functional.compute_functional" href="#gridloc.models.functional.compute_functional">compute_functional</a></code></li>
-<li><code><a title="gridloc.models.functional.compute_kernels" href="#gridloc.models.functional.compute_kernels">compute_kernels</a></code></li>
-<li><code><a title="gridloc.models.functional.from_chan_to_mrifile" href="#gridloc.models.functional.from_chan_to_mrifile">from_chan_to_mrifile</a></code></li>
-<li><code><a title="gridloc.models.functional.from_mrifile_to_chan" href="#gridloc.models.functional.from_mrifile_to_chan">from_mrifile_to_chan</a></code></li>
+<li><code><a title="gridloc.models.functional.compute_value_at_elec" href="#gridloc.models.functional.compute_value_at_elec">compute_value_at_elec</a></code></li>
 </ul>
 </li>
 </ul>

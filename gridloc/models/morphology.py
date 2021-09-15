@@ -2,10 +2,8 @@ from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
-"""
 from ..matlab.geometry import intersect_ray_triangle
 from ..io import WIRE
-"""
 
 d_ = dtype([
     ('label', '<U256'),   # labels cannot be longer than 256 char
@@ -13,7 +11,7 @@ d_ = dtype([
     ])
 
 
-def compute_morphology(grid, pial, method='minimum', max_distance=None, penalty=None):
+def compute_morphology(grid, pial, method='minimum', max_distance=None, penalty=1):
     if method == 'ray':
         distance = _distance_ray(grid, pial)
 
@@ -65,7 +63,9 @@ def _distance_minimum(grid, pial):
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance['morphology'][i_x, i_y] = norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1).min()
+            if grid['label'][i_x, i_y] == WIRE:
+                continue
+            distance['value'][i_x, i_y] = norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1).min()
 
     distance['label'] = grid['label']
     return distance

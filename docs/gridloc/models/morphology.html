@@ -28,10 +28,8 @@
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
-&#34;&#34;&#34;
 from ..matlab.geometry import intersect_ray_triangle
 from ..io import WIRE
-&#34;&#34;&#34;
 
 d_ = dtype([
     (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
@@ -39,7 +37,7 @@ d_ = dtype([
     ])
 
 
-def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=None):
+def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=1):
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
@@ -91,7 +89,9 @@ def _distance_minimum(grid, pial):
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance[&#39;morphology&#39;][i_x, i_y] = norm(pial[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1).min()
+            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
+                continue
+            distance[&#39;value&#39;][i_x, i_y] = norm(pial[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1).min()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance
@@ -160,7 +160,7 @@ def _distance_pdf(grid, pial):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridloc.models.morphology.compute_morphology"><code class="name flex">
-<span>def <span class="ident">compute_morphology</span></span>(<span>grid, pial, method='minimum', max_distance=None, penalty=None)</span>
+<span>def <span class="ident">compute_morphology</span></span>(<span>grid, pial, method='minimum', max_distance=None, penalty=1)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -168,7 +168,7 @@ def _distance_pdf(grid, pial):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=None):
+<pre><code class="python">def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=1):
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
