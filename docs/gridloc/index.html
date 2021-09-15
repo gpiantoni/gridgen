@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
 <title>gridloc API documentation</title>
-<meta name="description" content="GRIDLOC: tools to compute the location of a grid onto the surface of the brain" />
+<meta name="description" content="GRIDLOC: tools to compute the relationship between electrode locations on a grid and a 3d mesh or a volume, and to estimate the grid location on the …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,12 +20,12 @@
 <h1 class="title">Package <code>gridloc</code></h1>
 </header>
 <section id="section-intro">
-<p>GRIDLOC: tools to compute the location of a grid onto the surface of the brain</p>
+<p>GRIDLOC: tools to compute the relationship between electrode locations on a grid and a 3d mesh or a volume, and to estimate the grid location on the brain</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;GRIDLOC: tools to compute the location of a grid onto the surface of the brain
+<pre><code class="python">&#34;&#34;&#34;GRIDLOC: tools to compute the relationship between electrode locations on a grid and a 3d mesh or a volume, and to estimate the grid location on the brain
 &#34;&#34;&#34;</code></pre>
 </details>
 </section>
@@ -34,7 +34,7 @@
 <dl>
 <dt><code class="name"><a title="gridloc.bin" href="bin/index.html">gridloc.bin</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Functions for command line, including a description of the parameters</p></div>
 </dd>
 <dt><code class="name"><a title="gridloc.ecog" href="ecog.html">gridloc.ecog</a></code></dt>
 <dd>
@@ -46,11 +46,11 @@
 </dd>
 <dt><code class="name"><a title="gridloc.grid2d" href="grid2d.html">gridloc.grid2d</a></code></dt>
 <dd>
-<div class="desc"><p>Function to build a grid from a starting point, in 2D or 3D</p></div>
+<div class="desc"><p>Function to build a grid from a starting point, in 2D</p></div>
 </dd>
 <dt><code class="name"><a title="gridloc.grid3d" href="grid3d/index.html">gridloc.grid3d</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Functions to generate a 3D grid, based on normals to the dura surface</p></div>
 </dd>
 <dt><code class="name"><a title="gridloc.io" href="io.html">gridloc.io</a></code></dt>
 <dd>
@@ -63,7 +63,9 @@ for those matlab functions.</p></div>
 </dd>
 <dt><code class="name"><a title="gridloc.models" href="models/index.html">gridloc.models</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Functions to compute relationship between electrode grid and
+1) morphology (a mesh, such as pial surface)
+2) functional (a volume, such as fMRI data …</p></div>
 </dd>
 <dt><code class="name"><a title="gridloc.utils" href="utils.html">gridloc.utils</a></code></dt>
 <dd>
@@ -71,7 +73,7 @@ for those matlab functions.</p></div>
 </dd>
 <dt><code class="name"><a title="gridloc.viz" href="viz/index.html">gridloc.viz</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Functions to visualize 2d activity (ecog, models) and 3d activity (on surfaces)</p></div>
 </dd>
 </dl>
 </section>

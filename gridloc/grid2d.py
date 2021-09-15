@@ -1,12 +1,8 @@
-"""Function to build a grid from a starting point, in 2D or 3D
+"""Function to build a grid from a starting point, in 2D
 """
-from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud, where, arange
+from numpy import NaN, dtype, zeros, array, fliplr, flipud
 from logging import getLogger
 
-"""
-from .geometry import count_neighbors
-from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
-"""
 
 lg = getLogger(__name__)
 
@@ -55,7 +51,6 @@ def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern='{}'):
     grid['label'] = labels
 
     return grid
-
 
 
 def make_grid(n_rows, n_columns):

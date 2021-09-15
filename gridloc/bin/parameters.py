@@ -15,7 +15,7 @@ REQUIRED = {
     'ecog': [
         'ecog',
         ],
-    'init': [
+    'grid3d': [
         'grid3d',
         'mri',
         'initial',
@@ -465,7 +465,7 @@ def parse_parameters(parameters, function, output_dir=None):
 
     # move one parameter to mri because it's more straightforward
     if parameters.get('mri', {}).get('func_file', None) is not None:
-        parameters['mri']['func_threshold'] = parameters['functional'].get('threshold', None)
+        parameters['mri']['func_threshold'] = parameters['functional'].pop('threshold', None)
 
     return parameters
 

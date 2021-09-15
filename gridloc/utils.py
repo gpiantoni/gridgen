@@ -40,3 +40,15 @@ def match_labels(*args):
         out.append(arg['value'][i_chan])
 
     return out
+
+
+def remove_wires(model):
+    """We select rows with WIRE, so that we keep the 2d shape of the models
+    """
+    i_keep = model['grid']['label'] != WIRE
+    i_keep = i_keep.all(axis=1)
+    for field in ['ecog', 'grid', 'morphology', 'vasculature']:
+        if model[field] is not None:
+            model[field] = model[field][i_keep, :]
+
+    return model

@@ -41,7 +41,7 @@ REQUIRED = {
     &#39;ecog&#39;: [
         &#39;ecog&#39;,
         ],
-    &#39;init&#39;: [
+    &#39;grid3d&#39;: [
         &#39;grid3d&#39;,
         &#39;mri&#39;,
         &#39;initial&#39;,
@@ -491,7 +491,7 @@ def parse_parameters(parameters, function, output_dir=None):
 
     # move one parameter to mri because it&#39;s more straightforward
     if parameters.get(&#39;mri&#39;, {}).get(&#39;func_file&#39;, None) is not None:
-        parameters[&#39;mri&#39;][&#39;func_threshold&#39;] = parameters[&#39;functional&#39;].get(&#39;threshold&#39;, None)
+        parameters[&#39;mri&#39;][&#39;func_threshold&#39;] = parameters[&#39;functional&#39;].pop(&#39;threshold&#39;, None)
 
     return parameters
 
@@ -667,7 +667,7 @@ it absolute in reference to "parent"</p>
 
     # move one parameter to mri because it&#39;s more straightforward
     if parameters.get(&#39;mri&#39;, {}).get(&#39;func_file&#39;, None) is not None:
-        parameters[&#39;mri&#39;][&#39;func_threshold&#39;] = parameters[&#39;functional&#39;].get(&#39;threshold&#39;, None)
+        parameters[&#39;mri&#39;][&#39;func_threshold&#39;] = parameters[&#39;functional&#39;].pop(&#39;threshold&#39;, None)
 
     return parameters</code></pre>
 </details>

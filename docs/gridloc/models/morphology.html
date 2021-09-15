@@ -39,7 +39,7 @@ d_ = dtype([
     ])
 
 
-def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
+def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=None):
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
@@ -58,6 +58,8 @@ def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
     if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
         i = isnan(distance[&#39;value&#39;]) | (distance[&#39;value&#39;] &gt; max_distance)
         distance[&#39;value&#39;][i] = NaN
+
+    distance[&#39;value&#39;] = distance[&#39;value&#39;] ** (-1 * penalty)
 
     return distance
 
@@ -157,8 +159,8 @@ def _distance_pdf(grid, pial):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridloc.models.morphology.compute_distance"><code class="name flex">
-<span>def <span class="ident">compute_distance</span></span>(<span>grid, pial, method='minimum', max_distance=None)</span>
+<dt id="gridloc.models.morphology.compute_morphology"><code class="name flex">
+<span>def <span class="ident">compute_morphology</span></span>(<span>grid, pial, method='minimum', max_distance=None, penalty=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -166,7 +168,7 @@ def _distance_pdf(grid, pial):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_distance(grid, pial, method=&#39;minimum&#39;, max_distance=None):
+<pre><code class="python">def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=None):
     if method == &#39;ray&#39;:
         distance = _distance_ray(grid, pial)
 
@@ -185,6 +187,8 @@ def _distance_pdf(grid, pial):
     if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
         i = isnan(distance[&#39;value&#39;]) | (distance[&#39;value&#39;] &gt; max_distance)
         distance[&#39;value&#39;][i] = NaN
+
+    distance[&#39;value&#39;] = distance[&#39;value&#39;] ** (-1 * penalty)
 
     return distance</code></pre>
 </details>
@@ -207,7 +211,7 @@ def _distance_pdf(grid, pial):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridloc.models.morphology.compute_distance" href="#gridloc.models.morphology.compute_distance">compute_distance</a></code></li>
+<li><code><a title="gridloc.models.morphology.compute_morphology" href="#gridloc.models.morphology.compute_morphology">compute_morphology</a></code></li>
 </ul>
 </li>
 </ul>

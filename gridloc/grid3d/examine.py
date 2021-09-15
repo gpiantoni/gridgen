@@ -1,3 +1,5 @@
+"""Functions to calculate distances and angles between electrodes, to see if
+the computed values are within the range of the physical grid."""
 from logging import getLogger
 from numpy.linalg import norm
 from numpy import array, mean, max, min, std, dot, pi, arccos
@@ -6,6 +8,14 @@ lg = getLogger(__name__)
 
 
 def measure_distances(grid2d):
+    """Measure the distances between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed
+    """
     n_rows, n_columns = grid2d.shape
 
     dist = []
@@ -25,6 +35,14 @@ def measure_distances(grid2d):
 
 
 def measure_angles(grid2d):
+    """Measure the angles between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed. Does not require 'norm', only 'pos'
+    """
     n_rows, n_columns = grid2d.shape
 
     angle = []
@@ -59,7 +77,24 @@ def measure_angles(grid2d):
     lg.info(f'Angle: {mean(angle):0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]')
 
 
-n = lambda x: x / norm(x)
+_n = lambda x: x / norm(x)
+
 
 def compute_angle(pos0, pos1, pos2):
-    return arccos(dot(n(pos1 - pos0), n(pos2 - pos0))) / pi * 180
+    """Compute angle between 3 points. pos0 is the point with the angle of interest
+
+    Parameters
+    ----------
+    pos0 : (3,) array
+        first point (containing the angle)
+    pos1 : (3,) array
+        second point
+    pos2 : (3,) array
+        third point
+
+    Returns
+    -------
+    float
+        angle between pos1 and pos2
+    """
+    return arccos(dot(_n(pos1 - pos0), _n(pos2 - pos0))) / pi * 180

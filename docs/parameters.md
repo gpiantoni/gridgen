@@ -16,16 +16,16 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
   - **begtime**: (float, optional) start time in seconds from the beginning of the file
   - **endtime**: (float, optional) end time in seconds from the beginning of the file
   - **bad_channels**: (list, optional) list of str, name of the channels to exclude
-- **grid3d** (required by command `init`, `fit`)
+- **grid3d** (required by command `grid3d`, `fit`)
   - **interelec_distance**: (float, optional) distance between the electrode centers (pitch), in mm. Default: 3
   - **maximum_angle**: (float, optional) maximum angle, in degrees, that the grid can flex, between two neighboring electrodes (elasticity of the grid). Default: 5
   - **step_angle**: (float, optional) step size, in degrees, when computing range between -`maximum_angle` and +`maximum_angle`. The smaller the step size, the faster the generation of the grid. Default: 0.25
-- **mri** (required by command `init`, `fit`, `matlab`)
+- **mri** (required by command `grid3d`, `fit`, `matlab`)
   - **T1_file**: (str) path to T1 image (in particular, the T1.mgz from freesurfer). Only used to compute the mapping between T1 RAS space and surface RAS space
   - **dura_file**: (str) path to dura surface (for example, the smoothed pial surface). This surface will be used to generate the 3D grid
   - **pial_file**: (str, optional) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`. Default: None
   - **func_file**: (str, optional) path to angiogram or fMRI (in NIfTI format). You need to specify key `functional` in `parameters.json`. Default: None
-- **initial** (required by command `init`, `fit`)
+- **initial** (required by command `grid3d`, `fit`)
   - **label**: (str) label for the reference electrode
   - **RAS**: (list) initial location for the reference electrode (coordinates in MRI space)
   - **rotation**: (float) degree of rotation of the grid (in degrees, 0° is roughly pointing up)

@@ -40,13 +40,14 @@ from .parameters import (
     TEMPLATE,
     _JSONEncoder_path
     )
-&#34;&#34;&#34;
+
 from ..fitting import fitting, make_grid3d_model
-from ..matlab.comparison import compare_to_matlab
+from ..matlab import compare_to_matlab
 from ..viz import to_html, to_div, plot_grid2d
-from ..construct import make_grid_with_labels
+from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
 from ..io import (
+    read_mri,
     read_grid2d,
     write_grid2d,
     read_ecog2d,
@@ -54,7 +55,6 @@ from ..io import (
     read_surface_ras_shift,
     export_transform,
     )
-&#34;&#34;&#34;
 
 lg = getLogger(&#39;gridloc&#39;)
 
@@ -209,7 +209,6 @@ def main(arguments=None):
         mris = read_mri(**parameters[&#39;mri&#39;])
 
     if args.function == &#39;grid2d&#39;:
-
         grid2d = make_grid_with_labels(**parameters[&#39;grid2d&#39;])
         lg.info(f&#39;Writing labels to {grid2d_tsv}&#39;)
         write_grid2d(grid2d_tsv, grid2d)
@@ -227,7 +226,7 @@ def main(arguments=None):
 
     if args.function == &#39;grid3d&#39;:
 
-        ecog2d = read_grid2d(grid2d_tsv)
+        grid2d = read_grid2d(grid2d_tsv)
         output_dir = parameters[&#39;output_dir&#39;] / (&#39;grid3d_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing grid3d to {output_dir}&#39;)
@@ -235,12 +234,11 @@ def main(arguments=None):
 
         make_grid3d_model(
             output=output_dir,
-            ecog=ecog2d,
+            ecog=grid2d,
             initial=parameters[&#39;initial&#39;],
             mri=mris,
             grid3d=parameters[&#39;grid3d&#39;],
             )
-
 
     if args.function == &#39;fit&#39;:
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
@@ -441,7 +439,6 @@ def main(arguments=None):
         mris = read_mri(**parameters[&#39;mri&#39;])
 
     if args.function == &#39;grid2d&#39;:
-
         grid2d = make_grid_with_labels(**parameters[&#39;grid2d&#39;])
         lg.info(f&#39;Writing labels to {grid2d_tsv}&#39;)
         write_grid2d(grid2d_tsv, grid2d)
@@ -459,7 +456,7 @@ def main(arguments=None):
 
     if args.function == &#39;grid3d&#39;:
 
-        ecog2d = read_grid2d(grid2d_tsv)
+        grid2d = read_grid2d(grid2d_tsv)
         output_dir = parameters[&#39;output_dir&#39;] / (&#39;grid3d_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing grid3d to {output_dir}&#39;)
@@ -467,12 +464,11 @@ def main(arguments=None):
 
         make_grid3d_model(
             output=output_dir,
-            ecog=ecog2d,
+            ecog=grid2d,
             initial=parameters[&#39;initial&#39;],
             mri=mris,
             grid3d=parameters[&#39;grid3d&#39;],
             )
-
 
     if args.function == &#39;fit&#39;:
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)

@@ -1,5 +1,7 @@
 """Functions to compute vector-based transformation and searches.
 """
+from logging import getLogger
+
 from numpy import array, zeros, argmin, cross
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
@@ -11,6 +13,32 @@ NEIGHBORS = array([
     [1, 0],
     [0, -1],
     ])
+
+lg = getLogger(__name__)
+
+
+def find_vertex(surf, ras):
+    """Find vertex closest to one point
+
+    Parameters
+    ----------
+    surf : dict
+        hull surface
+    ras : (3, ) array
+        point in the same space
+
+    Returns
+    -------
+    int
+        index of the vertex closest to the point
+    """
+    init_ras = array(ras)
+    vertex = argmin(norm(surf['pos'] - init_ras, axis=1))
+    vert_dist = norm(init_ras - surf['pos'][vertex])
+
+    lg.debug(f'Target RAS: {init_ras}, vertex #{vertex} RAS: {surf["pos"][vertex]} (distance = {vert_dist:0.3}mm)')
+
+    return vertex
 
 
 def count_neighbors(grid, x, y):

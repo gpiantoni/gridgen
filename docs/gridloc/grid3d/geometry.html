@@ -27,6 +27,8 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Functions to compute vector-based transformation and searches.
 &#34;&#34;&#34;
+from logging import getLogger
+
 from numpy import array, zeros, argmin, cross
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
@@ -38,6 +40,32 @@ NEIGHBORS = array([
     [1, 0],
     [0, -1],
     ])
+
+lg = getLogger(__name__)
+
+
+def find_vertex(surf, ras):
+    &#34;&#34;&#34;Find vertex closest to one point
+
+    Parameters
+    ----------
+    surf : dict
+        hull surface
+    ras : (3, ) array
+        point in the same space
+
+    Returns
+    -------
+    int
+        index of the vertex closest to the point
+    &#34;&#34;&#34;
+    init_ras = array(ras)
+    vertex = argmin(norm(surf[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - surf[&#39;pos&#39;][vertex])
+
+    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {surf[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
+
+    return vertex
 
 
 def count_neighbors(grid, x, y):
@@ -308,6 +336,51 @@ point right (so that it's comparable to the orientation of an array.)</p></div>
     return n, coords</code></pre>
 </details>
 </dd>
+<dt id="gridloc.grid3d.geometry.find_vertex"><code class="name flex">
+<span>def <span class="ident">find_vertex</span></span>(<span>surf, ras)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find vertex closest to one point</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>hull surface</dd>
+<dt><strong><code>ras</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>point in the same space</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>index of the vertex closest to the point</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_vertex(surf, ras):
+    &#34;&#34;&#34;Find vertex closest to one point
+
+    Parameters
+    ----------
+    surf : dict
+        hull surface
+    ras : (3, ) array
+        point in the same space
+
+    Returns
+    -------
+    int
+        index of the vertex closest to the point
+    &#34;&#34;&#34;
+    init_ras = array(ras)
+    vertex = argmin(norm(surf[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - surf[&#39;pos&#39;][vertex])
+
+    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {surf[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
+
+    return vertex</code></pre>
+</details>
+</dd>
 <dt id="gridloc.grid3d.geometry.search_grid"><code class="name flex">
 <span>def <span class="ident">search_grid</span></span>(<span>surf, ref_vert, x, y)</span>
 </code></dt>
@@ -410,6 +483,7 @@ normal (due to internal convention). You can rotate the plane later.</p></div>
 <ul class="">
 <li><code><a title="gridloc.grid3d.geometry.calc_plane_to_axis" href="#gridloc.grid3d.geometry.calc_plane_to_axis">calc_plane_to_axis</a></code></li>
 <li><code><a title="gridloc.grid3d.geometry.count_neighbors" href="#gridloc.grid3d.geometry.count_neighbors">count_neighbors</a></code></li>
+<li><code><a title="gridloc.grid3d.geometry.find_vertex" href="#gridloc.grid3d.geometry.find_vertex">find_vertex</a></code></li>
 <li><code><a title="gridloc.grid3d.geometry.search_grid" href="#gridloc.grid3d.geometry.search_grid">search_grid</a></code></li>
 </ul>
 </li>

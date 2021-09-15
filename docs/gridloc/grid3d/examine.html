@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
 <title>gridloc.grid3d.examine API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Functions to calculate distances and angles between electrodes, to see if
+the computed values are within the range of the physical grid." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +21,15 @@
 <h1 class="title">Module <code>gridloc.grid3d.examine</code></h1>
 </header>
 <section id="section-intro">
+<p>Functions to calculate distances and angles between electrodes, to see if
+the computed values are within the range of the physical grid.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from logging import getLogger
+<pre><code class="python">&#34;&#34;&#34;Functions to calculate distances and angles between electrodes, to see if
+the computed values are within the range of the physical grid.&#34;&#34;&#34;
+from logging import getLogger
 from numpy.linalg import norm
 from numpy import array, mean, max, min, std, dot, pi, arccos
 
@@ -32,6 +37,14 @@ lg = getLogger(__name__)
 
 
 def measure_distances(grid2d):
+    &#34;&#34;&#34;Measure the distances between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed
+    &#34;&#34;&#34;
     n_rows, n_columns = grid2d.shape
 
     dist = []
@@ -51,6 +64,14 @@ def measure_distances(grid2d):
 
 
 def measure_angles(grid2d):
+    &#34;&#34;&#34;Measure the angles between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed. Does not require &#39;norm&#39;, only &#39;pos&#39;
+    &#34;&#34;&#34;
     n_rows, n_columns = grid2d.shape
 
     angle = []
@@ -85,10 +106,27 @@ def measure_angles(grid2d):
     lg.info(f&#39;Angle: {mean(angle):0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]&#39;)
 
 
-n = lambda x: x / norm(x)
+_n = lambda x: x / norm(x)
+
 
 def compute_angle(pos0, pos1, pos2):
-    return arccos(dot(n(pos1 - pos0), n(pos2 - pos0))) / pi * 180</code></pre>
+    &#34;&#34;&#34;Compute angle between 3 points. pos0 is the point with the angle of interest
+
+    Parameters
+    ----------
+    pos0 : (3,) array
+        first point (containing the angle)
+    pos1 : (3,) array
+        second point
+    pos2 : (3,) array
+        third point
+
+    Returns
+    -------
+    float
+        angle between pos1 and pos2
+    &#34;&#34;&#34;
+    return arccos(dot(_n(pos1 - pos0), _n(pos2 - pos0))) / pi * 180</code></pre>
 </details>
 </section>
 <section>
@@ -102,25 +140,69 @@ def compute_angle(pos0, pos1, pos2):
 <span>def <span class="ident">compute_angle</span></span>(<span>pos0, pos1, pos2)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Compute angle between 3 points. pos0 is the point with the angle of interest</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>pos0</code></strong> :&ensp;<code>(3,) array</code></dt>
+<dd>first point (containing the angle)</dd>
+<dt><strong><code>pos1</code></strong> :&ensp;<code>(3,) array</code></dt>
+<dd>second point</dd>
+<dt><strong><code>pos2</code></strong> :&ensp;<code>(3,) array</code></dt>
+<dd>third point</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>angle between pos1 and pos2</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compute_angle(pos0, pos1, pos2):
-    return arccos(dot(n(pos1 - pos0), n(pos2 - pos0))) / pi * 180</code></pre>
+    &#34;&#34;&#34;Compute angle between 3 points. pos0 is the point with the angle of interest
+
+    Parameters
+    ----------
+    pos0 : (3,) array
+        first point (containing the angle)
+    pos1 : (3,) array
+        second point
+    pos2 : (3,) array
+        third point
+
+    Returns
+    -------
+    float
+        angle between pos1 and pos2
+    &#34;&#34;&#34;
+    return arccos(dot(_n(pos1 - pos0), _n(pos2 - pos0))) / pi * 180</code></pre>
 </details>
 </dd>
 <dt id="gridloc.grid3d.examine.measure_angles"><code class="name flex">
 <span>def <span class="ident">measure_angles</span></span>(<span>grid2d)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Measure the angles between rows and columns (mean, std and range).
+Values are shown in the log</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>(n_rows, n_columns) array</code></dt>
+<dd>grid where electrode positions have been computed. Does not require 'norm', only 'pos'</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def measure_angles(grid2d):
+    &#34;&#34;&#34;Measure the angles between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed. Does not require &#39;norm&#39;, only &#39;pos&#39;
+    &#34;&#34;&#34;
     n_rows, n_columns = grid2d.shape
 
     angle = []
@@ -159,12 +241,26 @@ def compute_angle(pos0, pos1, pos2):
 <span>def <span class="ident">measure_distances</span></span>(<span>grid2d)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Measure the distances between rows and columns (mean, std and range).
+Values are shown in the log</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>(n_rows, n_columns) array</code></dt>
+<dd>grid where electrode positions have been computed</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def measure_distances(grid2d):
+    &#34;&#34;&#34;Measure the distances between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed
+    &#34;&#34;&#34;
     n_rows, n_columns = grid2d.shape
 
     dist = []
@@ -181,18 +277,6 @@ def compute_angle(pos0, pos1, pos2):
 
     lg.info(f&#39;Distance between columns: {mean(dist_col):0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]&#39;)
     lg.info(f&#39;Distance between rows:    {mean(dist_row):0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]&#39;)</code></pre>
-</details>
-</dd>
-<dt id="gridloc.grid3d.examine.n"><code class="name flex">
-<span>def <span class="ident">n</span></span>(<span>x)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">n = lambda x: x / norm(x)</code></pre>
 </details>
 </dd>
 </dl>
@@ -216,7 +300,6 @@ def compute_angle(pos0, pos1, pos2):
 <li><code><a title="gridloc.grid3d.examine.compute_angle" href="#gridloc.grid3d.examine.compute_angle">compute_angle</a></code></li>
 <li><code><a title="gridloc.grid3d.examine.measure_angles" href="#gridloc.grid3d.examine.measure_angles">measure_angles</a></code></li>
 <li><code><a title="gridloc.grid3d.examine.measure_distances" href="#gridloc.grid3d.examine.measure_distances">measure_distances</a></code></li>
-<li><code><a title="gridloc.grid3d.examine.n" href="#gridloc.grid3d.examine.n">n</a></code></li>
 </ul>
 </li>
 </ul>

@@ -32,9 +32,7 @@ from nibabel.affines import apply_affine
 
 from logging import getLogger
 
-"""
-from .construct import make_grid
-"""
+from .grid2d import make_grid
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0

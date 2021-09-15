@@ -25,7 +25,8 @@ lg = getLogger(__name__)
 # 1 sigma = 0.6065306597126334
 
 
-def calc_fmri_at_elec(measure_nii, electrodes_file, distance, kernels, graymatter, output_dir):
+def compute_functional(grid, func, distance=None, kernel=None):
+
     """
     Calculate the (weighted) average of fMRI values at electrode locations
     """

@@ -1,12 +1,11 @@
 """Function to build a grid from a starting point, in 2D or 3D
 """
-from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud, where, arange
+from numpy import pi, where, arange
 from logging import getLogger
 
-"""
 from .geometry import count_neighbors
 from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
-"""
+from ..grid2d import make_grid
 
 lg = getLogger(__name__)
 
@@ -52,7 +51,6 @@ def construct_grid(surf, start_vert, start_label, labels, grid3d, rotation=0):
     grid['label'] = labels
     grid['pos'].fill(0)
     grid['norm'].fill(0)
-    grid['done'] = False
 
     if start_label not in grid['label']:
         raise ValueError(f'"{start_label}" is not one of the labels of the grid')

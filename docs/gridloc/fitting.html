@@ -30,7 +30,6 @@
 from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
 from multiprocessing import Pool
-from numpy.linalg import norm
 from numpy import arange, array, argmin, corrcoef, zeros, dtype, intersect1d, NaN, unravel_index
 from logging import getLogger
 from datetime import datetime
@@ -41,11 +40,11 @@ try:
 except ImportError:
     mkl = None
 
+from .grid3d import construct_grid
 &#34;&#34;&#34;
 from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
-from .construct import construct_grid
 from .io import read_mri, write_tsv, WIRE, export_grid
 from .viz import plot_results, to_div, to_html, plot_electrodes
 from .examine import measure_distances, measure_angles
@@ -55,15 +54,18 @@ from .utils import be_nice, match_labels, normalize
 lg = getLogger(__name__)
 
 
-def make_grid3d_model():
+def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
 
     grid = construct_grid(
         mris[&#34;dura&#34;],
         initial[&#39;vertex&#39;],
         initial[&#34;label&#34;],
-        ecog[&#39;label&#39;],
+        grid2d[&#39;label&#39;],
         grid3d,
         rotation=initial[&#39;rotation&#39;])
+
+    model = compute_model(mris, grid, morphology, functional)
+
     fig = plot_electrodes(mris[&#39;pial&#39;], grid, ref_label=initial[&#39;label&#39;], angio=mris[&#39;angio&#39;])
     grid_file = output / &#39;start_pos.html&#39;
     to_html([to_div(fig), ], grid_file)
@@ -649,7 +651,7 @@ reading)</p>
 </details>
 </dd>
 <dt id="gridloc.fitting.make_grid3d_model"><code class="name flex">
-<span>def <span class="ident">make_grid3d_model</span></span>(<span>)</span>
+<span>def <span class="ident">make_grid3d_model</span></span>(<span>output, grid2d, mris, grid3d, initial, morphology={}, functional={})</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -657,15 +659,18 @@ reading)</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def make_grid3d_model():
+<pre><code class="python">def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
 
     grid = construct_grid(
         mris[&#34;dura&#34;],
         initial[&#39;vertex&#39;],
         initial[&#34;label&#34;],
-        ecog[&#39;label&#39;],
+        grid2d[&#39;label&#39;],
         grid3d,
         rotation=initial[&#39;rotation&#39;])
+
+    model = compute_model(mris, grid, morphology, functional)
+
     fig = plot_electrodes(mris[&#39;pial&#39;], grid, ref_label=initial[&#39;label&#39;], angio=mris[&#39;angio&#39;])
     grid_file = output / &#39;start_pos.html&#39;
     to_html([to_div(fig), ], grid_file)</code></pre>

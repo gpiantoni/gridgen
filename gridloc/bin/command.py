@@ -13,13 +13,14 @@ from .parameters import (
     TEMPLATE,
     _JSONEncoder_path
     )
-"""
+
 from ..fitting import fitting, make_grid3d_model
-from ..matlab.comparison import compare_to_matlab
+from ..matlab import compare_to_matlab
 from ..viz import to_html, to_div, plot_grid2d
-from ..construct import make_grid_with_labels
+from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
 from ..io import (
+    read_mri,
     read_grid2d,
     write_grid2d,
     read_ecog2d,
@@ -27,7 +28,6 @@ from ..io import (
     read_surface_ras_shift,
     export_transform,
     )
-"""
 
 lg = getLogger('gridloc')
 
@@ -182,7 +182,6 @@ def main(arguments=None):
         mris = read_mri(**parameters['mri'])
 
     if args.function == 'grid2d':
-
         grid2d = make_grid_with_labels(**parameters['grid2d'])
         lg.info(f'Writing labels to {grid2d_tsv}')
         write_grid2d(grid2d_tsv, grid2d)
@@ -200,7 +199,7 @@ def main(arguments=None):
 
     if args.function == 'grid3d':
 
-        ecog2d = read_grid2d(grid2d_tsv)
+        grid2d = read_grid2d(grid2d_tsv)
         output_dir = parameters['output_dir'] / ('grid3d_' + start_time.strftime('%Y%m%d_%H%M%S'))
         output_dir.mkdir(parents=True)
         lg.info(f'Writing grid3d to {output_dir}')
@@ -208,12 +207,11 @@ def main(arguments=None):
 
         make_grid3d_model(
             output=output_dir,
-            ecog=ecog2d,
+            ecog=grid2d,
             initial=parameters['initial'],
             mri=mris,
             grid3d=parameters['grid3d'],
             )
-
 
     if args.function == 'fit':
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)

@@ -3,7 +3,6 @@
 from scipy.optimize import brute, minimize
 from scipy.stats import spearmanr
 from multiprocessing import Pool
-from numpy.linalg import norm
 from numpy import arange, array, argmin, corrcoef, zeros, dtype, intersect1d, NaN, unravel_index
 from logging import getLogger
 from datetime import datetime
@@ -14,11 +13,11 @@ try:
 except ImportError:
     mkl = None
 
+from .grid3d import construct_grid
 """
 from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
-from .construct import construct_grid
 from .io import read_mri, write_tsv, WIRE, export_grid
 from .viz import plot_results, to_div, to_html, plot_electrodes
 from .examine import measure_distances, measure_angles
@@ -28,15 +27,18 @@ from .utils import be_nice, match_labels, normalize
 lg = getLogger(__name__)
 
 
-def make_grid3d_model():
+def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
 
     grid = construct_grid(
         mris["dura"],
         initial['vertex'],
         initial["label"],
-        ecog['label'],
+        grid2d['label'],
         grid3d,
         rotation=initial['rotation'])
+
+    model = compute_model(mris, grid, morphology, functional)
+
     fig = plot_electrodes(mris['pial'], grid, ref_label=initial['label'], angio=mris['angio'])
     grid_file = output / 'start_pos.html'
     to_html([to_div(fig), ], grid_file)

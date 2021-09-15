@@ -27,13 +27,12 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Function to build a grid from a starting point, in 2D or 3D
 &#34;&#34;&#34;
-from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud, where, arange
+from numpy import pi, where, arange
 from logging import getLogger
 
-&#34;&#34;&#34;
 from .geometry import count_neighbors
 from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
-&#34;&#34;&#34;
+from ..grid2d import make_grid
 
 lg = getLogger(__name__)
 
@@ -79,7 +78,6 @@ def construct_grid(surf, start_vert, start_label, labels, grid3d, rotation=0):
     grid[&#39;label&#39;] = labels
     grid[&#39;pos&#39;].fill(0)
     grid[&#39;norm&#39;].fill(0)
-    grid[&#39;done&#39;] = False
 
     if start_label not in grid[&#39;label&#39;]:
         raise ValueError(f&#39;&#34;{start_label}&#34; is not one of the labels of the grid&#39;)
@@ -278,7 +276,6 @@ reasonable results</dd>
     grid[&#39;label&#39;] = labels
     grid[&#39;pos&#39;].fill(0)
     grid[&#39;norm&#39;].fill(0)
-    grid[&#39;done&#39;] = False
 
     if start_label not in grid[&#39;label&#39;]:
         raise ValueError(f&#39;&#34;{start_label}&#34; is not one of the labels of the grid&#39;)

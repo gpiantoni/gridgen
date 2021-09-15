@@ -13,7 +13,7 @@ d_ = dtype([
     ])
 
 
-def compute_distance(grid, pial, method='minimum', max_distance=None):
+def compute_morphology(grid, pial, method='minimum', max_distance=None, penalty=None):
     if method == 'ray':
         distance = _distance_ray(grid, pial)
 
@@ -32,6 +32,8 @@ def compute_distance(grid, pial, method='minimum', max_distance=None):
     if max_distance and method in ('ray', 'minimum'):
         i = isnan(distance['value']) | (distance['value'] > max_distance)
         distance['value'][i] = NaN
+
+    distance['value'] = distance['value'] ** (-1 * penalty)
 
     return distance
 

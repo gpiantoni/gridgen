@@ -27,86 +27,33 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Functions to compute the actual fitting of the grid onto the brain surface
 &#34;&#34;&#34;
-from scipy.optimize import brute, minimize
-from scipy.stats import spearmanr
-from multiprocessing import Pool
-from numpy.linalg import norm
-from numpy import arange, array, argmin, corrcoef, zeros, dtype, intersect1d, NaN, unravel_index
 from logging import getLogger
-from datetime import datetime
-from json import dump
 
-try:
-    import mkl
-except ImportError:
-    mkl = None
-
-&#34;&#34;&#34;
-from .geometry import search_grid
-from .morphology.distance import compute_distance
-from .vascular.sphere import compute_vasculature
-from .construct import construct_grid
-from .io import read_mri, write_tsv, WIRE, export_grid
-from .viz import plot_results, to_div, to_html, plot_electrodes
-from .examine import measure_distances, measure_angles
-from .utils import be_nice, match_labels, normalize
-&#34;&#34;&#34;
+from .morphology import compute_morphology
+from .functional import compute_functional
 
 lg = getLogger(__name__)
 
 
-def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
-    &#34;&#34;&#34;Main model to minimize
+def compute_model(grid, mri, morphology={}, functional={}):
 
-    Note that when final=False, cc should be minimized (the smaller the better)
-    while when final=True, cc should be as large as possible (more intuitive
-    reading)
+    if mri[&#39;pial&#39;] is None:
+        morpho = None
+    else:
+        morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
 
-    Parameters
-    ----------
-    ranges : None
-        ignored, but easier to pass when working with arguments
+    if mri[&#39;functional&#39;] is None:
+        func = None
+    else:
+        func = compute_functional(grid, mri[&#39;func&#39;], **functional)
 
-    &#34;&#34;&#34;
-    grid = construct_grid(
-        mri[&#34;dura&#34;],
-        start_vert,
-        initial[&#34;label&#34;],
-        ecog[&#39;label&#39;],
-        grid3d,
-        rotation=initial[&#39;rotation&#39;] + rotation)
+    model = {
+        &#39;grid&#39;: grid,
+        &#39;morphology&#39;: morpho,
+        &#39;functional&#39;: func,
+        }
 
-    if mri[&#39;pial&#39;] is not None:
-        morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;distance&#39;], fit[&#39;maximum_distance&#39;])
-        morpho[&#39;value&#39;] = morpho[&#39;value&#39;] ** (-1 * fit[&#39;penalty&#39;])
-
-    if mri[&#39;angio&#39;] is not None:
-        vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
-        e, m, v = match_labels(ecog, morpho, vasc)[1:]
-
-    return model
-
-
-def remove_wires(model):
-    &#34;&#34;&#34;We select rows with WIRE, so that we keep the 2d shape of the models
-    &#34;&#34;&#34;
-    i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
-    i_keep = i_keep.all(axis=1)
-    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;vasculature&#39;]:
-        if model[field] is not None:
-            model[field] = model[field][i_keep, :]
-
-    return model
-
-
-def find_vertex(dura, ras):
-    init_ras = array(ras)
-    vertex = argmin(norm(dura[&#39;pos&#39;] - init_ras, axis=1))
-    vert_dist = norm(init_ras - dura[&#39;pos&#39;][vertex])
-
-    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {dura[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
-
-    return vertex</code></pre>
+    return model</code></pre>
 </details>
 </section>
 <section>
@@ -116,57 +63,8 @@ def find_vertex(dura, ras):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridloc.models.compute.corr_ecog_model"><code class="name flex">
-<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, ecog, grid3d, initial, mri, fit, final=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Main model to minimize</p>
-<p>Note that when final=False, cc should be minimized (the smaller the better)
-while when final=True, cc should be as large as possible (more intuitive
-reading)</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>ranges</code></strong> :&ensp;<code>None</code></dt>
-<dd>ignored, but easier to pass when working with arguments</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
-    &#34;&#34;&#34;Main model to minimize
-
-    Note that when final=False, cc should be minimized (the smaller the better)
-    while when final=True, cc should be as large as possible (more intuitive
-    reading)
-
-    Parameters
-    ----------
-    ranges : None
-        ignored, but easier to pass when working with arguments
-
-    &#34;&#34;&#34;
-    grid = construct_grid(
-        mri[&#34;dura&#34;],
-        start_vert,
-        initial[&#34;label&#34;],
-        ecog[&#39;label&#39;],
-        grid3d,
-        rotation=initial[&#39;rotation&#39;] + rotation)
-
-    if mri[&#39;pial&#39;] is not None:
-        morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;distance&#39;], fit[&#39;maximum_distance&#39;])
-        morpho[&#39;value&#39;] = morpho[&#39;value&#39;] ** (-1 * fit[&#39;penalty&#39;])
-
-    if mri[&#39;angio&#39;] is not None:
-        vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
-        e, m, v = match_labels(ecog, morpho, vasc)[1:]
-
-    return model</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.compute.find_vertex"><code class="name flex">
-<span>def <span class="ident">find_vertex</span></span>(<span>dura, ras)</span>
+<dt id="gridloc.models.compute.compute_model"><code class="name flex">
+<span>def <span class="ident">compute_model</span></span>(<span>grid, mri, morphology={}, functional={})</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -174,33 +72,23 @@ reading)</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_vertex(dura, ras):
-    init_ras = array(ras)
-    vertex = argmin(norm(dura[&#39;pos&#39;] - init_ras, axis=1))
-    vert_dist = norm(init_ras - dura[&#39;pos&#39;][vertex])
+<pre><code class="python">def compute_model(grid, mri, morphology={}, functional={}):
 
-    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {dura[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
+    if mri[&#39;pial&#39;] is None:
+        morpho = None
+    else:
+        morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
 
-    return vertex</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.compute.remove_wires"><code class="name flex">
-<span>def <span class="ident">remove_wires</span></span>(<span>model)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>We select rows with WIRE, so that we keep the 2d shape of the models</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def remove_wires(model):
-    &#34;&#34;&#34;We select rows with WIRE, so that we keep the 2d shape of the models
-    &#34;&#34;&#34;
-    i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
-    i_keep = i_keep.all(axis=1)
-    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;vasculature&#39;]:
-        if model[field] is not None:
-            model[field] = model[field][i_keep, :]
+    if mri[&#39;functional&#39;] is None:
+        func = None
+    else:
+        func = compute_functional(grid, mri[&#39;func&#39;], **functional)
+
+    model = {
+        &#39;grid&#39;: grid,
+        &#39;morphology&#39;: morpho,
+        &#39;functional&#39;: func,
+        }
 
     return model</code></pre>
 </details>
@@ -223,9 +111,7 @@ reading)</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridloc.models.compute.corr_ecog_model" href="#gridloc.models.compute.corr_ecog_model">corr_ecog_model</a></code></li>
-<li><code><a title="gridloc.models.compute.find_vertex" href="#gridloc.models.compute.find_vertex">find_vertex</a></code></li>
-<li><code><a title="gridloc.models.compute.remove_wires" href="#gridloc.models.compute.remove_wires">remove_wires</a></code></li>
+<li><code><a title="gridloc.models.compute.compute_model" href="#gridloc.models.compute.compute_model">compute_model</a></code></li>
 </ul>
 </li>
 </ul>

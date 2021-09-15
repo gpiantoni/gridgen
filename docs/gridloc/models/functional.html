@@ -51,7 +51,8 @@ lg = getLogger(__name__)
 # 1 sigma = 0.6065306597126334
 
 
-def calc_fmri_at_elec(measure_nii, electrodes_file, distance, kernels, graymatter, output_dir):
+def compute_functional(grid, func, distance=None, kernel=None):
+
     &#34;&#34;&#34;
     Calculate the (weighted) average of fMRI values at electrode locations
     &#34;&#34;&#34;
@@ -145,8 +146,42 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridloc.models.functional.calc_fmri_at_elec"><code class="name flex">
-<span>def <span class="ident">calc_fmri_at_elec</span></span>(<span>measure_nii, electrodes_file, distance, kernels, graymatter, output_dir)</span>
+<dt id="gridloc.models.functional.compute_chan"><code class="name flex">
+<span>def <span class="ident">compute_chan</span></span>(<span>pos, KERNEL, ndi, mri, distance)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_chan(pos, KERNEL, ndi, mri, distance):
+    dist_chan = norm(ndi - pos, axis=1)
+
+    if distance == &#39;gaussian&#39;:
+        m = normdistr.pdf(dist_chan, scale=KERNEL)
+        m /= normdistr.pdf(0, scale=KERNEL)  # normalize so that peak is at 1, so that it&#39;s easier to count voxels
+
+    elif distance == &#39;sphere&#39;:
+        m = zeros(dist_chan.shape)
+        m[dist_chan &lt;= KERNEL] = 1
+
+    elif distance == &#39;inverse&#39;:
+        m = power(dist_chan, -1 * KERNEL)
+
+    m = m.reshape(mri.shape)
+    m[isnan(mri)] = NaN
+
+    with warnings.catch_warnings():
+        warnings.simplefilter(&#34;ignore&#34;)
+        m /= sum(m[isfinite(m)])  # normalize so that the sum of the finite numbers is 1
+
+    mq = m * mri
+    return nansum(mq)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.models.functional.compute_functional"><code class="name flex">
+<span>def <span class="ident">compute_functional</span></span>(<span>grid, func, distance=None, kernel=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Calculate the (weighted) average of fMRI values at electrode locations</p></div>
@@ -154,7 +189,8 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def calc_fmri_at_elec(measure_nii, electrodes_file, distance, kernels, graymatter, output_dir):
+<pre><code class="python">def compute_functional(grid, func, distance=None, kernel=None):
+
     &#34;&#34;&#34;
     Calculate the (weighted) average of fMRI values at electrode locations
     &#34;&#34;&#34;
@@ -190,40 +226,6 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
             f.write(one_label + &#39;\t&#39; + &#39;\t&#39;.join(str(one_val) for one_val in val_at_elec) + &#39;\n&#39;)
 
     return fmri_vals_tsv, n_voxels_tsv</code></pre>
-</details>
-</dd>
-<dt id="gridloc.models.functional.compute_chan"><code class="name flex">
-<span>def <span class="ident">compute_chan</span></span>(<span>pos, KERNEL, ndi, mri, distance)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compute_chan(pos, KERNEL, ndi, mri, distance):
-    dist_chan = norm(ndi - pos, axis=1)
-
-    if distance == &#39;gaussian&#39;:
-        m = normdistr.pdf(dist_chan, scale=KERNEL)
-        m /= normdistr.pdf(0, scale=KERNEL)  # normalize so that peak is at 1, so that it&#39;s easier to count voxels
-
-    elif distance == &#39;sphere&#39;:
-        m = zeros(dist_chan.shape)
-        m[dist_chan &lt;= KERNEL] = 1
-
-    elif distance == &#39;inverse&#39;:
-        m = power(dist_chan, -1 * KERNEL)
-
-    m = m.reshape(mri.shape)
-    m[isnan(mri)] = NaN
-
-    with warnings.catch_warnings():
-        warnings.simplefilter(&#34;ignore&#34;)
-        m /= sum(m[isfinite(m)])  # normalize so that the sum of the finite numbers is 1
-
-    mq = m * mri
-    return nansum(mq)</code></pre>
 </details>
 </dd>
 <dt id="gridloc.models.functional.compute_kernels"><code class="name flex">
@@ -295,8 +297,8 @@ def compute_chan(pos, KERNEL, ndi, mri, distance):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridloc.models.functional.calc_fmri_at_elec" href="#gridloc.models.functional.calc_fmri_at_elec">calc_fmri_at_elec</a></code></li>
 <li><code><a title="gridloc.models.functional.compute_chan" href="#gridloc.models.functional.compute_chan">compute_chan</a></code></li>
+<li><code><a title="gridloc.models.functional.compute_functional" href="#gridloc.models.functional.compute_functional">compute_functional</a></code></li>
 <li><code><a title="gridloc.models.functional.compute_kernels" href="#gridloc.models.functional.compute_kernels">compute_kernels</a></code></li>
 <li><code><a title="gridloc.models.functional.from_chan_to_mrifile" href="#gridloc.models.functional.from_chan_to_mrifile">from_chan_to_mrifile</a></code></li>
 <li><code><a title="gridloc.models.functional.from_mrifile_to_chan" href="#gridloc.models.functional.from_mrifile_to_chan">from_mrifile_to_chan</a></code></li>

@@ -66,7 +66,19 @@ def match_labels(*args):
         i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
         out.append(arg[&#39;value&#39;][i_chan])
 
-    return out</code></pre>
+    return out
+
+
+def remove_wires(model):
+    &#34;&#34;&#34;We select rows with WIRE, so that we keep the 2d shape of the models
+    &#34;&#34;&#34;
+    i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
+    i_keep = i_keep.all(axis=1)
+    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;vasculature&#39;]:
+        if model[field] is not None:
+            model[field] = model[field][i_keep, :]
+
+    return model</code></pre>
 </details>
 </section>
 <section>
@@ -150,6 +162,27 @@ data with values between 0 and 1 (might contain NaN)</p></div>
     return (x - nanmin(x)) / (nanmax(x) - nanmin(x))</code></pre>
 </details>
 </dd>
+<dt id="gridloc.utils.remove_wires"><code class="name flex">
+<span>def <span class="ident">remove_wires</span></span>(<span>model)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>We select rows with WIRE, so that we keep the 2d shape of the models</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_wires(model):
+    &#34;&#34;&#34;We select rows with WIRE, so that we keep the 2d shape of the models
+    &#34;&#34;&#34;
+    i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
+    i_keep = i_keep.all(axis=1)
+    for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;vasculature&#39;]:
+        if model[field] is not None:
+            model[field] = model[field][i_keep, :]
+
+    return model</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -171,6 +204,7 @@ data with values between 0 and 1 (might contain NaN)</p></div>
 <li><code><a title="gridloc.utils.be_nice" href="#gridloc.utils.be_nice">be_nice</a></code></li>
 <li><code><a title="gridloc.utils.match_labels" href="#gridloc.utils.match_labels">match_labels</a></code></li>
 <li><code><a title="gridloc.utils.normalize" href="#gridloc.utils.normalize">normalize</a></code></li>
+<li><code><a title="gridloc.utils.remove_wires" href="#gridloc.utils.remove_wires">remove_wires</a></code></li>
 </ul>
 </li>
 </ul>
