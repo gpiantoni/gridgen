@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>gridloc.utils API documentation</title>
-<meta name="description" content="Various utilities" />
+<title>gridloc.bin API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,140 +17,26 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>gridloc.utils</code></h1>
+<h1 class="title">Namespace <code>gridloc.bin</code></h1>
 </header>
 <section id="section-intro">
-<p>Various utilities</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">&#34;&#34;&#34;Various utilities
-&#34;&#34;&#34;
-from os import nice
-from numpy import nanmax, nanmin, intersect1d, isnan, array
-
-
-def be_nice():
-    nice(10)
-
-
-def normalize(x):
-    &#34;&#34;&#34;Normalize values between 0 and 1. NaNs are ignored.
-
-    Parameters
-    ----------
-    x : (n,) array
-        original data
-
-    Returns
-    -------
-    (n,) array
-        data with values between 0 and 1 (might contain NaN)
-    &#34;&#34;&#34;
-    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
-
-
-def match_labels(*args):
-    &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
-    ecog, also getting rid of bad channels&#34;&#34;&#34;
-    args = [x.flatten(&#39;C&#39;) for x in args]
-
-    labels = set(args[0][&#39;label&#39;])
-
-    for arg in args:
-        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[&#39;value&#39;])])
-
-    out = [list(labels), ]
-    for arg in args:
-        i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
-        out.append(arg[&#39;value&#39;][i_chan])
-
-    return out</code></pre>
-</details>
 </section>
 <section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt id="gridloc.utils.be_nice"><code class="name flex">
-<span>def <span class="ident">be_nice</span></span>(<span>)</span>
-</code></dt>
+<dt><code class="name"><a title="gridloc.bin.command" href="command.html">gridloc.bin.command</a></code></dt>
+<dd>
+<div class="desc"><p>Specify how to call gridloc from the command line</p></div>
+</dd>
+<dt><code class="name"><a title="gridloc.bin.parameters" href="parameters.html">gridloc.bin.parameters</a></code></dt>
 <dd>
 <div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def be_nice():
-    nice(10)</code></pre>
-</details>
-</dd>
-<dt id="gridloc.utils.match_labels"><code class="name flex">
-<span>def <span class="ident">match_labels</span></span>(<span>*args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>make sure that that the values are in the same order as the labels in
-ecog, also getting rid of bad channels</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def match_labels(*args):
-    &#34;&#34;&#34;make sure that that the values are in the same order as the labels in
-    ecog, also getting rid of bad channels&#34;&#34;&#34;
-    args = [x.flatten(&#39;C&#39;) for x in args]
-
-    labels = set(args[0][&#39;label&#39;])
-
-    for arg in args:
-        labels = labels &amp; set(arg[&#39;label&#39;][~isnan(arg[&#39;value&#39;])])
-
-    out = [list(labels), ]
-    for arg in args:
-        i_chan = intersect1d(arg[&#39;label&#39;], array(list(labels)), assume_unique=False, return_indices=True)[1]
-        out.append(arg[&#39;value&#39;][i_chan])
-
-    return out</code></pre>
-</details>
-</dd>
-<dt id="gridloc.utils.normalize"><code class="name flex">
-<span>def <span class="ident">normalize</span></span>(<span>x)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Normalize values between 0 and 1. NaNs are ignored.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>(n,) array</code></dt>
-<dd>original data</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>(n,) array
-data with values between 0 and 1 (might contain NaN)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def normalize(x):
-    &#34;&#34;&#34;Normalize values between 0 and 1. NaNs are ignored.
-
-    Parameters
-    ----------
-    x : (n,) array
-        original data
-
-    Returns
-    -------
-    (n,) array
-        data with values between 0 and 1 (might contain NaN)
-    &#34;&#34;&#34;
-    return (x - nanmin(x)) / (nanmax(x) - nanmin(x))</code></pre>
-</details>
 </dd>
 </dl>
+</section>
+<section>
+</section>
+<section>
 </section>
 <section>
 </section>
@@ -163,14 +49,13 @@ data with values between 0 and 1 (might contain NaN)</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="gridloc" href="index.html">gridloc</a></code></li>
+<li><code><a title="gridloc" href="../index.html">gridloc</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="gridloc.utils.be_nice" href="#gridloc.utils.be_nice">be_nice</a></code></li>
-<li><code><a title="gridloc.utils.match_labels" href="#gridloc.utils.match_labels">match_labels</a></code></li>
-<li><code><a title="gridloc.utils.normalize" href="#gridloc.utils.normalize">normalize</a></code></li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="gridloc.bin.command" href="command.html">gridloc.bin.command</a></code></li>
+<li><code><a title="gridloc.bin.parameters" href="parameters.html">gridloc.bin.parameters</a></code></li>
 </ul>
 </li>
 </ul>

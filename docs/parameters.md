@@ -23,7 +23,7 @@ You can also use the command `gridloc parameters.json parameters` to generate a 
 - **mri** (required by command `init`, `fit`, `matlab`)
   - **T1_file**: (str) path to T1 image (in particular, the T1.mgz from freesurfer). Only used to compute the mapping between T1 RAS space and surface RAS space
   - **dura_file**: (str) path to dura surface (for example, the smoothed pial surface). This surface will be used to generate the 3D grid
-  - **pial_file**: (str) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`
+  - **pial_file**: (str, optional) path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`. Default: None
   - **func_file**: (str, optional) path to angiogram or fMRI (in NIfTI format). You need to specify key `functional` in `parameters.json`. Default: None
 - **initial** (required by command `init`, `fit`)
   - **label**: (str) label for the reference electrode

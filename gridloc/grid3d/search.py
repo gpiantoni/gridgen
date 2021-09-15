@@ -5,7 +5,9 @@ from numpy import array, argmin, cross, pi, sqrt
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
 
+"""
 from .geometry import calc_plane_to_axis
+"""
 
 
 lg = getLogger(__name__)

@@ -13,9 +13,12 @@ from .parameters import (
     TEMPLATE,
     _JSONEncoder_path
     )
-from ..fitting import fitting
+"""
+from ..fitting import fitting, make_grid3d_model
 from ..matlab.comparison import compare_to_matlab
 from ..viz import to_html, to_div, plot_grid2d
+from ..construct import make_grid_with_labels
+from ..ecog import read_ecog, put_ecog_on_grid2d
 from ..io import (
     read_grid2d,
     write_grid2d,
@@ -24,6 +27,7 @@ from ..io import (
     read_surface_ras_shift,
     export_transform,
     )
+"""
 
 lg = getLogger('gridloc')
 
@@ -166,19 +170,24 @@ def main(arguments=None):
     ecog_fig = parameters['output_dir'] / 'grid2d_ecog.html'
     transform_file = parameters['output_dir'] / 'tkras'
 
+    start_time = datetime.now()
+
+    if args.function in ('ecog', 'grid3d'):
+        lg.info(f'Reading 2d grid from {grid2d_tsv}')
+        grid2d = read_grid2d(grid2d_tsv)
+
+    if args.function in ('grid3d', 'fit'):
+        offset = read_surface_ras_shift(parameters['mri']['T1_file'])
+        export_transform(offset, transform_file)
+        mris = read_mri(**parameters['mri'])
+
     if args.function == 'grid2d':
-        from ..construct import make_grid_with_labels
 
         grid2d = make_grid_with_labels(**parameters['grid2d'])
         lg.info(f'Writing labels to {grid2d_tsv}')
         write_grid2d(grid2d_tsv, grid2d)
 
     if args.function == 'ecog':
-        from ..ecog.read_ecog import read_ecog, put_ecog_on_grid2d
-
-        lg.info(f'Reading 2d grid from {grid2d_tsv}')
-        grid2d = read_grid2d(grid2d_tsv)
-
         timefreq = read_ecog(**parameters['ecog'])
         ecog2d = put_ecog_on_grid2d(timefreq, grid2d)
 
@@ -189,36 +198,41 @@ def main(arguments=None):
         fig = plot_grid2d(ecog2d, 'ecog')
         to_html([to_div(fig), ], ecog_fig)
 
-    if args.function in ('grid3d', 'fit'):
+    if args.function == 'grid3d':
 
-        offset = read_surface_ras_shift(parameters['mri']['T1_file'])
-        export_transform(offset, transform_file)
+        ecog2d = read_grid2d(grid2d_tsv)
+        output_dir = parameters['output_dir'] / ('grid3d_' + start_time.strftime('%Y%m%d_%H%M%S'))
+        output_dir.mkdir(parents=True)
+        lg.info(f'Writing grid3d to {output_dir}')
+        output_dir = parameters['output_dir']
 
-        if args.function == 'fit':
-            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+        make_grid3d_model(
+            output=output_dir,
+            ecog=ecog2d,
+            initial=parameters['initial'],
+            mri=mris,
+            grid3d=parameters['grid3d'],
+            )
 
-            start_time = datetime.now()
-            folder_name = '_'.join(str(parameters['fit'][k]) for k in ('method', 'correlation', 'distance', 'penalty'))
-            output_dir = parameters['output_dir'] / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
-            output_dir.mkdir(parents=True)
-            lg.info(f'Writing fitting results to {output_dir}')
 
-            parameters['timestamp'] = start_time.isoformat()
-            parameters_json = output_dir / 'parameters.json'
-            with parameters_json.open('w') as f:
-                dump(parameters, f, indent=2, cls=_JSONEncoder_path)
-        else:
-            ecog2d = read_grid2d(grid2d_tsv)
-            output_dir = parameters['output_dir'] / ('grid3d_' + start_time.strftime('%Y%m%d_%H%M%S'))
-            output_dir.mkdir(parents=True)
-            lg.info(f'Writing grid3d to {output_dir}')
-            output_dir = parameters['output_dir']
+    if args.function == 'fit':
+        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+
+        folder_name = '_'.join(str(parameters['fit'][k]) for k in ('method', 'correlation', 'distance', 'penalty'))
+        output_dir = parameters['output_dir'] / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
+        output_dir.mkdir(parents=True)
+        lg.info(f'Writing fitting results to {output_dir}')
+
+        parameters['timestamp'] = start_time.isoformat()
+        parameters_json = output_dir / 'parameters.json'
+        with parameters_json.open('w') as f:
+            dump(parameters, f, indent=2, cls=_JSONEncoder_path)
 
         fitting(
             output=output_dir,
             ecog=ecog2d,
             initial=parameters['initial'],
-            mri=parameters['mri'],
+            mri=mris,
             grid3d=parameters['grid3d'],
             fit=parameters['fit'],
             )

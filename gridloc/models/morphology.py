@@ -2,8 +2,10 @@ from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
+"""
 from ..matlab.geometry import intersect_ray_triangle
 from ..io import WIRE
+"""
 
 d_ = dtype([
     ('label', '<U256'),   # labels cannot be longer than 256 char

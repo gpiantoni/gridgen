@@ -1,3 +1,5 @@
+"""Various utilities
+"""
 from os import nice
 from numpy import nanmax, nanmin, intersect1d, isnan, array
 
@@ -7,6 +9,18 @@ def be_nice():
 
 
 def normalize(x):
+    """Normalize values between 0 and 1. NaNs are ignored.
+
+    Parameters
+    ----------
+    x : (n,) array
+        original data
+
+    Returns
+    -------
+    (n,) array
+        data with values between 0 and 1 (might contain NaN)
+    """
     return (x - nanmin(x)) / (nanmax(x) - nanmin(x))
 
 

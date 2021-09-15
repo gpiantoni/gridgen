@@ -3,8 +3,10 @@
 from numpy import NaN, pi, dtype, zeros, array, fliplr, flipud, where, arange
 from logging import getLogger
 
+"""
 from .geometry import count_neighbors
 from .search import find_new_pos_0d, find_new_pos_1d, find_new_pos_2d
+"""
 
 lg = getLogger(__name__)
 

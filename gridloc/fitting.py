@@ -14,6 +14,7 @@ try:
 except ImportError:
     mkl = None
 
+"""
 from .geometry import search_grid
 from .morphology.distance import compute_distance
 from .vascular.sphere import compute_vasculature
@@ -22,8 +23,24 @@ from .io import read_mri, write_tsv, WIRE, export_grid
 from .viz import plot_results, to_div, to_html, plot_electrodes
 from .examine import measure_distances, measure_angles
 from .utils import be_nice, match_labels, normalize
+"""
 
 lg = getLogger(__name__)
+
+
+def make_grid3d_model():
+
+    grid = construct_grid(
+        mris["dura"],
+        initial['vertex'],
+        initial["label"],
+        ecog['label'],
+        grid3d,
+        rotation=initial['rotation'])
+    fig = plot_electrodes(mris['pial'], grid, ref_label=initial['label'], angio=mris['angio'])
+    grid_file = output / 'start_pos.html'
+    to_html([to_div(fig), ], grid_file)
+
 
 
 def fitting(output, ecog, grid3d, initial, mri, fit):
@@ -50,23 +67,8 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         grid2d with best positions
     """
     start_time = datetime.now()
-    mris = read_mri(**mri)
 
     lg.info(f'Starting position for {initial["label"]} is vertex #{initial["vertex"]} with orientation {initial["rotation"]}')
-
-    if not fit:
-        # start position
-        grid = construct_grid(
-            mris["dura"],
-            initial['vertex'],
-            initial["label"],
-            ecog['label'],
-            grid3d,
-            rotation=initial['rotation'])
-        fig = plot_electrodes(mris['pial'], grid, ref_label=initial['label'], angio=mris['angio'])
-        grid_file = output / 'start_pos.html'
-        to_html([to_div(fig), ], grid_file)
-        return
 
     # has to be a tuple
     minimizer_args = (

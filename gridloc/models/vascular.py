@@ -2,7 +2,9 @@ from numpy import zeros, dtype, NaN
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
+"""
 from ..io import WIRE
+"""
 
 
 def compute_vasculature(grid, angio):

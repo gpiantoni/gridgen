@@ -6,12 +6,14 @@ from numpy.linalg import norm
 from multiprocessing import Pool
 from functools import partial
 
+"""
 from .geometry import project_to_cortex
 from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
 from ..utils import be_nice
 
 from ..geometry import calc_plane_to_axis
 from ..construct import make_grid_with_labels
+"""
 
 
 def getROI(surf, ref_vert, ROIsize=18, intElec=3):

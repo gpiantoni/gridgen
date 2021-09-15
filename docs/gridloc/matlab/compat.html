@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gridloc.matlab.compat API documentation</title>
+<meta name="description" content="The functions in this module should have the same name and argument signature
+of the Matlab functions, for compatibility" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gridloc.matlab.compat</code></h1>
+</header>
+<section id="section-intro">
+<p>The functions in this module should have the same name and argument signature
+of the Matlab functions, for compatibility</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;The functions in this module should have the same name and argument signature
+of the Matlab functions, for compatibility&#34;&#34;&#34;
+
+from numpy import array, arange, meshgrid, nanmean, isnan, dot, prod, arctan2, cross, pi, mean, errstate
+from numpy.linalg import norm
+from multiprocessing import Pool
+from functools import partial
+
+&#34;&#34;&#34;
+from .geometry import project_to_cortex
+from .utils import plane_intersect, AxelRot, _apply_affine, _sort_closest_triangles, calcCoords
+from ..utils import be_nice
+
+from ..geometry import calc_plane_to_axis
+from ..construct import make_grid_with_labels
+&#34;&#34;&#34;
+
+
+def getROI(surf, ref_vert, ROIsize=18, intElec=3):
+    &#34;&#34;&#34;generate 10x10 grid, on one plane
+
+    TODO
+    ----
+    we should calculate pos and norm from
+    pos -&gt; projected position
+    normal -&gt; normal to the hullcortex
+    &#34;&#34;&#34;
+    pos = surf[&#39;pos&#39;][ref_vert, :]
+    normal = surf[&#39;pos_norm&#39;][ref_vert, :]
+
+    # trying to replicate getROI.m (l. 69-90) but we do not consider the orientation here
+    steps = arange(-ROIsize + intElec, ROIsize - intElec, intElec)
+    x_mesh, y_mesh = meshgrid(steps, steps)
+
+    ROI = []
+    for x, y in zip(x_mesh.flatten(), y_mesh.flatten()):
+        coords_2d = array([x, y])
+        plane = calc_plane_to_axis(normal)
+        target = coords_2d @ plane + pos
+        ROI.append(target)
+
+    return array(ROI)
+
+
+def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype=&#39;&#39;,
+                      intersval=0):
+    &#34;&#34;&#34;Replicate projectElectrodes. This function is a ray-triangle intersection.
+    The normal of the point is specified in `normway` if normway has three values.
+    Otherwise, it computes the normal based on the direction of the points of the
+    mesh which are closer than `normway`.
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    subjstructs : dict with &#39;electrodes&#39;
+        location of the electrodes
+    normway : float
+        distance to use to include mesh points when computing the normal
+    normUse : bool
+        if true, it uses the normals of `subjstructs`, if false it recomputes them
+    interstype : str
+        if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
+        to specify a radius `intersval`
+    intersval : float
+        radius when `interstype` == `&#39;fixed&#39;`
+
+    Returns
+    -------
+    dict with &#39;electrodes&#39;, &#39;normals&#39;, &#39;trielectrodes&#39;
+        for each electrode, it returns its normal (based on neighboring mesh
+        vertices) and the projection onto the surface.
+    &#34;&#34;&#34;
+    assert interstype in (&#39;&#39;, &#39;fixed&#39;)
+
+    normdist = normway  # if normway is scalar
+
+    normals = []
+    pints = []
+    for i in range(subjstructs[&#39;electrodes&#39;].shape[0]):
+        electrode = subjstructs[&#39;electrodes&#39;][i, :]
+
+        if normUse:
+            normal = subjstructs[&#39;normal&#39;][i, :]
+        else:
+            normal = normElec(surf, electrode, normdist)
+
+        if interstype == &#39;fixed&#39;:
+            sorttri = _sort_closest_triangles(surf, electrode, intersval)
+
+        else:
+            sorttri = None
+
+        # note the sign of normal is inverted
+        pint = project_to_cortex(surf, electrode, normal, sorted_triangles=sorttri)[1]  # l. 198-237
+
+        normals.append(normal)
+        pints.append(pint)
+
+    subjstructs[&#39;normal&#39;] = array(normals)
+    subjstructs[&#39;trielectrodes&#39;] = array(pints)
+
+    return subjstructs
+
+
+def normElec(surf, electrode, normdist, NaN_as_zeros=True):
+    &#34;&#34;&#34;
+    Notes
+    -----
+    When `normway` is a scalar, it takes the normal of the points of the mesh which are closer
+    than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
+    if the vertex does not belong to any triangle). projectElectrodes.m includes
+    those (0, 0, 0) in the calculation, but it might not be correct.
+    See l. 138 (there are no NaN in normals but only (0, 0, 0)).
+
+    To replicate the matlab behavior, make sure that `NaN_as_zeros` is True.
+    &#34;&#34;&#34;
+    dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)  # l. 104-112 of projectElectrodes.m
+    closevert = dvect &lt; normdist  # l. 120 of projectElectrodes.m
+    normal = surf[&#39;pos_norm&#39;][closevert, :].mean(axis=0)  # l. 144 of projectElectrodes.m
+
+    normals2av = surf[&#39;pos_norm&#39;][closevert, :].copy()
+    if NaN_as_zeros:
+        normals2av[isnan(normals2av)] = 0
+    normal = nanmean(normals2av, axis=0)
+
+    return normal
+
+
+def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
+
+    N = normElec(hullcortex, c, 25)
+    d = dot(N, c)
+
+    point = c
+    normal = N
+    tangPlane = coords.copy().reshape(prod(dims), 3)
+    tangPlane[:, 0] = (-normal[1] * tangPlane[:, 1] - normal[2] * tangPlane[:, 2] - d) / normal[0]  # l. 19
+    N = tangPlane[0, :] - tangPlane[7, :]
+    M = coords[0, :] - coords[7, :]
+
+    AngleBetweenPlanes = arctan2(norm(cross(M, N)), dot(M, N))
+
+    Point, IntersectionPlanes = plane_intersect(array([1., 0., 0.]), coords[0, :], normal, point)
+
+    RotMatrix = AxelRot(AngleBetweenPlanes, IntersectionPlanes, Point)
+    coords_Tangent = _apply_affine(coords, RotMatrix)
+
+    if hemi == &#39;r&#39;:
+        coords_Tangent[:, 0] = coords_Tangent[::-1, 0]  # l. 54-65
+
+    return coords_Tangent
+
+
+def createGrid(sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None):
+    &#34;&#34;&#34;Create GRID per ROI point and project on cortex
+
+    Parameters
+    ----------
+    sub : dict of array
+        the same as &#39;projectedROIpoints&#39;
+    rotation : None
+        not used (but it might be in the future)
+    turns : None
+        not used (but it might be in the future)
+    auxDims : tuple of int
+        dimensions of the grid
+    subj_info : dict
+        information about this subject
+    hullcortex : dict with &#39;pos&#39; and &#39;tri&#39;
+        hull cortex
+    &#34;&#34;&#34;
+    hemivect = subj_info[&#39;hemiVect&#39;]
+    intElec = subj_info[&#39;intElec&#39;]
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemivect=hemivect, hullcortex=hullcortex)
+    with Pool(initializer=be_nice) as p:
+        ROI = p.map(f, range(sub[&#39;electrodes&#39;].shape[0]))
+
+    return ROI
+
+
+def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemivect, hullcortex):
+    ROI_pos = sub[&#39;trielectrodes&#39;][roi_punt, :]
+    ROI_norm = sub[&#39;normal&#39;][roi_punt, :]
+
+    # swap orientation when on the side
+    if hemivect[&#39;side&#39;] in (&#39;r&#39;, &#39;l&#39;):
+        auxDims = auxDims[1], auxDims[0]
+
+    twoDgridElectrodes = calcCoords(ROI_pos, intElec, auxDims)
+    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemivect[&#39;hemi&#39;])
+
+    normNormals = ROI_norm / norm(ROI_norm)
+
+    # apply first rotation
+    _transform = AxelRot(-45 / 180 * pi, normNormals, ROI_pos)
+    electrodes_start = _apply_affine(electrodes_start, _transform)  # l. 44-50
+
+    normdist = 25
+    intersval = 30  # use largest range anyway
+
+    coords = []
+    rotations = range(90)
+    for rotation in rotations:
+        _transform = AxelRot(rotation / 180 * pi, normNormals, ROI_pos)
+        new_turn = {&#39;electrodes&#39;: _apply_affine(electrodes_start, _transform)}
+        new_turn = projectElectrodes(hullcortex, new_turn, normdist, normUse=False, interstype=&#39;fixed&#39;, intersval=intersval)
+        coords.append(new_turn)
+
+    return coords
+
+
+def projectToCoarser(ROI, cortexcoarser, turns=None):
+    &#34;&#34;&#34;
+    Project the create grid onto the coarser model
+
+    turns is not necessary
+    &#34;&#34;&#34;
+    f = partial(projectToCoarser_per_point, cortexcoarser=cortexcoarser)
+    with Pool() as p:
+        ROI = p.map(f, ROI)
+
+    return ROI
+
+
+def projectToCoarser_per_point(coords, cortexcoarser):
+    intersval = 35
+    for one_coord in coords:
+        ss = {
+            &#39;electrodes&#39;: one_coord[&#39;trielectrodes&#39;],
+            &#39;normal&#39;: one_coord[&#39;normal&#39;],
+            }
+        ss = projectElectrodes(cortexcoarser, ss, 25, normUse=True, interstype=&#39;fixed&#39;, intersval=intersval)
+        one_coord[&#39;pint&#39;] = ss[&#39;trielectrodes&#39;]
+
+    return coords
+
+
+def calculateModel(null, ROI, cortex, normAngio=None):
+    &#34;&#34;&#34;Use only the first dimension
+    Cortex is only needed when using normAngio
+    &#34;&#34;&#34;
+    for coords in ROI:
+        for one_coord in coords:
+
+            # only the first dimension
+            McM = abs(one_coord[&#39;pint&#39;][:, 0] - one_coord[&#39;trielectrodes&#39;][:, 0])
+            McM = 1 - (McM - McM.min()) / McM.max()
+            one_coord[&#39;McM&#39;] = McM
+
+            if normAngio is None:
+                one_coord[&#39;weights&#39;] = one_coord[&#39;McM&#39;]
+
+    if normAngio is not None:
+        f = partial(_calculateVascularModel, cortex=cortex, normAngio=normAngio)
+        with Pool() as p:
+            ROI = p.map(f, ROI)
+
+    return ROI
+
+
+def _calculateVascularModel(coords, cortex, normAngio):
+    for one_coord in coords:
+        v = []
+        for pint in one_coord[&#39;pint&#39;]:
+            dist = norm(pint - cortex[&#39;pos&#39;], axis=1)
+            with errstate(invalid=&#39;ignore&#39;):
+                idx = dist &lt;= 2
+            v.append(mean(normAngio[idx]))
+        one_coord[&#39;MvM&#39;] = array(v)
+
+        one_coord[&#39;weights&#39;] = 0.5 * one_coord[&#39;MvM&#39;] + 0.5 * one_coord[&#39;McM&#39;]
+
+    return coords
+
+
+def indexFuncLegacy(subj_info):
+    &#34;&#34;&#34;Computes the label to assign to the electrode position (so not to the
+    ecog activity, as in matlab function)
+
+    Requires
+      - hemiVect:
+        - hemi: &#39;l&#39; or &#39;r&#39;
+        - side: &#39;u&#39; (up), &#39;d&#39; (down), &#39;l&#39; (left), or &#39;r&#39; (right)
+
+    - dims [n_columns, n_rows]
+    Note that `dims` is first columns, then rows, so for the normal grid it&#39;s
+    [8, 16]
+
+    &#34;&#34;&#34;
+    n_columns, n_rows = subj_info[&#39;dims&#39;]
+
+    if subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;l&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;LRBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;RLTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elif subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;r&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;LRTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;RLBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elec2d = make_grid_with_labels(n_rows, n_columns, direction=direction, chan_pattern=&#39;chan{}&#39;)
+    return elec2d[&#39;label&#39;].flatten(order=&#39;F&#39;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridloc.matlab.compat.calcTangent"><code class="name flex">
+<span>def <span class="ident">calcTangent</span></span>(<span>hullcortex, c, coords, dims, lngth, hemi)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calcTangent(hullcortex, c, coords, dims, lngth, hemi):
+
+    N = normElec(hullcortex, c, 25)
+    d = dot(N, c)
+
+    point = c
+    normal = N
+    tangPlane = coords.copy().reshape(prod(dims), 3)
+    tangPlane[:, 0] = (-normal[1] * tangPlane[:, 1] - normal[2] * tangPlane[:, 2] - d) / normal[0]  # l. 19
+    N = tangPlane[0, :] - tangPlane[7, :]
+    M = coords[0, :] - coords[7, :]
+
+    AngleBetweenPlanes = arctan2(norm(cross(M, N)), dot(M, N))
+
+    Point, IntersectionPlanes = plane_intersect(array([1., 0., 0.]), coords[0, :], normal, point)
+
+    RotMatrix = AxelRot(AngleBetweenPlanes, IntersectionPlanes, Point)
+    coords_Tangent = _apply_affine(coords, RotMatrix)
+
+    if hemi == &#39;r&#39;:
+        coords_Tangent[:, 0] = coords_Tangent[::-1, 0]  # l. 54-65
+
+    return coords_Tangent</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.calculateModel"><code class="name flex">
+<span>def <span class="ident">calculateModel</span></span>(<span>null, ROI, cortex, normAngio=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Use only the first dimension
+Cortex is only needed when using normAngio</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculateModel(null, ROI, cortex, normAngio=None):
+    &#34;&#34;&#34;Use only the first dimension
+    Cortex is only needed when using normAngio
+    &#34;&#34;&#34;
+    for coords in ROI:
+        for one_coord in coords:
+
+            # only the first dimension
+            McM = abs(one_coord[&#39;pint&#39;][:, 0] - one_coord[&#39;trielectrodes&#39;][:, 0])
+            McM = 1 - (McM - McM.min()) / McM.max()
+            one_coord[&#39;McM&#39;] = McM
+
+            if normAngio is None:
+                one_coord[&#39;weights&#39;] = one_coord[&#39;McM&#39;]
+
+    if normAngio is not None:
+        f = partial(_calculateVascularModel, cortex=cortex, normAngio=normAngio)
+        with Pool() as p:
+            ROI = p.map(f, ROI)
+
+    return ROI</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.createGrid"><code class="name flex">
+<span>def <span class="ident">createGrid</span></span>(<span>sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create GRID per ROI point and project on cortex</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sub</code></strong> :&ensp;<code>dict</code> of <code>array</code></dt>
+<dd>the same as 'projectedROIpoints'</dd>
+<dt><strong><code>rotation</code></strong> :&ensp;<code>None</code></dt>
+<dd>not used (but it might be in the future)</dd>
+<dt><strong><code>turns</code></strong> :&ensp;<code>None</code></dt>
+<dd>not used (but it might be in the future)</dd>
+<dt><strong><code>auxDims</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>dimensions of the grid</dd>
+<dt><strong><code>subj_info</code></strong> :&ensp;<code>dict</code></dt>
+<dd>information about this subject</dd>
+<dt><strong><code>hullcortex</code></strong> :&ensp;<code>dict with 'pos' and 'tri'</code></dt>
+<dd>hull cortex</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def createGrid(sub, rotation=None, turns=None, auxDims=None, subj_info=None, hullcortex=None):
+    &#34;&#34;&#34;Create GRID per ROI point and project on cortex
+
+    Parameters
+    ----------
+    sub : dict of array
+        the same as &#39;projectedROIpoints&#39;
+    rotation : None
+        not used (but it might be in the future)
+    turns : None
+        not used (but it might be in the future)
+    auxDims : tuple of int
+        dimensions of the grid
+    subj_info : dict
+        information about this subject
+    hullcortex : dict with &#39;pos&#39; and &#39;tri&#39;
+        hull cortex
+    &#34;&#34;&#34;
+    hemivect = subj_info[&#39;hemiVect&#39;]
+    intElec = subj_info[&#39;intElec&#39;]
+    f = partial(createGrid_per_point, sub=sub, intElec=intElec, auxDims=auxDims, hemivect=hemivect, hullcortex=hullcortex)
+    with Pool(initializer=be_nice) as p:
+        ROI = p.map(f, range(sub[&#39;electrodes&#39;].shape[0]))
+
+    return ROI</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.createGrid_per_point"><code class="name flex">
+<span>def <span class="ident">createGrid_per_point</span></span>(<span>roi_punt, sub, intElec, auxDims, hemivect, hullcortex)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def createGrid_per_point(roi_punt, sub, intElec, auxDims, hemivect, hullcortex):
+    ROI_pos = sub[&#39;trielectrodes&#39;][roi_punt, :]
+    ROI_norm = sub[&#39;normal&#39;][roi_punt, :]
+
+    # swap orientation when on the side
+    if hemivect[&#39;side&#39;] in (&#39;r&#39;, &#39;l&#39;):
+        auxDims = auxDims[1], auxDims[0]
+
+    twoDgridElectrodes = calcCoords(ROI_pos, intElec, auxDims)
+    electrodes_start = calcTangent(hullcortex, ROI_pos, twoDgridElectrodes, auxDims, prod(auxDims), hemivect[&#39;hemi&#39;])
+
+    normNormals = ROI_norm / norm(ROI_norm)
+
+    # apply first rotation
+    _transform = AxelRot(-45 / 180 * pi, normNormals, ROI_pos)
+    electrodes_start = _apply_affine(electrodes_start, _transform)  # l. 44-50
+
+    normdist = 25
+    intersval = 30  # use largest range anyway
+
+    coords = []
+    rotations = range(90)
+    for rotation in rotations:
+        _transform = AxelRot(rotation / 180 * pi, normNormals, ROI_pos)
+        new_turn = {&#39;electrodes&#39;: _apply_affine(electrodes_start, _transform)}
+        new_turn = projectElectrodes(hullcortex, new_turn, normdist, normUse=False, interstype=&#39;fixed&#39;, intersval=intersval)
+        coords.append(new_turn)
+
+    return coords</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.getROI"><code class="name flex">
+<span>def <span class="ident">getROI</span></span>(<span>surf, ref_vert, ROIsize=18, intElec=3)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>generate 10x10 grid, on one plane</p>
+<h2 id="todo">Todo</h2>
+<p>we should calculate pos and norm from
+pos -&gt; projected position
+normal -&gt; normal to the hullcortex</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getROI(surf, ref_vert, ROIsize=18, intElec=3):
+    &#34;&#34;&#34;generate 10x10 grid, on one plane
+
+    TODO
+    ----
+    we should calculate pos and norm from
+    pos -&gt; projected position
+    normal -&gt; normal to the hullcortex
+    &#34;&#34;&#34;
+    pos = surf[&#39;pos&#39;][ref_vert, :]
+    normal = surf[&#39;pos_norm&#39;][ref_vert, :]
+
+    # trying to replicate getROI.m (l. 69-90) but we do not consider the orientation here
+    steps = arange(-ROIsize + intElec, ROIsize - intElec, intElec)
+    x_mesh, y_mesh = meshgrid(steps, steps)
+
+    ROI = []
+    for x, y in zip(x_mesh.flatten(), y_mesh.flatten()):
+        coords_2d = array([x, y])
+        plane = calc_plane_to_axis(normal)
+        target = coords_2d @ plane + pos
+        ROI.append(target)
+
+    return array(ROI)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.indexFuncLegacy"><code class="name flex">
+<span>def <span class="ident">indexFuncLegacy</span></span>(<span>subj_info)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Computes the label to assign to the electrode position (so not to the
+ecog activity, as in matlab function)</p>
+<p>Requires
+- hemiVect:
+- hemi: 'l' or 'r'
+- side: 'u' (up), 'd' (down), 'l' (left), or 'r' (right)</p>
+<ul>
+<li>dims [n_columns, n_rows]
+Note that <code>dims</code> is first columns, then rows, so for the normal grid it's
+[8, 16]</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def indexFuncLegacy(subj_info):
+    &#34;&#34;&#34;Computes the label to assign to the electrode position (so not to the
+    ecog activity, as in matlab function)
+
+    Requires
+      - hemiVect:
+        - hemi: &#39;l&#39; or &#39;r&#39;
+        - side: &#39;u&#39; (up), &#39;d&#39; (down), &#39;l&#39; (left), or &#39;r&#39; (right)
+
+    - dims [n_columns, n_rows]
+    Note that `dims` is first columns, then rows, so for the normal grid it&#39;s
+    [8, 16]
+
+    &#34;&#34;&#34;
+    n_columns, n_rows = subj_info[&#39;dims&#39;]
+
+    if subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;l&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;LRBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;RLTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elif subj_info[&#39;hemiVect&#39;][&#39;hemi&#39;] == &#39;r&#39;:
+        if subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;u&#39;:
+            direction = &#39;TBRL&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;d&#39;:
+            direction = &#39;BTLR&#39;
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;r&#39;:
+            direction = &#39;LRTB&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+        elif subj_info[&#39;hemiVect&#39;][&#39;side&#39;] == &#39;l&#39;:
+            direction = &#39;RLBT&#39;
+            n_rows, n_columns = n_columns, n_rows
+
+    elec2d = make_grid_with_labels(n_rows, n_columns, direction=direction, chan_pattern=&#39;chan{}&#39;)
+    return elec2d[&#39;label&#39;].flatten(order=&#39;F&#39;)</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.normElec"><code class="name flex">
+<span>def <span class="ident">normElec</span></span>(<span>surf, electrode, normdist, NaN_as_zeros=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="notes">Notes</h2>
+<p>When <code>normway</code> is a scalar, it takes the normal of the points of the mesh which are closer
+than <code>normway</code>. However, some points have a normal of (0, 0, 0) (default assigned
+if the vertex does not belong to any triangle). projectElectrodes.m includes
+those (0, 0, 0) in the calculation, but it might not be correct.
+See l. 138 (there are no NaN in normals but only (0, 0, 0)).</p>
+<p>To replicate the matlab behavior, make sure that <code>NaN_as_zeros</code> is True.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def normElec(surf, electrode, normdist, NaN_as_zeros=True):
+    &#34;&#34;&#34;
+    Notes
+    -----
+    When `normway` is a scalar, it takes the normal of the points of the mesh which are closer
+    than `normway`. However, some points have a normal of (0, 0, 0) (default assigned
+    if the vertex does not belong to any triangle). projectElectrodes.m includes
+    those (0, 0, 0) in the calculation, but it might not be correct.
+    See l. 138 (there are no NaN in normals but only (0, 0, 0)).
+
+    To replicate the matlab behavior, make sure that `NaN_as_zeros` is True.
+    &#34;&#34;&#34;
+    dvect = norm(electrode - surf[&#39;pos&#39;], axis=1)  # l. 104-112 of projectElectrodes.m
+    closevert = dvect &lt; normdist  # l. 120 of projectElectrodes.m
+    normal = surf[&#39;pos_norm&#39;][closevert, :].mean(axis=0)  # l. 144 of projectElectrodes.m
+
+    normals2av = surf[&#39;pos_norm&#39;][closevert, :].copy()
+    if NaN_as_zeros:
+        normals2av[isnan(normals2av)] = 0
+    normal = nanmean(normals2av, axis=0)
+
+    return normal</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.projectElectrodes"><code class="name flex">
+<span>def <span class="ident">projectElectrodes</span></span>(<span>surf, subjstructs, normway, normUse=False, interstype='', intersval=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replicate projectElectrodes. This function is a ray-triangle intersection.
+The normal of the point is specified in <code>normway</code> if normway has three values.
+Otherwise, it computes the normal based on the direction of the points of the
+mesh which are closer than <code>normway</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict with 'pos', 'tri'</code></dt>
+<dd>surface of the brain use to project the electrodes (it's not necessary
+to have 'tri_norm')</dd>
+<dt><strong><code>subjstructs</code></strong> :&ensp;<code>dict with 'electrodes'</code></dt>
+<dd>location of the electrodes</dd>
+<dt><strong><code>normway</code></strong> :&ensp;<code>float</code></dt>
+<dd>distance to use to include mesh points when computing the normal</dd>
+<dt><strong><code>normUse</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if true, it uses the normals of <code>subjstructs</code>, if false it recomputes them</dd>
+<dt><strong><code>interstype</code></strong> :&ensp;<code>str</code></dt>
+<dd>if <code>''</code> all triangles of the model are processed; if <code>'fixed'</code>, you need
+to specify a radius <code>intersval</code></dd>
+<dt><strong><code>intersval</code></strong> :&ensp;<code>float</code></dt>
+<dd>radius when <code>interstype</code> == <code>'fixed'</code></dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict with 'electrodes', 'normals', 'trielectrodes'</code></dt>
+<dd>for each electrode, it returns its normal (based on neighboring mesh
+vertices) and the projection onto the surface.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype=&#39;&#39;,
+                      intersval=0):
+    &#34;&#34;&#34;Replicate projectElectrodes. This function is a ray-triangle intersection.
+    The normal of the point is specified in `normway` if normway has three values.
+    Otherwise, it computes the normal based on the direction of the points of the
+    mesh which are closer than `normway`.
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    subjstructs : dict with &#39;electrodes&#39;
+        location of the electrodes
+    normway : float
+        distance to use to include mesh points when computing the normal
+    normUse : bool
+        if true, it uses the normals of `subjstructs`, if false it recomputes them
+    interstype : str
+        if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
+        to specify a radius `intersval`
+    intersval : float
+        radius when `interstype` == `&#39;fixed&#39;`
+
+    Returns
+    -------
+    dict with &#39;electrodes&#39;, &#39;normals&#39;, &#39;trielectrodes&#39;
+        for each electrode, it returns its normal (based on neighboring mesh
+        vertices) and the projection onto the surface.
+    &#34;&#34;&#34;
+    assert interstype in (&#39;&#39;, &#39;fixed&#39;)
+
+    normdist = normway  # if normway is scalar
+
+    normals = []
+    pints = []
+    for i in range(subjstructs[&#39;electrodes&#39;].shape[0]):
+        electrode = subjstructs[&#39;electrodes&#39;][i, :]
+
+        if normUse:
+            normal = subjstructs[&#39;normal&#39;][i, :]
+        else:
+            normal = normElec(surf, electrode, normdist)
+
+        if interstype == &#39;fixed&#39;:
+            sorttri = _sort_closest_triangles(surf, electrode, intersval)
+
+        else:
+            sorttri = None
+
+        # note the sign of normal is inverted
+        pint = project_to_cortex(surf, electrode, normal, sorted_triangles=sorttri)[1]  # l. 198-237
+
+        normals.append(normal)
+        pints.append(pint)
+
+    subjstructs[&#39;normal&#39;] = array(normals)
+    subjstructs[&#39;trielectrodes&#39;] = array(pints)
+
+    return subjstructs</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.projectToCoarser"><code class="name flex">
+<span>def <span class="ident">projectToCoarser</span></span>(<span>ROI, cortexcoarser, turns=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Project the create grid onto the coarser model</p>
+<p>turns is not necessary</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def projectToCoarser(ROI, cortexcoarser, turns=None):
+    &#34;&#34;&#34;
+    Project the create grid onto the coarser model
+
+    turns is not necessary
+    &#34;&#34;&#34;
+    f = partial(projectToCoarser_per_point, cortexcoarser=cortexcoarser)
+    with Pool() as p:
+        ROI = p.map(f, ROI)
+
+    return ROI</code></pre>
+</details>
+</dd>
+<dt id="gridloc.matlab.compat.projectToCoarser_per_point"><code class="name flex">
+<span>def <span class="ident">projectToCoarser_per_point</span></span>(<span>coords, cortexcoarser)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def projectToCoarser_per_point(coords, cortexcoarser):
+    intersval = 35
+    for one_coord in coords:
+        ss = {
+            &#39;electrodes&#39;: one_coord[&#39;trielectrodes&#39;],
+            &#39;normal&#39;: one_coord[&#39;normal&#39;],
+            }
+        ss = projectElectrodes(cortexcoarser, ss, 25, normUse=True, interstype=&#39;fixed&#39;, intersval=intersval)
+        one_coord[&#39;pint&#39;] = ss[&#39;trielectrodes&#39;]
+
+    return coords</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gridloc.matlab" href="index.html">gridloc.matlab</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridloc.matlab.compat.calcTangent" href="#gridloc.matlab.compat.calcTangent">calcTangent</a></code></li>
+<li><code><a title="gridloc.matlab.compat.calculateModel" href="#gridloc.matlab.compat.calculateModel">calculateModel</a></code></li>
+<li><code><a title="gridloc.matlab.compat.createGrid" href="#gridloc.matlab.compat.createGrid">createGrid</a></code></li>
+<li><code><a title="gridloc.matlab.compat.createGrid_per_point" href="#gridloc.matlab.compat.createGrid_per_point">createGrid_per_point</a></code></li>
+<li><code><a title="gridloc.matlab.compat.getROI" href="#gridloc.matlab.compat.getROI">getROI</a></code></li>
+<li><code><a title="gridloc.matlab.compat.indexFuncLegacy" href="#gridloc.matlab.compat.indexFuncLegacy">indexFuncLegacy</a></code></li>
+<li><code><a title="gridloc.matlab.compat.normElec" href="#gridloc.matlab.compat.normElec">normElec</a></code></li>
+<li><code><a title="gridloc.matlab.compat.projectElectrodes" href="#gridloc.matlab.compat.projectElectrodes">projectElectrodes</a></code></li>
+<li><code><a title="gridloc.matlab.compat.projectToCoarser" href="#gridloc.matlab.compat.projectToCoarser">projectToCoarser</a></code></li>
+<li><code><a title="gridloc.matlab.compat.projectToCoarser_per_point" href="#gridloc.matlab.compat.projectToCoarser_per_point">projectToCoarser_per_point</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

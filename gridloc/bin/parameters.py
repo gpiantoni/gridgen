@@ -124,8 +124,9 @@ TEMPLATE = {
             },
         "pial_file": {
             'type': 'str',
-            'necessary': True,
+            'necessary': False,
             'help': 'path to pial surface (in particular, the lh.pial or rh.pial from freesurfer). You need to specify key `morphology` in `parameters.json`',
+            'default': None,
             },
         "func_file": {
             'type': 'str',
