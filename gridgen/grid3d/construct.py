@@ -27,6 +27,7 @@ def construct_grid(surf, start_vert, start_label, labels, grid3d, rotation=0):
     grid3d : dict
         - interelec_distance : float
         - maximum_angle : float
+        - step_angle : float
     rotation : float
         rotation from the inferior-superior axis (clockwise, in degrees)
 

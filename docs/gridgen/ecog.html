@@ -107,19 +107,19 @@ def put_ecog_on_grid2d(ecog, grid2d):
     &#34;&#34;&#34;
     d_ = dtype([
         (&#39;label&#39;, &#39;&lt;U256&#39;),
-        (&#39;ecog&#39;, &#39;f8&#39;),
+        (&#39;value&#39;, &#39;f8&#39;),
         (&#39;good&#39;, &#39;bool&#39;),
         ])
     ecog_on_grid = zeros(grid2d.shape, dtype=d_)
 
     ecog_on_grid[&#39;label&#39;] = grid2d[&#39;label&#39;]
-    ecog_on_grid[&#39;ecog&#39;].fill(NaN)
+    ecog_on_grid[&#39;value&#39;].fill(NaN)
 
     for x in range(ecog_on_grid.shape[0]):
         for y in range(ecog_on_grid.shape[1]):
             label = ecog_on_grid[&#39;label&#39;][x, y]
             if label in ecog.axis[&#39;chan&#39;][0]:
-                ecog_on_grid[&#39;ecog&#39;][x, y] = ecog(trial=0, chan=label)
+                ecog_on_grid[&#39;value&#39;][x, y] = ecog(trial=0, chan=label)
                 ecog_on_grid[&#39;good&#39;][x, y] = True
 
     return ecog_on_grid</code></pre>
@@ -180,19 +180,19 @@ location</p>
     &#34;&#34;&#34;
     d_ = dtype([
         (&#39;label&#39;, &#39;&lt;U256&#39;),
-        (&#39;ecog&#39;, &#39;f8&#39;),
+        (&#39;value&#39;, &#39;f8&#39;),
         (&#39;good&#39;, &#39;bool&#39;),
         ])
     ecog_on_grid = zeros(grid2d.shape, dtype=d_)
 
     ecog_on_grid[&#39;label&#39;] = grid2d[&#39;label&#39;]
-    ecog_on_grid[&#39;ecog&#39;].fill(NaN)
+    ecog_on_grid[&#39;value&#39;].fill(NaN)
 
     for x in range(ecog_on_grid.shape[0]):
         for y in range(ecog_on_grid.shape[1]):
             label = ecog_on_grid[&#39;label&#39;][x, y]
             if label in ecog.axis[&#39;chan&#39;][0]:
-                ecog_on_grid[&#39;ecog&#39;][x, y] = ecog(trial=0, chan=label)
+                ecog_on_grid[&#39;value&#39;][x, y] = ecog(trial=0, chan=label)
                 ecog_on_grid[&#39;good&#39;][x, y] = True
 
     return ecog_on_grid</code></pre>

@@ -90,8 +90,6 @@ def write_grid2d(grid_file, grid2d):
     with grid_file.open(&#39;w&#39;) as f:
         for row in grid2d[&#39;label&#39;]:
             f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)
-        wires = [WIRE, ] * len(row)
-        f.write(&#39;\t&#39;.join(wires))
 
 
 def read_grid2d(grid_file):
@@ -1143,9 +1141,7 @@ To get from volume to surface coordinates, substract these numbers.</p>
     &#34;&#34;&#34;
     with grid_file.open(&#39;w&#39;) as f:
         for row in grid2d[&#39;label&#39;]:
-            f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)
-        wires = [WIRE, ] * len(row)
-        f.write(&#39;\t&#39;.join(wires))</code></pre>
+            f.write(&#39;\t&#39;.join(row) + &#39;\n&#39;)</code></pre>
 </details>
 </dd>
 <dt id="gridgen.io.write_tsv"><code class="name flex">

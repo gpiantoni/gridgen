@@ -27,15 +27,24 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Function to build a grid from a starting point, in 2D
 &#34;&#34;&#34;
-from numpy import NaN, dtype, zeros, array, fliplr, flipud
+from numpy import NaN, dtype, zeros, array, fliplr, flipud, vstack
 from logging import getLogger
+from .utils import WIRE
 
 
 lg = getLogger(__name__)
 
 
+d_ = dtype([
+    (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
+    (&#39;pos&#39;, &#39;f4&#39;, (3, )),
+    (&#39;norm&#39;, &#39;f4&#39;, (3, )),
+    (&#39;done&#39;, &#39;bool&#39;),
+    ])
+
+
 def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39;):
-    &#34;&#34;&#34;Create a regular 2D grid, with labels.
+    &#34;&#34;&#34;Create a regular 2D grid, with labels and wires
 
     Parameters
     ----------
@@ -56,11 +65,13 @@ def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39
 
     Returns
     -------
-    ndarray of shape (n_rows, n_columns) with fields:
+    ndarray of shape (n_rows + 1, n_columns) with fields:
         - label : str (labels)
         - pos : 3 floats (specifying the x, y, z position)
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
+
+    The labels in the bottom row are all WIRE
     &#34;&#34;&#34;
     grid = make_grid(n_rows, n_columns)
 
@@ -77,7 +88,10 @@ def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39
         labels = flipud(labels)
     grid[&#39;label&#39;] = labels
 
-    return grid
+    wires = zeros((1, n_columns), dtype=d_)
+    wires[&#39;label&#39;] = WIRE
+
+    return vstack([grid, wires])
 
 
 def make_grid(n_rows, n_columns):
@@ -98,12 +112,6 @@ def make_grid(n_rows, n_columns):
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
     &#34;&#34;&#34;
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;pos&#39;, &#39;f4&#39;, (3, )),
-        (&#39;norm&#39;, &#39;f4&#39;, (3, )),
-        (&#39;done&#39;, &#39;bool&#39;),
-        ])
     grid = zeros((n_rows, n_columns), dtype=d_)
     grid[&#39;pos&#39;].fill(NaN)
     grid[&#39;norm&#39;].fill(NaN)
@@ -165,12 +173,6 @@ def make_grid(n_rows, n_columns):
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
     &#34;&#34;&#34;
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;pos&#39;, &#39;f4&#39;, (3, )),
-        (&#39;norm&#39;, &#39;f4&#39;, (3, )),
-        (&#39;done&#39;, &#39;bool&#39;),
-        ])
     grid = zeros((n_rows, n_columns), dtype=d_)
     grid[&#39;pos&#39;].fill(NaN)
     grid[&#39;norm&#39;].fill(NaN)
@@ -183,7 +185,7 @@ def make_grid(n_rows, n_columns):
 <span>def <span class="ident">make_grid_with_labels</span></span>(<span>n_rows, n_columns, direction, chan_pattern='{}')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a regular 2D grid, with labels.</p>
+<div class="desc"><p>Create a regular 2D grid, with labels and wires</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>n_rows</code></strong> :&ensp;<code>int</code></dt>
@@ -203,7 +205,7 @@ def make_grid(n_rows, n_columns):
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>ndarray</code> of <code>shape (n_rows, n_columns) with fields:</code></dt>
+<dt><code>ndarray</code> of <code>shape (n_rows + 1, n_columns) with fields:</code></dt>
 <dd>
 <ul>
 <li>label : str (labels)</li>
@@ -212,13 +214,15 @@ def make_grid(n_rows, n_columns):
 <li>done : bool (where the position has been computed or not)</li>
 </ul>
 </dd>
+<dt><code>The labels in the bottom row are all WIRE</code></dt>
+<dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39;):
-    &#34;&#34;&#34;Create a regular 2D grid, with labels.
+    &#34;&#34;&#34;Create a regular 2D grid, with labels and wires
 
     Parameters
     ----------
@@ -239,11 +243,13 @@ def make_grid(n_rows, n_columns):
 
     Returns
     -------
-    ndarray of shape (n_rows, n_columns) with fields:
+    ndarray of shape (n_rows + 1, n_columns) with fields:
         - label : str (labels)
         - pos : 3 floats (specifying the x, y, z position)
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
+
+    The labels in the bottom row are all WIRE
     &#34;&#34;&#34;
     grid = make_grid(n_rows, n_columns)
 
@@ -260,7 +266,10 @@ def make_grid(n_rows, n_columns):
         labels = flipud(labels)
     grid[&#39;label&#39;] = labels
 
-    return grid</code></pre>
+    wires = zeros((1, n_columns), dtype=d_)
+    wires[&#39;label&#39;] = WIRE
+
+    return vstack([grid, wires])</code></pre>
 </details>
 </dd>
 </dl>
