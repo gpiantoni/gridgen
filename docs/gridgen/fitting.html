@@ -45,23 +45,6 @@ from .grid3d import construct_grid
 lg = getLogger(__name__)
 
 
-def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
-
-    grid = construct_grid(
-        mris[&#34;dura&#34;],
-        initial[&#39;vertex&#39;],
-        initial[&#34;label&#34;],
-        grid2d[&#39;label&#39;],
-        grid3d,
-        rotation=initial[&#39;rotation&#39;])
-
-    model = compute_model(mris, grid, morphology, functional)
-
-    fig = plot_electrodes(mris[&#39;pial&#39;], grid, ref_label=initial[&#39;label&#39;], angio=mris[&#39;angio&#39;])
-    grid_file = output / &#39;start_pos.html&#39;
-    to_html([to_div(fig), ], grid_file)
-
-
 
 def fitting(output, ecog, grid3d, initial, mri, fit):
     &#34;&#34;&#34;Fit the brain activity onto the surface
@@ -641,32 +624,6 @@ reading)</p>
     return m</code></pre>
 </details>
 </dd>
-<dt id="gridgen.fitting.make_grid3d_model"><code class="name flex">
-<span>def <span class="ident">make_grid3d_model</span></span>(<span>output, grid2d, mris, grid3d, initial, morphology={}, functional={})</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
-
-    grid = construct_grid(
-        mris[&#34;dura&#34;],
-        initial[&#39;vertex&#39;],
-        initial[&#34;label&#34;],
-        grid2d[&#39;label&#39;],
-        grid3d,
-        rotation=initial[&#39;rotation&#39;])
-
-    model = compute_model(mris, grid, morphology, functional)
-
-    fig = plot_electrodes(mris[&#39;pial&#39;], grid, ref_label=initial[&#39;label&#39;], angio=mris[&#39;angio&#39;])
-    grid_file = output / &#39;start_pos.html&#39;
-    to_html([to_div(fig), ], grid_file)</code></pre>
-</details>
-</dd>
 <dt id="gridgen.fitting.merge_models"><code class="name flex">
 <span>def <span class="ident">merge_models</span></span>(<span>model)</span>
 </code></dt>
@@ -731,7 +688,6 @@ reading)</p>
 <li><code><a title="gridgen.fitting.fitting" href="#gridgen.fitting.fitting">fitting</a></code></li>
 <li><code><a title="gridgen.fitting.fitting_brute" href="#gridgen.fitting.fitting_brute">fitting_brute</a></code></li>
 <li><code><a title="gridgen.fitting.fitting_simplex" href="#gridgen.fitting.fitting_simplex">fitting_simplex</a></code></li>
-<li><code><a title="gridgen.fitting.make_grid3d_model" href="#gridgen.fitting.make_grid3d_model">make_grid3d_model</a></code></li>
 <li><code><a title="gridgen.fitting.merge_models" href="#gridgen.fitting.merge_models">merge_models</a></code></li>
 </ul>
 </li>

@@ -2,4 +2,4 @@
 1) morphology (a mesh, such as pial surface)
 2) functional (a volume, such as fMRI data or angiogram)
 """
-from .compute import compute_model
+from .compute import compute_model, make_grid3d_model

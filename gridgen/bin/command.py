@@ -14,8 +14,9 @@ from .parameters import (
     _JSONEncoder_path
     )
 
-from ..fitting import fitting, make_grid3d_model
+from ..fitting import fitting
 from ..matlab import compare_to_matlab
+from ..models import make_grid3d_model
 from ..viz import to_html, to_div, plot_grid2d
 from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
@@ -207,10 +208,12 @@ def main(arguments=None):
 
         make_grid3d_model(
             output=output_dir,
-            ecog=grid2d,
-            initial=parameters['initial'],
-            mri=mris,
+            grid2d=grid2d,
+            mris=mris,
             grid3d=parameters['grid3d'],
+            initial=parameters['initial'],
+            morphology=parameters.get('morphology', {}),
+            functional=parameters.get('functional', {}),
             )
 
     if args.function == 'fit':

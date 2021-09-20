@@ -18,23 +18,6 @@ from .grid3d import construct_grid
 lg = getLogger(__name__)
 
 
-def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
-
-    grid = construct_grid(
-        mris["dura"],
-        initial['vertex'],
-        initial["label"],
-        grid2d['label'],
-        grid3d,
-        rotation=initial['rotation'])
-
-    model = compute_model(mris, grid, morphology, functional)
-
-    fig = plot_electrodes(mris['pial'], grid, ref_label=initial['label'], angio=mris['angio'])
-    grid_file = output / 'start_pos.html'
-    to_html([to_div(fig), ], grid_file)
-
-
 
 def fitting(output, ecog, grid3d, initial, mri, fit):
     """Fit the brain activity onto the surface

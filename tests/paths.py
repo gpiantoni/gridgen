@@ -5,7 +5,6 @@ TEST_PATH = Path(__file__).resolve().parent
 ANALYSIS_PATH = TEST_PATH / 'analysis'
 DATA_PATH = ANALYSIS_PATH / 'data'
 
-PARAMETERS_FILE = ANALYSIS_PATH / 'parameters.json'
 SMOOTH_FILE = DATA_PATH / 'lh_smooth.pial'
 PIAL_FILE = DATA_PATH / 'lh.pial'
 T1_FILE = DATA_PATH / 'T1.mgz'

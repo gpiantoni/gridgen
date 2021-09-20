@@ -1,43 +1,51 @@
 from gridgen.bin.command import main
+from gridgen.bin.parameters import REQUIRED, _JSONEncoder_path
 from json import dump
-from .paths import DATA_PATH, OUTPUT_PATH, PARAMETERS_FILE, ECOG_FILE
+from .paths import DATA_PATH, OUTPUT_PATH, ECOG_FILE
 
-
-PARAMETERS = {
-    "output": str(OUTPUT_PATH),
-    "grid": {
-        "n_rows": 4,
-        "n_columns": 5,
+EXAMPLES = {
+    "grid2d": {
+        "n_rows": 3,
+        "n_columns": 3,
+        "direction": "TBLR",
         "chan_pattern": "chan{}"
         },
     "ecog": {
-        "file": str(ECOG_FILE),
+        "ecog_file": str(ECOG_FILE),
         "begtime": 0,
         "endtime": 10,
         "freq_range": [60, 90]
         },
-    "fitting": {
+    "mri": {
         "T1_file": str(DATA_PATH / "T1.mgz"),
         "dura_file": str(DATA_PATH / "lh_smooth.pial"),
-        "pial_file": str(DATA_PATH / "lh.pial"),
-        "angio_file": None,  # str(DATA_PATH / "angiogram.nii.gz"),
-        "angio_threshold": 100,
-        "initial": {
-            "label": "chan4",
-            "RAS": [-34, 0, 8],
-            "rotation": 0,
-            },
-        }
+        },
+    "grid3d": {
+        },
+    "initial": {
+        "label": "chan4",
+        "RAS": [10, 42, 40],
+        "rotation": 90,
+        },
     }
 
 
-def notest_cmd_grid2d():
-    with PARAMETERS_FILE.open('w') as f:
-        dump(PARAMETERS, f, indent=2)
 
-    main([str(PARAMETERS_FILE), 'grid2d'])
+def test_cmd():
 
+    for cmd in list(REQUIRED)[:3]:
 
-def notest_cmd_ecog():
+        params = {}
+        params['output_dir'] = OUTPUT_PATH
+        for grp in REQUIRED[cmd]:
+            params[grp] = EXAMPLES[grp]
 
-    main([str(PARAMETERS_FILE), 'ecog'])
+        if params.get('mri', {}).get('pial_file', None) is not None:
+            params['morphology'] = {}
+
+        param_json = OUTPUT_PATH / (cmd + '.json')
+
+        with param_json.open('w') as f:
+            dump(params, f, indent=2, cls=_JSONEncoder_path)
+
+        main([str(param_json), cmd])
