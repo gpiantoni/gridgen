@@ -1,8 +1,8 @@
 from numpy.testing import assert_array_almost_equal
 
-from gridloc.ecog.read_ecog import read_ecog, put_ecog_on_grid2d
-from gridloc.construct import make_grid_with_labels
-from gridloc.io import read_ecog2d, write_ecog2d, write_grid2d
+from gridgen.ecog.read_ecog import read_ecog, put_ecog_on_grid2d
+from gridgen.construct import make_grid_with_labels
+from gridgen.io import read_ecog2d, write_ecog2d, write_grid2d
 
 from .paths import ECOG_FILE, OUTPUT_PATH
 

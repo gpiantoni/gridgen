@@ -1,4 +1,4 @@
-from gridloc.bin.command import main
+from gridgen.bin.command import main
 from json import dump
 from .paths import DATA_PATH, OUTPUT_PATH, PARAMETERS_FILE, ECOG_FILE
 

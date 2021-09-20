@@ -1,6 +1,6 @@
 from numpy import array
 from numpy.testing import assert_array_equal
-from gridloc.io import read_surf, read_surface_ras_shift, export_transform, read_volume
+from gridgen.io import read_surf, read_surface_ras_shift, export_transform, read_volume
 
 from .paths import T1_FILE, SMOOTH_FILE, OUTPUT_PATH
 

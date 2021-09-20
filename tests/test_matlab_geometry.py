@@ -2,8 +2,8 @@ from numpy import cross
 from numpy.linalg import norm
 from numpy.testing import assert_array_almost_equal
 
-from gridloc.matlab.geometry import project_to_cortex
-from gridloc.io import read_surf
+from gridgen.matlab.geometry import project_to_cortex
+from gridgen.io import read_surf
 
 from .paths import PIAL_FILE
 

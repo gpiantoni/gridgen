@@ -1,6 +1,6 @@
 from numpy import pi, array, dot
 from numpy.testing import assert_array_almost_equal
-from gridloc.geometry import calc_plane_to_axis
+from gridgen.grid3d.geometry import calc_plane_to_axis
 
 
 def test_rotation():

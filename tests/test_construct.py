@@ -1,6 +1,6 @@
-from gridloc.construct import construct_grid, make_grid_with_labels, index_order
-from gridloc.io import read_surf, export_grid
-from gridloc.geometry import search_grid
+from gridgen.construct import construct_grid, make_grid_with_labels, index_order
+from gridgen.io import read_surf, export_grid
+from gridgen.geometry import search_grid
 
 from numpy.testing import assert_array_almost_equal
 from numpy import array
