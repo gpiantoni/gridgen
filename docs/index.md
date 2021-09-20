@@ -1,4 +1,4 @@
-## GRIDLOC
+## GRIDGEN
 
 [Installation](installation.md)
 
@@ -6,5 +6,5 @@
 
 [Parameters](parameters.md)
 
-[API](gridloc/index.html)
+[API](gridgen/index.html)
 

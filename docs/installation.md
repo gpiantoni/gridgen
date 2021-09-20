@@ -5,8 +5,8 @@ Make sure if you have at least python 3.6 installed.
 Then you can install it, by typing:
 
 ```bash
-git pull https://github.com/gpiantoni/gridloc.git
-pip install -e gridloc
+git pull https://github.com/gpiantoni/gridgen.git
+pip install -e gridgen
 ```
 
 ## Dependencies

@@ -1,21 +1,21 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.4'
+VERSION = '0.5'
 
 long_description = ''
 
 setup(
-    name='gridloc',
+    name='gridgen',
     version=VERSION,
     description='',
     long_description=long_description,
-    url='https://github.com/gpiantoni/gridloc',
+    url='https://github.com/gpiantoni/gridgen',
     author="Gio Piantoni",
-    author_email='gridloc@gpiantoni.com',
-    license='GPLv3',
+    author_email='gridgen@gpiantoni.com',
+    license='BSD',
     classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3.6',
         ],
     keywords='analysis',
@@ -29,7 +29,7 @@ setup(
         ],
     entry_points={
         'console_scripts': [
-            'gridloc=gridloc.bin.command:main',
+            'gridgen=gridgen.bin.command:main',
         ],
     },
     )

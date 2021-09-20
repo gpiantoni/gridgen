@@ -1,5 +1,5 @@
-rm docs/gridloc -fr
-pdoc3 gridloc -o docs --html
-python3 gridloc/bin/parameters.py
+rm docs/gridgen -fr
+pdoc3 gridgen -o docs --html
+python3 gridgen/bin/parameters.py
 git add docs
 

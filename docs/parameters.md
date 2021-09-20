@@ -1,8 +1,8 @@
 ## Parameters
 
 Parameters should be saved as a `json` file.
-You can pass the parameters with the command `gridloc parameters.json func` where `func` is one of the possible functions (`grid2d`, `ecog`, `fit` etc).
-You can also use the command `gridloc parameters.json parameters` to generate a template `parameters.json` file.
+You can pass the parameters with the command `gridgen parameters.json func` where `func` is one of the possible functions (`grid2d`, `ecog`, `fit` etc).
+You can also use the command `gridgen parameters.json parameters` to generate a template `parameters.json` file.
 
 - **output_dir**: (str, optional) path to output directory
 - **grid2d** (required by command `grid2d`)

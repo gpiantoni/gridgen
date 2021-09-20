@@ -1,1 +1,1 @@
-See [documentation](https://gpiantoni.github.io/gridloc)
+See [documentation](https://gpiantoni.github.io/gridgen)
