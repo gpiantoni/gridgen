@@ -33,7 +33,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest -vv --cov=gridgen --cov-report=xml tests/test_geometry.py
+        pytest -vv --cov=gridgen --cov-report=xml tests
 
     - name: Code Coverage
       uses: codecov/codecov-action@v2
