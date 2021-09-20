@@ -11,29 +11,29 @@ d_ = dtype([
     ])
 
 
-def compute_morphology(grid, pial, method='minimum', max_distance=None, penalty=1):
-    if method == 'ray':
-        distance = _distance_ray(grid, pial)
+def compute_morphology(grid, pial, distance='minimum', maximum_distance=None, penalty=1):
+    if distance == 'ray':
+        dist = _distance_ray(grid, pial)
 
-    elif method == 'minimum':
-        distance = _distance_minimum(grid, pial)
+    elif distance == 'minimum':
+        dist = _distance_minimum(grid, pial)
 
-    elif method == 'view':
-        distance = _distance_view(grid, pial)
+    elif distance == 'view':
+        dist = _distance_view(grid, pial)
 
-    elif method == 'cylinder':
-        distance = _distance_cylinder(grid, pial)
+    elif distance == 'cylinder':
+        dist = _distance_cylinder(grid, pial)
 
-    elif method == 'pdf':
-        distance = _distance_pdf(grid, pial)
+    elif distance == 'pdf':
+        dist = _distance_pdf(grid, pial)
 
-    if max_distance and method in ('ray', 'minimum'):
-        i = isnan(distance['value']) | (distance['value'] > max_distance)
-        distance['value'][i] = NaN
+    if maximum_distance and distance in ('ray', 'minimum'):
+        i = isnan(dist['value']) | (dist['value'] > maximum_distance)
+        dist['value'][i] = NaN
 
-    distance['value'] = distance['value'] ** (-1 * penalty)
+    dist['value'] = dist['value'] ** (-1 * penalty)
 
-    return distance
+    return dist
 
 
 def _distance_ray(grid, pial):

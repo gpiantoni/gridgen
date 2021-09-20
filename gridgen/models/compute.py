@@ -5,12 +5,11 @@ from logging import getLogger
 from ..grid3d import construct_grid, find_vertex
 from .morphology import compute_morphology
 from .functional import compute_functional
-from ..viz import plot_electrodes, to_div, to_html
 
 lg = getLogger(__name__)
 
 
-def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, functional={}):
+def make_grid3d_model(mris, grid2d, grid3d, initial, morphology={}, functional={}):
 
     vertex = find_vertex(mris['dura'], initial['RAS'])
     grid = construct_grid(
@@ -24,10 +23,6 @@ def make_grid3d_model(output, grid2d, mris, grid3d, initial, morphology={}, func
     model = compute_model(mris, grid, morphology, functional)
 
     return model
-
-    fig = plot_electrodes(mris['pial'], grid, ref_label=initial['label'], angio=mris['angio'])
-    grid_file = output / 'start_pos.html'
-    to_html([to_div(fig), ], grid_file)
 
 
 def compute_model(mri, grid, morphology={}, functional={}):

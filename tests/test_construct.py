@@ -1,5 +1,5 @@
 from gridgen.grid2d import make_grid_with_labels, make_grid
-from gridgen.grid3d import find_vertex, construct_grid, measure_distances, measure_angles
+from gridgen.grid3d import find_vertex, construct_grid, measure_distances, measure_angles, search_grid
 from gridgen.grid3d.construct import index_order
 from gridgen.io import read_surf, export_grid, read_surface_ras_shift
 
@@ -17,6 +17,9 @@ def test_geometry_construct():
     smooth = read_surf(SMOOTH_FILE, normals=True)
     out_vertex = find_vertex(smooth, [10, 42, 40])
     assert out_vertex == 50747
+
+    vertex = search_grid(smooth, 50747, 5, -5)
+    assert vertex == 49086
 
     # test construct
     grid2d = make_grid_with_labels(4, 3, 'TBLR', chan_pattern='elec{}')

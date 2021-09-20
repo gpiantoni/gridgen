@@ -18,7 +18,6 @@ from .grid3d import construct_grid
 lg = getLogger(__name__)
 
 
-
 def fitting(output, ecog, grid3d, initial, mri, fit):
     """Fit the brain activity onto the surface
 

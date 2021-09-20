@@ -44,7 +44,7 @@ from .parameters import (
 from ..fitting import fitting
 from ..matlab import compare_to_matlab
 from ..models import make_grid3d_model
-from ..viz import to_html, to_div, plot_grid2d
+from ..viz import to_html, to_div, plot_grid2d, plot_electrodes
 from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
 from ..io import (
@@ -231,10 +231,8 @@ def main(arguments=None):
         output_dir = parameters[&#39;output_dir&#39;] / (&#39;grid3d_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing grid3d to {output_dir}&#39;)
-        output_dir = parameters[&#39;output_dir&#39;]
 
-        make_grid3d_model(
-            output=output_dir,
+        model = make_grid3d_model(
             grid2d=grid2d,
             mris=mris,
             grid3d=parameters[&#39;grid3d&#39;],
@@ -242,6 +240,13 @@ def main(arguments=None):
             morphology=parameters.get(&#39;morphology&#39;, {}),
             functional=parameters.get(&#39;functional&#39;, {}),
             )
+
+        fig = plot_electrodes(
+            mris[&#39;pial&#39;],
+            model[&#39;grid&#39;],
+            ref_label=parameters[&#39;initial&#39;][&#39;label&#39;])
+        grid_file = output_dir / &#39;start_pos.html&#39;
+        to_html([to_div(fig), ], grid_file)
 
     if args.function == &#39;fit&#39;:
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
@@ -463,10 +468,8 @@ def main(arguments=None):
         output_dir = parameters[&#39;output_dir&#39;] / (&#39;grid3d_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;))
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing grid3d to {output_dir}&#39;)
-        output_dir = parameters[&#39;output_dir&#39;]
 
-        make_grid3d_model(
-            output=output_dir,
+        model = make_grid3d_model(
             grid2d=grid2d,
             mris=mris,
             grid3d=parameters[&#39;grid3d&#39;],
@@ -474,6 +477,13 @@ def main(arguments=None):
             morphology=parameters.get(&#39;morphology&#39;, {}),
             functional=parameters.get(&#39;functional&#39;, {}),
             )
+
+        fig = plot_electrodes(
+            mris[&#39;pial&#39;],
+            model[&#39;grid&#39;],
+            ref_label=parameters[&#39;initial&#39;][&#39;label&#39;])
+        grid_file = output_dir / &#39;start_pos.html&#39;
+        to_html([to_div(fig), ], grid_file)
 
     if args.function == &#39;fit&#39;:
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)

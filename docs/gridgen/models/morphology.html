@@ -37,29 +37,29 @@ d_ = dtype([
     ])
 
 
-def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=1):
-    if method == &#39;ray&#39;:
-        distance = _distance_ray(grid, pial)
+def compute_morphology(grid, pial, distance=&#39;minimum&#39;, maximum_distance=None, penalty=1):
+    if distance == &#39;ray&#39;:
+        dist = _distance_ray(grid, pial)
 
-    elif method == &#39;minimum&#39;:
-        distance = _distance_minimum(grid, pial)
+    elif distance == &#39;minimum&#39;:
+        dist = _distance_minimum(grid, pial)
 
-    elif method == &#39;view&#39;:
-        distance = _distance_view(grid, pial)
+    elif distance == &#39;view&#39;:
+        dist = _distance_view(grid, pial)
 
-    elif method == &#39;cylinder&#39;:
-        distance = _distance_cylinder(grid, pial)
+    elif distance == &#39;cylinder&#39;:
+        dist = _distance_cylinder(grid, pial)
 
-    elif method == &#39;pdf&#39;:
-        distance = _distance_pdf(grid, pial)
+    elif distance == &#39;pdf&#39;:
+        dist = _distance_pdf(grid, pial)
 
-    if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
-        i = isnan(distance[&#39;value&#39;]) | (distance[&#39;value&#39;] &gt; max_distance)
-        distance[&#39;value&#39;][i] = NaN
+    if maximum_distance and distance in (&#39;ray&#39;, &#39;minimum&#39;):
+        i = isnan(dist[&#39;value&#39;]) | (dist[&#39;value&#39;] &gt; maximum_distance)
+        dist[&#39;value&#39;][i] = NaN
 
-    distance[&#39;value&#39;] = distance[&#39;value&#39;] ** (-1 * penalty)
+    dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
 
-    return distance
+    return dist
 
 
 def _distance_ray(grid, pial):
@@ -160,7 +160,7 @@ def _distance_pdf(grid, pial):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridgen.models.morphology.compute_morphology"><code class="name flex">
-<span>def <span class="ident">compute_morphology</span></span>(<span>grid, pial, method='minimum', max_distance=None, penalty=1)</span>
+<span>def <span class="ident">compute_morphology</span></span>(<span>grid, pial, distance='minimum', maximum_distance=None, penalty=1)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -168,29 +168,29 @@ def _distance_pdf(grid, pial):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_morphology(grid, pial, method=&#39;minimum&#39;, max_distance=None, penalty=1):
-    if method == &#39;ray&#39;:
-        distance = _distance_ray(grid, pial)
+<pre><code class="python">def compute_morphology(grid, pial, distance=&#39;minimum&#39;, maximum_distance=None, penalty=1):
+    if distance == &#39;ray&#39;:
+        dist = _distance_ray(grid, pial)
 
-    elif method == &#39;minimum&#39;:
-        distance = _distance_minimum(grid, pial)
+    elif distance == &#39;minimum&#39;:
+        dist = _distance_minimum(grid, pial)
 
-    elif method == &#39;view&#39;:
-        distance = _distance_view(grid, pial)
+    elif distance == &#39;view&#39;:
+        dist = _distance_view(grid, pial)
 
-    elif method == &#39;cylinder&#39;:
-        distance = _distance_cylinder(grid, pial)
+    elif distance == &#39;cylinder&#39;:
+        dist = _distance_cylinder(grid, pial)
 
-    elif method == &#39;pdf&#39;:
-        distance = _distance_pdf(grid, pial)
+    elif distance == &#39;pdf&#39;:
+        dist = _distance_pdf(grid, pial)
 
-    if max_distance and method in (&#39;ray&#39;, &#39;minimum&#39;):
-        i = isnan(distance[&#39;value&#39;]) | (distance[&#39;value&#39;] &gt; max_distance)
-        distance[&#39;value&#39;][i] = NaN
+    if maximum_distance and distance in (&#39;ray&#39;, &#39;minimum&#39;):
+        i = isnan(dist[&#39;value&#39;]) | (dist[&#39;value&#39;] &gt; maximum_distance)
+        dist[&#39;value&#39;][i] = NaN
 
-    distance[&#39;value&#39;] = distance[&#39;value&#39;] ** (-1 * penalty)
+    dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
 
-    return distance</code></pre>
+    return dist</code></pre>
 </details>
 </dd>
 </dl>

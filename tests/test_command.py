@@ -1,7 +1,7 @@
 from gridgen.bin.command import main
 from gridgen.bin.parameters import REQUIRED, _JSONEncoder_path
 from json import dump
-from .paths import DATA_PATH, OUTPUT_PATH, ECOG_FILE
+from .paths import OUTPUT_PATH, ECOG_FILE, T1_FILE, SMOOTH_FILE, PIAL_FILE
 
 EXAMPLES = {
     "grid2d": {
@@ -11,14 +11,15 @@ EXAMPLES = {
         "chan_pattern": "chan{}"
         },
     "ecog": {
-        "ecog_file": str(ECOG_FILE),
+        "ecog_file": ECOG_FILE,
         "begtime": 0,
         "endtime": 10,
         "freq_range": [60, 90]
         },
     "mri": {
-        "T1_file": str(DATA_PATH / "T1.mgz"),
-        "dura_file": str(DATA_PATH / "lh_smooth.pial"),
+        "T1_file": T1_FILE,
+        "dura_file": SMOOTH_FILE,
+        "pial_file": PIAL_FILE,
         },
     "grid3d": {
         },
@@ -29,6 +30,11 @@ EXAMPLES = {
         },
     }
 
+
+def test_cmd_param():
+
+    param_json = OUTPUT_PATH / 'template.json'
+    main([str(param_json), 'parameters'])
 
 
 def test_cmd():
