@@ -14,6 +14,7 @@ ECOG_FILE = DATA_PATH / 'ecog.eeg'
 GENERATED_PATH = ANALYSIS_PATH / 'generated'
 GENERATED_PATH.mkdir(parents=True, exist_ok=True)
 OUTPUT_PATH = ANALYSIS_PATH / 'output'
+OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
 data = simulate_data()
 data.export(ECOG_FILE, export_format='BrainVision')
