@@ -1,25 +1,13 @@
-from functools import partial
-from itertools import product
 from logging import getLogger
-from multiprocessing import Pool
-import warnings
 
-from numpy import (ndindex,
-                   array,
-                   sum,
-                   power,
+from numpy import (power,
                    zeros,
                    NaN,
-                   isfinite,
                    nansum,
-                   isnan,
                    dtype,
-                   where,
                    )
-from numpy.linalg import norm, inv
+from numpy.linalg import norm
 from scipy.stats import norm as normdistr
-from nibabel.affines import apply_affine
-from nibabel import load as nload
 from ..io import WIRE
 
 lg = getLogger(__name__)
@@ -34,25 +22,18 @@ def compute_functional(grid, func, distance=None, kernel=None):
         ('value', 'f4'),
         ])
 
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    distance['label'] = grid['label']
+    dist = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    dist['label'] = grid['label']
+    dist['value'].fill(NaN)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
             if grid['label'][i_x, i_y] == WIRE:
                 continue
-
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    distance['value'].fill(NaN)
-
-    for i_x in range(grid.shape[0]):
-        for i_y in range(grid.shape[1]):
-            if grid['label'][i_x, i_y] == WIRE:
-                continue
-            distance['value'][i_x, i_y] = compute_value_at_elec(
+            dist['value'][i_x, i_y] = compute_value_at_elec(
                 grid['pos'][i_x, i_y], func, distance, kernel)
 
-    return distance
+    return dist
 
 
 def compute_value_at_elec(pos, func, distance='gaussian', kernel=8):
@@ -62,19 +43,19 @@ def compute_value_at_elec(pos, func, distance='gaussian', kernel=8):
     ----
     How to normalize:
     You need to think hard if you need to normalize value (because we only
-    include voxels > 0
+    include voxels > 0)
     """
-    distance = norm(func['pos'] - pos, axis=1)
+    dist = norm(func['pos'] - pos, axis=1)
 
-    if True or distance == 'gaussian':
-        m = normdistr.pdf(distance, scale=kernel)
+    if distance == 'gaussian':
+        m = normdistr.pdf(dist, scale=kernel)
 
     elif distance == 'sphere':
-        m = zeros(dist_chan.shape)
-        m[dist_chan <= KERNEL] = 1
+        m = zeros(dist.shape)
+        m[dist <= kernel] = 1
 
     elif distance == 'inverse':
-        m = power(dist_chan, -1 * KERNEL)
+        m = power(dist, -1 * kernel)
 
     v = func['value'] * m
     return nansum(v)

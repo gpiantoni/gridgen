@@ -400,7 +400,10 @@ def read_volume(volume_file, threshold=-Inf):
     output = zeros(i.sum(), dtype=d_)
 
     output['pos'] = apply_affine(volume.affine, array(where(i)).T)
-    output['value'] = data[i]
+    if threshold is not None:
+        output['value'] = 1
+    else:
+        output['value'] = data[i]
 
     return output
 

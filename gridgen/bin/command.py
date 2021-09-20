@@ -224,8 +224,8 @@ def main(arguments=None):
     if args.function == 'fit':
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        folder_name = '_'.join(str(parameters['fit'][k]) for k in ('method', 'correlation', 'distance', 'penalty'))
-        output_dir = parameters['output_dir'] / ('bestfit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
+        folder_name = '_'.join(str(parameters['fit'][k]) for k in ('method', 'correlation'))
+        output_dir = parameters['output_dir'] / ('fit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
         output_dir.mkdir(parents=True)
         lg.info(f'Writing fitting results to {output_dir}')
 
@@ -237,10 +237,12 @@ def main(arguments=None):
         fitting(
             output=output_dir,
             ecog=ecog2d,
-            initial=parameters['initial'],
-            mri=mris,
+            mris=mris,
             grid3d=parameters['grid3d'],
+            initial=parameters['initial'],
             fit=parameters['fit'],
+            morphology=parameters.get('morphology', {}),
+            functional=parameters.get('functional', {}),
             )
 
     if args.function == 'matlab':

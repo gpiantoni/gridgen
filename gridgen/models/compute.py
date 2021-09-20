@@ -12,6 +12,7 @@ lg = getLogger(__name__)
 def make_grid3d_model(mris, grid2d, grid3d, initial, morphology={}, functional={}):
 
     vertex = find_vertex(mris['dura'], initial['RAS'])
+
     grid = construct_grid(
         mris["dura"],
         vertex,

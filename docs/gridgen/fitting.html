@@ -28,9 +28,8 @@
 <pre><code class="python">&#34;&#34;&#34;Functions to compute the actual fitting of the grid onto the brain surface
 &#34;&#34;&#34;
 from scipy.optimize import brute, minimize
-from scipy.stats import spearmanr
 from multiprocessing import Pool
-from numpy import arange, array, argmin, corrcoef, zeros, dtype, intersect1d, NaN, unravel_index
+from numpy import array
 from logging import getLogger
 from datetime import datetime
 from json import dump
@@ -40,12 +39,14 @@ try:
 except ImportError:
     mkl = None
 
-from .grid3d import construct_grid
+from .grid3d import construct_grid, search_grid, find_vertex
+from .models import compute_model, merge_models, compare_model_with_ecog
+from .utils import be_nice
 
 lg = getLogger(__name__)
 
 
-def fitting(output, ecog, grid3d, initial, mri, fit):
+def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
     &#34;&#34;&#34;Fit the brain activity onto the surface
 
     Parameters
@@ -69,16 +70,22 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         grid2d with best positions
     &#34;&#34;&#34;
     start_time = datetime.now()
-
+    initial[&#34;vertex&#34;] = find_vertex(mris[&#39;dura&#39;], initial[&#39;RAS&#39;])
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
+
+    params = {
+        &#39;initial&#39;: initial,
+        &#39;grid3d&#39;: grid3d,
+        &#39;morphology&#39;: morphology,
+        &#39;functional&#39;: functional,
+        &#39;fit&#39;: fit,
+        }
 
     # has to be a tuple
     minimizer_args = (
         ecog,  # 0
-        grid3d,  # 1
-        initial,  # 2
-        mris,  # 3
-        fit,  # 4
+        mris,  # 1
+        params,  # 2
         )
 
     if fit[&#39;method&#39;] == &#39;simplex&#39;:
@@ -96,22 +103,21 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
+    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_functional&#34;]:.2f}%)&#39;)
 
-    plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
+    # plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
 
-    model = remove_wires(model)
+    # model = remove_wires(model)
 
-    measure_distances(model[&#39;grid&#39;])
-    measure_angles(model[&#39;grid&#39;])
+    # measure_distances(model[&#39;grid&#39;])
+    # measure_angles(model[&#39;grid&#39;])
     out = {
         &#39;label&#39;: initial[&#39;label&#39;],
-        &#39;surface&#39;: str(mri[&#39;dura_file&#39;]),
         &#39;vertex&#39;: int(model[&#39;vertex&#39;]),
         &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
         &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
-        &#39;percent_vasculature&#39;: model[&#39;percent_vasc&#39;],
+        &#39;percent_functional&#39;: model[&#39;percent_func&#39;],
         &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
         &#39;corr_coef&#39;: model[&#39;corr_coef&#39;],
         &#39;duration&#39;: comp_dur,
@@ -121,14 +127,14 @@ def fitting(output, ecog, grid3d, initial, mri, fit):
         dump(out, f, indent=2)
 
     grid_file = output / &#39;electrodes&#39;
-    export_grid(model[&#39;grid&#39;], mris[&#39;ras_shift&#39;], grid_file)
-    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
+    # export_grid(model[&#39;grid&#39;], mris[&#39;ras_shift&#39;], grid_file)
+    # write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
     lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)
 
     return model[&#39;grid&#39;]
 
 
-def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
+def corr_ecog_model(x0, ecog, mris, params, final=False):
     &#34;&#34;&#34;Main model to minimize
 
     Note that when final=False, cc should be minimized (the smaller the better)
@@ -139,83 +145,43 @@ def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
     ----------
     ranges : None
         ignored, but easier to pass when working with arguments
-
     &#34;&#34;&#34;
     x, y, rotation = x0
-    start_vert = search_grid(mri[&#34;dura&#34;], initial[&#34;vertex&#34;], x, y)
+    start_vertex = search_grid(mris[&#34;dura&#34;], params[&#39;initial&#39;][&#34;vertex&#34;], x, y)
+
     grid = construct_grid(
-        mri[&#34;dura&#34;],
-        start_vert,
-        initial[&#34;label&#34;],
+        mris[&#34;dura&#34;],
+        start_vertex,
+        params[&#39;initial&#39;][&#34;label&#34;],
         ecog[&#39;label&#39;],
-        grid3d,
-        rotation=initial[&#39;rotation&#39;] + rotation)
+        params[&#39;grid3d&#39;],
+        rotation=params[&#39;initial&#39;][&#39;rotation&#39;] + rotation)
 
-    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;distance&#39;], fit[&#39;maximum_distance&#39;])
-    morpho[&#39;value&#39;] = morpho[&#39;value&#39;] ** (-1 * fit[&#39;penalty&#39;])
+    model = compute_model(mris, grid, params[&#39;morphology&#39;], params[&#39;functional&#39;])
 
-    if mri[&#39;angio&#39;] is not None:
-        vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
-        e, m, v = match_labels(ecog, morpho, vasc)[1:]
+    n_chan, weight, cc = compare_model_with_ecog(
+        model,
+        ecog,
+        correlation=params[&#39;fit&#39;][&#39;correlation&#39;],
+        functional_contribution=params[&#39;fit&#39;][&#39;functional_contribution&#39;])
 
-    else:
-        e, m = match_labels(ecog, morpho)[1:]
-        v = vasc = None
-
-    i, cc = compare_models(e, m, v, correlation=fit[&#39;correlation&#39;])
     if not final:
-        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
-
-    if final:
-        model = {
-            &#39;ecog&#39;: ecog,
-            &#39;vertex&#39;: start_vert,
-            &#39;grid&#39;: grid,
-            &#39;morphology&#39;: morpho,
-            &#39;vasculature&#39;: vasc,
-            &#39;percent_vasc&#39;: 100 * (1 - i),
-            &#39;n_channels&#39;: len(e),  # number of channels used to compute
-            &#39;corr_coef&#39;: cc,
-            }
-        model[&#39;merged&#39;] = merge_models(model)
-        return model
-
-    else:
+        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vertex: 6d}) = {cc:+8.3f} (# included channels:{n_chan: 4d}, vascular contribution: {weight:.2f}%)&#39;)
         return -1 * cc  # value to minimize
 
-
-def compare_models(E, M, V=None, correlation=&#39;parametric&#39;):
-
-    E = normalize(E)
-    M = normalize(M)
-
-    if V is not None:
-        V = normalize(V)
-        WEIGHTS = arange(0, 1.1, 0.1)
     else:
-        V = 0
-        WEIGHTS = [1, ]
-
-    x = []
-    for weight in WEIGHTS:
-        prediction = weight * M + (1 - weight) * V
-
-        if correlation == &#39;parametric&#39;:
-            c = corrcoef(E, prediction)[0, 1]
-        else:
-            c = spearmanr(E, prediction).correlation
-
-        x.append(c)
-
-    x = array(x)
-    i = argmin(x)
-
-    return WEIGHTS[i], x[i]
+        model[&#39;ecog&#39;] = ecog
+        model[&#39;vertex&#39;] = start_vertex
+        model[&#39;percent_functional&#39;] = weight
+        model[&#39;corr_coef&#39;] = cc
+        model[&#39;n_channels&#39;] = n_chan
+        model[&#39;merged&#39;] = merge_models(model)
+        return model
 
 
 def fitting_brute(func, args):
 
-    ranges = args[4][&#39;ranges&#39;]
+    ranges = args[2][&#39;fit&#39;][&#39;ranges&#39;]
     # make sure that the last point is included in the range
     for k, v in ranges.items():
         ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
@@ -248,12 +214,12 @@ def fitting_simplex(func, init, args):
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
-        steps = args[4][&#39;steps&#39;]
+        steps = args[2][&#39;fit&#39;][&#39;steps&#39;]
     else:
         lg.info(f&#39;Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°&#39;)
         x, y, rotation = init
         # convert ranges to simplex steps
-        steps = {k: args[4][&#39;ranges&#39;][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
+        steps = {k: args[2][&#39;fit&#39;][&#39;ranges&#39;][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
 
     simplex = array([
         [x - steps[&#39;x&#39;], y - steps[&#39;y&#39;], rotation - steps[&#39;rotation&#39;]],
@@ -275,39 +241,7 @@ def fitting_simplex(func, init, args):
             ),
         )
 
-    return m
-
-
-def merge_models(model):
-
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;value&#39;, &#39;f4&#39;),
-        ])
-    merged = zeros((model[&#39;ecog&#39;].shape[0], model[&#39;ecog&#39;].shape[1]), dtype=d_)
-    merged[&#39;label&#39;] = model[&#39;ecog&#39;][&#39;label&#39;]
-
-    if model[&#39;vasculature&#39;] is None:
-        merged[&#39;value&#39;] = normalize(model[&#39;ecog&#39;][&#39;value&#39;])
-
-    else:
-        merged[&#39;value&#39;].fill(NaN)
-
-        labels, e, m, v = match_labels(
-            model[&#39;ecog&#39;],
-            model[&#39;morphology&#39;],
-            model[&#39;vasculature&#39;]
-            )
-        percent_vasc = model[&#39;percent_vasc&#39;]
-        M = normalize(m)
-        V = normalize(v)
-        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
-
-        [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
-        i0r, i0c = unravel_index(i0, merged.shape)
-        merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
-
-    return merged</code></pre>
+    return m</code></pre>
 </details>
 </section>
 <section>
@@ -317,46 +251,8 @@ def merge_models(model):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridgen.fitting.compare_models"><code class="name flex">
-<span>def <span class="ident">compare_models</span></span>(<span>E, M, V=None, correlation='parametric')</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compare_models(E, M, V=None, correlation=&#39;parametric&#39;):
-
-    E = normalize(E)
-    M = normalize(M)
-
-    if V is not None:
-        V = normalize(V)
-        WEIGHTS = arange(0, 1.1, 0.1)
-    else:
-        V = 0
-        WEIGHTS = [1, ]
-
-    x = []
-    for weight in WEIGHTS:
-        prediction = weight * M + (1 - weight) * V
-
-        if correlation == &#39;parametric&#39;:
-            c = corrcoef(E, prediction)[0, 1]
-        else:
-            c = spearmanr(E, prediction).correlation
-
-        x.append(c)
-
-    x = array(x)
-    i = argmin(x)
-
-    return WEIGHTS[i], x[i]</code></pre>
-</details>
-</dd>
 <dt id="gridgen.fitting.corr_ecog_model"><code class="name flex">
-<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, ecog, grid3d, initial, mri, fit, final=False)</span>
+<span>def <span class="ident">corr_ecog_model</span></span>(<span>x0, ecog, mris, params, final=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main model to minimize</p>
@@ -372,7 +268,7 @@ reading)</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def corr_ecog_model(x0, ecog, grid3d, initial, mri, fit, final=False):
+<pre><code class="python">def corr_ecog_model(x0, ecog, mris, params, final=False):
     &#34;&#34;&#34;Main model to minimize
 
     Note that when final=False, cc should be minimized (the smaller the better)
@@ -383,53 +279,42 @@ reading)</p>
     ----------
     ranges : None
         ignored, but easier to pass when working with arguments
-
     &#34;&#34;&#34;
     x, y, rotation = x0
-    start_vert = search_grid(mri[&#34;dura&#34;], initial[&#34;vertex&#34;], x, y)
+    start_vertex = search_grid(mris[&#34;dura&#34;], params[&#39;initial&#39;][&#34;vertex&#34;], x, y)
+
     grid = construct_grid(
-        mri[&#34;dura&#34;],
-        start_vert,
-        initial[&#34;label&#34;],
+        mris[&#34;dura&#34;],
+        start_vertex,
+        params[&#39;initial&#39;][&#34;label&#34;],
         ecog[&#39;label&#39;],
-        grid3d,
-        rotation=initial[&#39;rotation&#39;] + rotation)
+        params[&#39;grid3d&#39;],
+        rotation=params[&#39;initial&#39;][&#39;rotation&#39;] + rotation)
 
-    morpho = compute_distance(grid, mri[&#39;pial&#39;], fit[&#39;distance&#39;], fit[&#39;maximum_distance&#39;])
-    morpho[&#39;value&#39;] = morpho[&#39;value&#39;] ** (-1 * fit[&#39;penalty&#39;])
+    model = compute_model(mris, grid, params[&#39;morphology&#39;], params[&#39;functional&#39;])
 
-    if mri[&#39;angio&#39;] is not None:
-        vasc = compute_vasculature(grid, mri[&#39;angio&#39;])
-        e, m, v = match_labels(ecog, morpho, vasc)[1:]
+    n_chan, weight, cc = compare_model_with_ecog(
+        model,
+        ecog,
+        correlation=params[&#39;fit&#39;][&#39;correlation&#39;],
+        functional_contribution=params[&#39;fit&#39;][&#39;functional_contribution&#39;])
 
-    else:
-        e, m = match_labels(ecog, morpho)[1:]
-        v = vasc = None
-
-    i, cc = compare_models(e, m, v, correlation=fit[&#39;correlation&#39;])
     if not final:
-        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vert: 6d}) = {cc:+8.3f} (# included channels:{len(e): 4d}, vascular contribution: {100 * (1 - i):.2f}%)&#39;)
-
-    if final:
-        model = {
-            &#39;ecog&#39;: ecog,
-            &#39;vertex&#39;: start_vert,
-            &#39;grid&#39;: grid,
-            &#39;morphology&#39;: morpho,
-            &#39;vasculature&#39;: vasc,
-            &#39;percent_vasc&#39;: 100 * (1 - i),
-            &#39;n_channels&#39;: len(e),  # number of channels used to compute
-            &#39;corr_coef&#39;: cc,
-            }
-        model[&#39;merged&#39;] = merge_models(model)
-        return model
+        lg.debug(f&#39;{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vertex: 6d}) = {cc:+8.3f} (# included channels:{n_chan: 4d}, vascular contribution: {weight:.2f}%)&#39;)
+        return -1 * cc  # value to minimize
 
     else:
-        return -1 * cc  # value to minimize</code></pre>
+        model[&#39;ecog&#39;] = ecog
+        model[&#39;vertex&#39;] = start_vertex
+        model[&#39;percent_functional&#39;] = weight
+        model[&#39;corr_coef&#39;] = cc
+        model[&#39;n_channels&#39;] = n_chan
+        model[&#39;merged&#39;] = merge_models(model)
+        return model</code></pre>
 </details>
 </dd>
 <dt id="gridgen.fitting.fitting"><code class="name flex">
-<span>def <span class="ident">fitting</span></span>(<span>output, ecog, grid3d, initial, mri, fit)</span>
+<span>def <span class="ident">fitting</span></span>(<span>output, ecog, mris, grid3d, initial, fit, morphology, functional)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fit the brain activity onto the surface</p>
@@ -457,7 +342,7 @@ reading)</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fitting(output, ecog, grid3d, initial, mri, fit):
+<pre><code class="python">def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
     &#34;&#34;&#34;Fit the brain activity onto the surface
 
     Parameters
@@ -481,16 +366,22 @@ reading)</p>
         grid2d with best positions
     &#34;&#34;&#34;
     start_time = datetime.now()
-
+    initial[&#34;vertex&#34;] = find_vertex(mris[&#39;dura&#39;], initial[&#39;RAS&#39;])
     lg.info(f&#39;Starting position for {initial[&#34;label&#34;]} is vertex #{initial[&#34;vertex&#34;]} with orientation {initial[&#34;rotation&#34;]}&#39;)
+
+    params = {
+        &#39;initial&#39;: initial,
+        &#39;grid3d&#39;: grid3d,
+        &#39;morphology&#39;: morphology,
+        &#39;functional&#39;: functional,
+        &#39;fit&#39;: fit,
+        }
 
     # has to be a tuple
     minimizer_args = (
         ecog,  # 0
-        grid3d,  # 1
-        initial,  # 2
-        mris,  # 3
-        fit,  # 4
+        mris,  # 1
+        params,  # 2
         )
 
     if fit[&#39;method&#39;] == &#39;simplex&#39;:
@@ -508,22 +399,21 @@ reading)</p>
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_vasc&#34;]:.2f}%)&#39;)
+    lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_functional&#34;]:.2f}%)&#39;)
 
-    plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
+    # plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
 
-    model = remove_wires(model)
+    # model = remove_wires(model)
 
-    measure_distances(model[&#39;grid&#39;])
-    measure_angles(model[&#39;grid&#39;])
+    # measure_distances(model[&#39;grid&#39;])
+    # measure_angles(model[&#39;grid&#39;])
     out = {
         &#39;label&#39;: initial[&#39;label&#39;],
-        &#39;surface&#39;: str(mri[&#39;dura_file&#39;]),
         &#39;vertex&#39;: int(model[&#39;vertex&#39;]),
         &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
         &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
-        &#39;percent_vasculature&#39;: model[&#39;percent_vasc&#39;],
+        &#39;percent_functional&#39;: model[&#39;percent_func&#39;],
         &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
         &#39;corr_coef&#39;: model[&#39;corr_coef&#39;],
         &#39;duration&#39;: comp_dur,
@@ -533,8 +423,8 @@ reading)</p>
         dump(out, f, indent=2)
 
     grid_file = output / &#39;electrodes&#39;
-    export_grid(model[&#39;grid&#39;], mris[&#39;ras_shift&#39;], grid_file)
-    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
+    # export_grid(model[&#39;grid&#39;], mris[&#39;ras_shift&#39;], grid_file)
+    # write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
     lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)
 
     return model[&#39;grid&#39;]</code></pre>
@@ -551,7 +441,7 @@ reading)</p>
 </summary>
 <pre><code class="python">def fitting_brute(func, args):
 
-    ranges = args[4][&#39;ranges&#39;]
+    ranges = args[2][&#39;fit&#39;][&#39;ranges&#39;]
     # make sure that the last point is included in the range
     for k, v in ranges.items():
         ranges[k][1], ranges[k][2] = ranges[k][2], ranges[k][1]
@@ -593,12 +483,12 @@ reading)</p>
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
-        steps = args[4][&#39;steps&#39;]
+        steps = args[2][&#39;fit&#39;][&#39;steps&#39;]
     else:
         lg.info(f&#39;Applying simplex from starting point: {init[0]:+8.3f}mm {init[1]:+8.3f}mm {init[2]:+8.3f}°&#39;)
         x, y, rotation = init
         # convert ranges to simplex steps
-        steps = {k: args[4][&#39;ranges&#39;][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
+        steps = {k: args[2][&#39;fit&#39;][&#39;ranges&#39;][k][2] / 2 for k in (&#39;x&#39;, &#39;y&#39;, &#39;rotation&#39;)}
 
     simplex = array([
         [x - steps[&#39;x&#39;], y - steps[&#39;y&#39;], rotation - steps[&#39;rotation&#39;]],
@@ -623,47 +513,6 @@ reading)</p>
     return m</code></pre>
 </details>
 </dd>
-<dt id="gridgen.fitting.merge_models"><code class="name flex">
-<span>def <span class="ident">merge_models</span></span>(<span>model)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def merge_models(model):
-
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;value&#39;, &#39;f4&#39;),
-        ])
-    merged = zeros((model[&#39;ecog&#39;].shape[0], model[&#39;ecog&#39;].shape[1]), dtype=d_)
-    merged[&#39;label&#39;] = model[&#39;ecog&#39;][&#39;label&#39;]
-
-    if model[&#39;vasculature&#39;] is None:
-        merged[&#39;value&#39;] = normalize(model[&#39;ecog&#39;][&#39;value&#39;])
-
-    else:
-        merged[&#39;value&#39;].fill(NaN)
-
-        labels, e, m, v = match_labels(
-            model[&#39;ecog&#39;],
-            model[&#39;morphology&#39;],
-            model[&#39;vasculature&#39;]
-            )
-        percent_vasc = model[&#39;percent_vasc&#39;]
-        M = normalize(m)
-        V = normalize(v)
-        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
-
-        [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
-        i0r, i0c = unravel_index(i0, merged.shape)
-        merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
-
-    return merged</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -681,13 +530,11 @@ reading)</p>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="two-column">
-<li><code><a title="gridgen.fitting.compare_models" href="#gridgen.fitting.compare_models">compare_models</a></code></li>
+<ul class="">
 <li><code><a title="gridgen.fitting.corr_ecog_model" href="#gridgen.fitting.corr_ecog_model">corr_ecog_model</a></code></li>
 <li><code><a title="gridgen.fitting.fitting" href="#gridgen.fitting.fitting">fitting</a></code></li>
 <li><code><a title="gridgen.fitting.fitting_brute" href="#gridgen.fitting.fitting_brute">fitting_brute</a></code></li>
 <li><code><a title="gridgen.fitting.fitting_simplex" href="#gridgen.fitting.fitting_simplex">fitting_simplex</a></code></li>
-<li><code><a title="gridgen.fitting.merge_models" href="#gridgen.fitting.merge_models">merge_models</a></code></li>
 </ul>
 </li>
 </ul>

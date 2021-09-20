@@ -251,8 +251,8 @@ def main(arguments=None):
     if args.function == &#39;fit&#39;:
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;distance&#39;, &#39;penalty&#39;))
-        output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
+        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;))
+        output_dir = parameters[&#39;output_dir&#39;] / (&#39;fit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing fitting results to {output_dir}&#39;)
 
@@ -264,10 +264,12 @@ def main(arguments=None):
         fitting(
             output=output_dir,
             ecog=ecog2d,
-            initial=parameters[&#39;initial&#39;],
-            mri=mris,
+            mris=mris,
             grid3d=parameters[&#39;grid3d&#39;],
+            initial=parameters[&#39;initial&#39;],
             fit=parameters[&#39;fit&#39;],
+            morphology=parameters.get(&#39;morphology&#39;, {}),
+            functional=parameters.get(&#39;functional&#39;, {}),
             )
 
     if args.function == &#39;matlab&#39;:
@@ -488,8 +490,8 @@ def main(arguments=None):
     if args.function == &#39;fit&#39;:
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;, &#39;distance&#39;, &#39;penalty&#39;))
-        output_dir = parameters[&#39;output_dir&#39;] / (&#39;bestfit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
+        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;))
+        output_dir = parameters[&#39;output_dir&#39;] / (&#39;fit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing fitting results to {output_dir}&#39;)
 
@@ -501,10 +503,12 @@ def main(arguments=None):
         fitting(
             output=output_dir,
             ecog=ecog2d,
-            initial=parameters[&#39;initial&#39;],
-            mri=mris,
+            mris=mris,
             grid3d=parameters[&#39;grid3d&#39;],
+            initial=parameters[&#39;initial&#39;],
             fit=parameters[&#39;fit&#39;],
+            morphology=parameters.get(&#39;morphology&#39;, {}),
+            functional=parameters.get(&#39;functional&#39;, {}),
             )
 
     if args.function == &#39;matlab&#39;:

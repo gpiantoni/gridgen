@@ -209,6 +209,12 @@ TEMPLATE = {
             "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
             "default": "parametric",
             },
+        "functional_contribution": {
+            "type": "list",
+            "necessary": False,
+            "help": "If both present, it's possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution)",
+            "default": [10, 20, 30, 40, 50, 60, 70, 80, 90],
+            },
         "steps": {
             "x": {
                 "type": "float",

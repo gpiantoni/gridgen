@@ -40,6 +40,7 @@ You can also use the command `gridgen parameters.json parameters` to generate a 
 - **fit** (required by command `fit`)
   - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
   - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
+  - **functional_contribution**: (list, optional) If both present, it's possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution). Default: [10, 20, 30, 40, 50, 60, 70, 80, 90]
   - **steps**
     - **x**: (float, optional) Step size in mm for x-direction, for method simplex
     - **y**: (float, optional) Step size in mm for y-direction, for method simplex
