@@ -1,5 +1,5 @@
 from gridgen.grid2d import make_grid_with_labels, make_grid
-from gridgen.grid3d import find_vertex, construct_grid
+from gridgen.grid3d import find_vertex, construct_grid, measure_distances, measure_angles
 from gridgen.grid3d.construct import index_order
 from gridgen.io import read_surf, export_grid, read_surface_ras_shift
 
@@ -7,6 +7,9 @@ from numpy.testing import assert_array_almost_equal
 from numpy import array
 
 from .paths import GENERATED_PATH, SMOOTH_FILE, T1_FILE
+
+
+GRID_FILE = GENERATED_PATH / 'grid_020.fcsv'
 
 
 def test_geometry_construct():
@@ -30,9 +33,14 @@ def test_geometry_construct():
         decimal=3)
 
     offset = read_surface_ras_shift(T1_FILE)
-    grid_file = GENERATED_PATH / 'grid_020.fcsv'
-    export_grid(grid, offset, grid_file, 'slicer')
-    export_grid(grid, offset, grid_file, 'freeview')
+    export_grid(grid, offset, GRID_FILE, 'slicer')
+    export_grid(grid, offset, GRID_FILE, 'freeview')
+
+    m_col, m_row = measure_distances(grid)
+    assert_array_almost_equal(m_col, 2.991, decimal=3)
+    assert_array_almost_equal(m_row, 2.993, decimal=3)
+    m_angle = measure_angles(grid)
+    assert_array_almost_equal(m_angle, 89.981, decimal=3)
 
 
 def test_make_grids_with_labels():

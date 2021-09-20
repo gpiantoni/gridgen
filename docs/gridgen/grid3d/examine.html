@@ -44,6 +44,13 @@ def measure_distances(grid2d):
     ----------
     grid2d : (n_rows, n_columns) array
         grid where electrode positions have been computed
+
+    Returns
+    -------
+    float
+        mean distances between columns
+    float
+        mean distances between rows
     &#34;&#34;&#34;
     n_rows, n_columns = grid2d.shape
 
@@ -59,8 +66,13 @@ def measure_distances(grid2d):
             dist.append(norm(grid2d[i_row, i_col][&#39;pos&#39;] - grid2d[i_row + 1, i_col][&#39;pos&#39;]))
     dist_row = array(dist)
 
-    lg.info(f&#39;Distance between columns: {mean(dist_col):0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]&#39;)
-    lg.info(f&#39;Distance between rows:    {mean(dist_row):0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]&#39;)
+    m_dist_col = mean(dist_col)
+    m_dist_row = mean(dist_row)
+
+    lg.info(f&#39;Distance between columns: {m_dist_col:0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]&#39;)
+    lg.info(f&#39;Distance between rows:    {m_dist_row:0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]&#39;)
+
+    return m_dist_col, m_dist_row
 
 
 def measure_angles(grid2d):
@@ -103,7 +115,10 @@ def measure_angles(grid2d):
             pos2 = grid2d[i_row, i_col - 1][&#39;pos&#39;]
             angle.append(compute_angle(pos0, pos1, pos2))
 
-    lg.info(f&#39;Angle: {mean(angle):0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]&#39;)
+    m_angle = mean(angle)
+    lg.info(f&#39;Angle: {m_angle:0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]&#39;)
+
+    return m_angle
 
 
 _n = lambda x: x / norm(x)
@@ -234,7 +249,10 @@ Values are shown in the log</p>
             pos2 = grid2d[i_row, i_col - 1][&#39;pos&#39;]
             angle.append(compute_angle(pos0, pos1, pos2))
 
-    lg.info(f&#39;Angle: {mean(angle):0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]&#39;)</code></pre>
+    m_angle = mean(angle)
+    lg.info(f&#39;Angle: {m_angle:0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]&#39;)
+
+    return m_angle</code></pre>
 </details>
 </dd>
 <dt id="gridgen.grid3d.examine.measure_distances"><code class="name flex">
@@ -247,6 +265,13 @@ Values are shown in the log</p>
 <dl>
 <dt><strong><code>grid2d</code></strong> :&ensp;<code>(n_rows, n_columns) array</code></dt>
 <dd>grid where electrode positions have been computed</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>mean distances between columns</dd>
+<dt><code>float</code></dt>
+<dd>mean distances between rows</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -260,6 +285,13 @@ Values are shown in the log</p>
     ----------
     grid2d : (n_rows, n_columns) array
         grid where electrode positions have been computed
+
+    Returns
+    -------
+    float
+        mean distances between columns
+    float
+        mean distances between rows
     &#34;&#34;&#34;
     n_rows, n_columns = grid2d.shape
 
@@ -275,8 +307,13 @@ Values are shown in the log</p>
             dist.append(norm(grid2d[i_row, i_col][&#39;pos&#39;] - grid2d[i_row + 1, i_col][&#39;pos&#39;]))
     dist_row = array(dist)
 
-    lg.info(f&#39;Distance between columns: {mean(dist_col):0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]&#39;)
-    lg.info(f&#39;Distance between rows:    {mean(dist_row):0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]&#39;)</code></pre>
+    m_dist_col = mean(dist_col)
+    m_dist_row = mean(dist_row)
+
+    lg.info(f&#39;Distance between columns: {m_dist_col:0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]&#39;)
+    lg.info(f&#39;Distance between rows:    {m_dist_row:0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]&#39;)
+
+    return m_dist_col, m_dist_row</code></pre>
 </details>
 </dd>
 </dl>

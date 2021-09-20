@@ -15,6 +15,13 @@ def measure_distances(grid2d):
     ----------
     grid2d : (n_rows, n_columns) array
         grid where electrode positions have been computed
+
+    Returns
+    -------
+    float
+        mean distances between columns
+    float
+        mean distances between rows
     """
     n_rows, n_columns = grid2d.shape
 
@@ -30,8 +37,13 @@ def measure_distances(grid2d):
             dist.append(norm(grid2d[i_row, i_col]['pos'] - grid2d[i_row + 1, i_col]['pos']))
     dist_row = array(dist)
 
-    lg.info(f'Distance between columns: {mean(dist_col):0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]')
-    lg.info(f'Distance between rows:    {mean(dist_row):0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]')
+    m_dist_col = mean(dist_col)
+    m_dist_row = mean(dist_row)
+
+    lg.info(f'Distance between columns: {m_dist_col:0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]')
+    lg.info(f'Distance between rows:    {m_dist_row:0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]')
+
+    return m_dist_col, m_dist_row
 
 
 def measure_angles(grid2d):
@@ -74,7 +86,10 @@ def measure_angles(grid2d):
             pos2 = grid2d[i_row, i_col - 1]['pos']
             angle.append(compute_angle(pos0, pos1, pos2))
 
-    lg.info(f'Angle: {mean(angle):0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]')
+    m_angle = mean(angle)
+    lg.info(f'Angle: {m_angle:0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]')
+
+    return m_angle
 
 
 _n = lambda x: x / norm(x)
