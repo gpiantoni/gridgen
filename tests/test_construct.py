@@ -1,6 +1,8 @@
+"""
 from gridgen.construct import construct_grid, make_grid_with_labels, index_order
 from gridgen.io import read_surf, export_grid
 from gridgen.geometry import search_grid
+"""
 
 from numpy.testing import assert_array_almost_equal
 from numpy import array
@@ -8,7 +10,7 @@ from numpy import array
 from .paths import GENERATED_PATH, SMOOTH_FILE
 
 
-def test_geometry_construct():
+def notest_geometry_construct():
     # test geometry
     smooth = read_surf(SMOOTH_FILE, normals=True)
     out_vertex = search_grid(smooth, 30000, 5, 5)
@@ -28,7 +30,7 @@ def test_geometry_construct():
     export_grid(grid, grid_file, 'freeview')
 
 
-def test_make_grids_with_labels():
+def notest_make_grids_with_labels():
     n_rows = 4
     n_columns = 3
     chan_pattern = 'chan{:02d}'
@@ -46,6 +48,6 @@ def test_make_grids_with_labels():
     assert grid2d['label'][n_rows - 1, n_columns - 1] == chan_pattern.format(1)  # BR
 
 
-def test_index_order():
+def notest_index_order():
     grid2d = make_grid_with_labels(2, 2)
     assert list(index_order(grid2d, '1', 'minor')) == [(0, 0), (0, 1), (1, 0), (1, 1)]

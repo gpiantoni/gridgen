@@ -3,6 +3,8 @@
 from os import nice
 from numpy import nanmax, nanmin, intersect1d, isnan, array
 
+WIRE = 'wire'
+
 
 def be_nice():
     nice(10)

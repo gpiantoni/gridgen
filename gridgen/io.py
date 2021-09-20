@@ -63,8 +63,6 @@ def write_grid2d(grid_file, grid2d):
     with grid_file.open('w') as f:
         for row in grid2d['label']:
             f.write('\t'.join(row) + '\n')
-        wires = [WIRE, ] * len(row)
-        f.write('\t'.join(wires))
 
 
 def read_grid2d(grid_file):

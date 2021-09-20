@@ -14,15 +14,6 @@ except ImportError:
     mkl = None
 
 from .grid3d import construct_grid
-"""
-from .geometry import search_grid
-from .morphology.distance import compute_distance
-from .vascular.sphere import compute_vasculature
-from .io import read_mri, write_tsv, WIRE, export_grid
-from .viz import plot_results, to_div, to_html, plot_electrodes
-from .examine import measure_distances, measure_angles
-from .utils import be_nice, match_labels, normalize
-"""
 
 lg = getLogger(__name__)
 

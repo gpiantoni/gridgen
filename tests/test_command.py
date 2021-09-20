@@ -31,13 +31,13 @@ PARAMETERS = {
     }
 
 
-def test_cmd_grid2d():
+def notest_cmd_grid2d():
     with PARAMETERS_FILE.open('w') as f:
         dump(PARAMETERS, f, indent=2)
 
     main([str(PARAMETERS_FILE), 'grid2d'])
 
 
-def test_cmd_ecog():
+def notest_cmd_ecog():
 
     main([str(PARAMETERS_FILE), 'ecog'])

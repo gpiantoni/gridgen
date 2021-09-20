@@ -80,19 +80,19 @@ def put_ecog_on_grid2d(ecog, grid2d):
     """
     d_ = dtype([
         ('label', '<U256'),
-        ('ecog', 'f8'),
+        ('value', 'f8'),
         ('good', 'bool'),
         ])
     ecog_on_grid = zeros(grid2d.shape, dtype=d_)
 
     ecog_on_grid['label'] = grid2d['label']
-    ecog_on_grid['ecog'].fill(NaN)
+    ecog_on_grid['value'].fill(NaN)
 
     for x in range(ecog_on_grid.shape[0]):
         for y in range(ecog_on_grid.shape[1]):
             label = ecog_on_grid['label'][x, y]
             if label in ecog.axis['chan'][0]:
-                ecog_on_grid['ecog'][x, y] = ecog(trial=0, chan=label)
+                ecog_on_grid['value'][x, y] = ecog(trial=0, chan=label)
                 ecog_on_grid['good'][x, y] = True
 
     return ecog_on_grid

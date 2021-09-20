@@ -1,7 +1,7 @@
 from numpy.testing import assert_array_almost_equal
 
-from gridgen.ecog.read_ecog import read_ecog, put_ecog_on_grid2d
-from gridgen.construct import make_grid_with_labels
+from gridgen.ecog import read_ecog, put_ecog_on_grid2d
+from gridgen.grid2d import make_grid_with_labels
 from gridgen.io import read_ecog2d, write_ecog2d, write_grid2d
 
 from .paths import ECOG_FILE, OUTPUT_PATH
@@ -15,7 +15,7 @@ def test_read_ecog():
     ecog2d = put_ecog_on_grid2d(tf, grid2d)
 
     assert ecog2d[0, 0]['label'] == 'chan1'
-    assert tf(trial=0, chan='chan1') == ecog2d[0, 0]['ecog']
+    assert tf(trial=0, chan='chan1') == ecog2d[0, 0]['value']
 
     ecog_file = OUTPUT_PATH / 'grid2d_ecog.tsv'
     grid_file = OUTPUT_PATH / 'grid2d_labels.tsv'
@@ -23,4 +23,4 @@ def test_read_ecog():
     write_grid2d(grid_file, grid2d)
 
     ecog2d_import = read_ecog2d(ecog_file, grid_file)
-    assert_array_almost_equal(ecog2d_import['ecog'], ecog2d['ecog'])
+    assert_array_almost_equal(ecog2d_import['value'], ecog2d['value'])

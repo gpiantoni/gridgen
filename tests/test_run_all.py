@@ -1,10 +1,12 @@
 from numpy import array
 from numpy.testing import assert_array_almost_equal
 
+"""
 from gridgen.construct import construct_grid, make_grid
 from gridgen.fitting import fitting_brute, fitting_hopping
 from gridgen.io import read_surf
 from gridgen.morphology.distance import compute_distance
+"""
 
 from .paths import SMOOTH_FILE, PIAL_FILE
 
