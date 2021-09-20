@@ -90,9 +90,9 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         'pos': list(mris['dura']['pos'][model['vertex'], :]),
         'normals': list(mris['dura']['pos_norm'][model['vertex'], :]),
         'rotation': rotation,
-        'percent_functional': model['percent_func'],
-        'n_included_channels': model['n_channels'],
-        'corr_coef': model['corr_coef'],
+        'percent_functional': int(model['percent_functional']),
+        'n_included_channels': int(model['n_channels']),
+        'corr_coef': int(model['corr_coef']),
         'duration': comp_dur,
         }
     results_file = output / 'results.json'

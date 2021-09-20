@@ -117,9 +117,9 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
         &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
-        &#39;percent_functional&#39;: model[&#39;percent_func&#39;],
-        &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
-        &#39;corr_coef&#39;: model[&#39;corr_coef&#39;],
+        &#39;percent_functional&#39;: int(model[&#39;percent_functional&#39;]),
+        &#39;n_included_channels&#39;: int(model[&#39;n_channels&#39;]),
+        &#39;corr_coef&#39;: int(model[&#39;corr_coef&#39;]),
         &#39;duration&#39;: comp_dur,
         }
     results_file = output / &#39;results.json&#39;
@@ -413,9 +413,9 @@ reading)</p>
         &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
         &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
-        &#39;percent_functional&#39;: model[&#39;percent_func&#39;],
-        &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
-        &#39;corr_coef&#39;: model[&#39;corr_coef&#39;],
+        &#39;percent_functional&#39;: int(model[&#39;percent_functional&#39;]),
+        &#39;n_included_channels&#39;: int(model[&#39;n_channels&#39;]),
+        &#39;corr_coef&#39;: int(model[&#39;corr_coef&#39;]),
         &#39;duration&#39;: comp_dur,
         }
     results_file = output / &#39;results.json&#39;
