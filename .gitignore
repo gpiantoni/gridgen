@@ -1,3 +1,6 @@
 htmlcov/
 
+.coverage*
+
+tests/analysis/generated/
 tests/analysis/output/

@@ -6,7 +6,7 @@ from .paths import OUTPUT_PATH, ECOG_FILE, T1_FILE, SMOOTH_FILE, PIAL_FILE, FUNC
 EXAMPLES = {
     "grid2d": {
         "n_rows": 3,
-        "n_columns": 3,
+        "n_columns": 2,
         "direction": "TBLR",
         "chan_pattern": "chan{}"
         },
@@ -26,15 +26,15 @@ EXAMPLES = {
         },
     "initial": {
         "label": "chan4",
-        "RAS": [10, 42, 40],
+        "RAS": [-47, -1, 3],
         "rotation": 90,
         },
     "fit": {
         "method": "simplex",
         "steps": {
-            "x": 1,
-            "y": 1,
-            "rotation": 1
+            "x": 0.1,
+            "y": 0.1,
+            "rotation": 0.1
             },
         },
     }
