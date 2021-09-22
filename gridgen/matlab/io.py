@@ -1,7 +1,10 @@
 import scipy.io as spio
-from mat73 import loadmat as load73
 from json import load as json_load
 from numpy import array
+try:
+    from mat73 import loadmat as load73
+except ModuleNotFoundError:
+    load73 = None
 
 
 def read_matlab(mat_file):
@@ -39,6 +42,8 @@ def read_matlab(mat_file):
             out = loadold(mat_file)
             out = {k: v for k, v in out.items() if not k.startswith('__')}
         except NotImplementedError:
+            if load73 is None:
+                raise ModuleNotFoundError('You need to install "mat73"')
             out = load73(mat_file)
 
     if len(out) == 1:
