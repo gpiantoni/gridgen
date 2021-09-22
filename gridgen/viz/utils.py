@@ -8,6 +8,8 @@ COLORSCALE = 'Viridis'
 
 
 def default_colorbar(value):
+    """this hsould come from parameters"""
+    raise NotImplementedError
     if value == 'ecog':
         colorbar = 'PSD (Hz<sup>-1</sup>)'
     elif value == 'morphology':

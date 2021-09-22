@@ -180,17 +180,17 @@ TEMPLATE = {
             'help': 'value to threshold the func_file and binarize it. If None, func_file won\'t be binarized',
             'default': None,
             },
-        "distance": {
+        "metric": {
             "type": "str",
             "necessary": False,
             "values": ['gaussian', 'sphere', 'inverse'],
-            "help": "",
+            "help": "TODO",
             "default": "inverse",
             },
         "kernel": {
             "type": "float",
             "necessary": False,
-            "help": "",
+            "help": "TODO",
             "default": 2,
             },
         },
@@ -208,6 +208,20 @@ TEMPLATE = {
             "values": ['parametric', 'nonparametric'],
             "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
             "default": "parametric",
+            },
+        "morphology_weight": {
+            "type": "str",
+            "necessary": False,
+            "values": ['positive', 'negative'],
+            "help": "TODO",
+            "default": "positive",
+            },
+        "functional_weight": {
+            "type": "str",
+            "necessary": False,
+            "values": ['positive', 'negative'],
+            "help": "TODO",
+            "default": "positive",
             },
         "functional_contribution": {
             "type": "list",

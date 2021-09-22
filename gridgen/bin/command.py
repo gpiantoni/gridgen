@@ -17,7 +17,7 @@ from .parameters import (
 from ..fitting import fitting
 from ..matlab import compare_to_matlab
 from ..models import make_grid3d_model
-from ..viz import to_html, to_div, plot_grid2d, plot_electrodes
+from ..viz import to_html, to_div, plot_grid2d, plot_grid3d
 from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
 from ..io import (
@@ -204,6 +204,7 @@ def main(arguments=None):
         output_dir = parameters['output_dir'] / ('grid3d_' + start_time.strftime('%Y%m%d_%H%M%S'))
         output_dir.mkdir(parents=True)
         lg.info(f'Writing grid3d to {output_dir}')
+        parameters['output_dir'] = output_dir
 
         model = make_grid3d_model(
             grid2d=grid2d,
@@ -214,12 +215,7 @@ def main(arguments=None):
             functional=parameters.get('functional', {}),
             )
 
-        fig = plot_electrodes(
-            mris['pial'],
-            model['grid'],
-            ref_label=parameters['initial']['label'])
-        grid_file = output_dir / 'start_pos.html'
-        to_html([to_div(fig), ], grid_file)
+        plot_grid3d(parameters, mris, model)
 
     if args.function == 'fit':
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)

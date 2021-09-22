@@ -206,17 +206,17 @@ TEMPLATE = {
             &#39;help&#39;: &#39;value to threshold the func_file and binarize it. If None, func_file won\&#39;t be binarized&#39;,
             &#39;default&#39;: None,
             },
-        &#34;distance&#34;: {
+        &#34;metric&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
             &#34;values&#34;: [&#39;gaussian&#39;, &#39;sphere&#39;, &#39;inverse&#39;],
-            &#34;help&#34;: &#34;&#34;,
+            &#34;help&#34;: &#34;TODO&#34;,
             &#34;default&#34;: &#34;inverse&#34;,
             },
         &#34;kernel&#34;: {
             &#34;type&#34;: &#34;float&#34;,
             &#34;necessary&#34;: False,
-            &#34;help&#34;: &#34;&#34;,
+            &#34;help&#34;: &#34;TODO&#34;,
             &#34;default&#34;: 2,
             },
         },
@@ -234,6 +234,20 @@ TEMPLATE = {
             &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
             &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank)&#34;,
             &#34;default&#34;: &#34;parametric&#34;,
+            },
+        &#34;morphology_weight&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;positive&#39;, &#39;negative&#39;],
+            &#34;help&#34;: &#34;TODO&#34;,
+            &#34;default&#34;: &#34;positive&#34;,
+            },
+        &#34;functional_weight&#34;: {
+            &#34;type&#34;: &#34;str&#34;,
+            &#34;necessary&#34;: False,
+            &#34;values&#34;: [&#39;positive&#39;, &#39;negative&#39;],
+            &#34;help&#34;: &#34;TODO&#34;,
+            &#34;default&#34;: &#34;positive&#34;,
             },
         &#34;functional_contribution&#34;: {
             &#34;type&#34;: &#34;list&#34;,

@@ -15,7 +15,7 @@ lg = getLogger(__name__)
 # 1 sigma = 0.6065306597126334
 
 
-def compute_functional(grid, func, distance=None, kernel=None):
+def compute_functional(grid, func, metric=None, kernel=None):
 
     d_ = dtype([
         ('label', '<U256'),   # labels cannot be longer than 256 char
@@ -31,12 +31,12 @@ def compute_functional(grid, func, distance=None, kernel=None):
             if grid['label'][i_x, i_y] == WIRE:
                 continue
             dist['value'][i_x, i_y] = compute_value_at_elec(
-                grid['pos'][i_x, i_y], func, distance, kernel)
+                grid['pos'][i_x, i_y], func, metric, kernel)
 
     return dist
 
 
-def compute_value_at_elec(pos, func, distance='gaussian', kernel=8):
+def compute_value_at_elec(pos, func, metric='gaussian', kernel=8):
     """
 
     TODO
@@ -47,14 +47,14 @@ def compute_value_at_elec(pos, func, distance='gaussian', kernel=8):
     """
     dist = norm(func['pos'] - pos, axis=1)
 
-    if distance == 'gaussian':
+    if metric == 'gaussian':
         m = normdistr.pdf(dist, scale=kernel)
 
-    elif distance == 'sphere':
+    elif metric == 'sphere':
         m = zeros(dist.shape)
         m[dist <= kernel] = 1
 
-    elif distance == 'inverse':
+    elif metric == 'inverse':
         m = power(dist, -1 * kernel)
 
     v = func['value'] * m

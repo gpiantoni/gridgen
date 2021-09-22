@@ -8,18 +8,14 @@ from ..utils import match_labels, normalize
 lg = getLogger(__name__)
 
 
-def plot_grid2d(grid2d, value):
+def plot_grid2d(grid2d):
     """Plot the 2D grid to a plotly html
 
     Parameters
     ----------
     grid2d :
 
-    value : str
-        ecog, morphology, vasculature, merged
     """
-    colorbar = default_colorbar(value)
-
     n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
@@ -27,16 +23,11 @@ def plot_grid2d(grid2d, value):
             text=grid2d['label'],
             hoverinfo='text+z',
             colorscale=COLORSCALE,
-            colorbar=dict(
-                title=dict(
-                    text=colorbar.replace(' ', '<br>'),
-                    )
-                ),
             ),
         ]
 
     annots = [{
-        'x': n_cols / 2,
+        'x': n_cols / 2 - 0.5,
         'y': n_rows,
         'showarrow': False,
         'text': 'WIRES',
@@ -70,7 +61,7 @@ def plot_scatter(model):
     labels, e, m, v = match_labels(
         model['ecog'],
         model['morphology'],
-        model['vasculature']
+        model['functional']
         )
 
     divs = []
@@ -78,7 +69,7 @@ def plot_scatter(model):
     fig = plot_correlation(labels, e, m, 'ecog', 'morphology')
     divs.append(to_div(fig))
 
-    fig = plot_correlation(labels, e, v, 'ecog', 'vasculature')
+    fig = plot_correlation(labels, e, v, 'ecog', 'functional')
     divs.append(to_div(fig))
 
     fig = plot_prediction(labels, e, m, v, percent_vasc=model['percent_vasc'])

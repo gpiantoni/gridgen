@@ -34,6 +34,8 @@ COLORSCALE = &#39;Viridis&#39;
 
 
 def default_colorbar(value):
+    &#34;&#34;&#34;this hsould come from parameters&#34;&#34;&#34;
+    raise NotImplementedError
     if value == &#39;ecog&#39;:
         colorbar = &#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;
     elif value == &#39;morphology&#39;:
@@ -106,12 +108,14 @@ def to_html(divs, filename):
 <span>def <span class="ident">default_colorbar</span></span>(<span>value)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>this hsould come from parameters</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def default_colorbar(value):
+    &#34;&#34;&#34;this hsould come from parameters&#34;&#34;&#34;
+    raise NotImplementedError
     if value == &#39;ecog&#39;:
         colorbar = &#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;
     elif value == &#39;morphology&#39;:

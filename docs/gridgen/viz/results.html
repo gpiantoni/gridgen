@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
-<title>gridgen.models.functional API documentation</title>
+<title>gridgen.viz.results API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>gridgen.models.functional</code></h1>
+<h1 class="title">Module <code>gridgen.viz.results</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -26,65 +26,65 @@
 </summary>
 <pre><code class="python">from logging import getLogger
 
-from numpy import (power,
-                   zeros,
-                   NaN,
-                   nansum,
-                   dtype,
-                   )
-from numpy.linalg import norm
-from scipy.stats import norm as normdistr
-from ..io import WIRE
+from .utils import to_html, to_div
+from .viz2d import plot_scatter, plot_grid2d
+from .viz3d import plot_electrodes
 
 lg = getLogger(__name__)
 
-# 1 sigma = 0.6065306597126334
+modalities = &#39;morphology&#39;, &#39;functional&#39;
 
 
-def compute_functional(grid, func, metric=None, kernel=None):
+def plot_grid3d(parameters, mris, model):
+    output_dir = parameters[&#39;output_dir&#39;]
 
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;value&#39;, &#39;f4&#39;),
-        ])
+    fig = plot_electrodes(
+        mris[&#39;pial&#39;],
+        model[&#39;grid&#39;],
+        ref_label=parameters[&#39;initial&#39;][&#39;label&#39;])
+    grid_file = output_dir / &#39;electrodes.html&#39;
+    to_html([to_div(fig), ], grid_file)
 
-    dist = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    dist[&#39;label&#39;] = grid[&#39;label&#39;]
-    dist[&#39;value&#39;].fill(NaN)
-
-    for i_x in range(grid.shape[0]):
-        for i_y in range(grid.shape[1]):
-            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
-                continue
-            dist[&#39;value&#39;][i_x, i_y] = compute_value_at_elec(
-                grid[&#39;pos&#39;][i_x, i_y], func, metric, kernel)
-
-    return dist
+    for mod in modalities:
+        grid_file = output_dir / mod
+        if mod == &#39;functional&#39;:
+            func = mris[&#39;func&#39;]
+        else:
+            func = None
+        fig1 = plot_grid2d(model[mod])
+        fig2 = plot_electrodes(mris[&#39;pial&#39;], model[&#39;grid&#39;], model[mod], functional=func)
+        to_html([to_div(fig1), to_div(fig2)], grid_file)
+        lg.debug(f&#39;Exported {mod} model to {grid_file}&#39;)
 
 
-def compute_value_at_elec(pos, func, metric=&#39;gaussian&#39;, kernel=8):
-    &#34;&#34;&#34;
+def plot_fitting(parameters, mris, model):
 
-    TODO
-    ----
-    How to normalize:
-    You need to think hard if you need to normalize value (because we only
-    include voxels &gt; 0)
-    &#34;&#34;&#34;
-    dist = norm(func[&#39;pos&#39;] - pos, axis=1)
+    scatter_file = output / &#39;scatter&#39;
+    divs = plot_scatter(model)
+    to_html(divs, scatter_file)
 
-    if metric == &#39;gaussian&#39;:
-        m = normdistr.pdf(dist, scale=kernel)
+    grid_file = output / &#39;projected&#39;
+    fig = plot_electrodes(pial, model, &#39;ecog&#39;, angio=angio)
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
 
-    elif metric == &#39;sphere&#39;:
-        m = zeros(dist.shape)
-        m[dist &lt;= kernel] = 1
+    grid_file = output / &#39;morphology&#39;
+    fig0 = plot_grid2d(model[&#39;morphology&#39;], &#39;morphology&#39;)
+    fig1 = plot_electrodes(pial, model, &#39;morphology&#39;)
+    to_html([to_div(fig0), to_div(fig1)], grid_file)
 
-    elif metric == &#39;inverse&#39;:
-        m = power(dist, -1 * kernel)
+    if model[&#39;functional&#39;] is not None:
+        grid_file = output / &#39;functional&#39;
+        fig0 = plot_grid2d(model[&#39;functional&#39;], &#39;functional&#39;)
+        fig1 = plot_electrodes(pial, model, &#39;functional&#39;, angio=angio)
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
 
-    v = func[&#39;value&#39;] * m
-    return nansum(v)</code></pre>
+        grid_file = output / &#39;merged&#39;
+        fig0 = plot_grid2d(model[&#39;merged&#39;], &#39;merged&#39;)
+        fig1 = plot_electrodes(pial, model, &#39;merged&#39;, angio=angio)
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f&#39;Exported merged model to {grid_file}&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -94,8 +94,8 @@ def compute_value_at_elec(pos, func, metric=&#39;gaussian&#39;, kernel=8):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridgen.models.functional.compute_functional"><code class="name flex">
-<span>def <span class="ident">compute_functional</span></span>(<span>grid, func, metric=None, kernel=None)</span>
+<dt id="gridgen.viz.results.plot_fitting"><code class="name flex">
+<span>def <span class="ident">plot_fitting</span></span>(<span>parameters, mris, model)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -103,62 +103,65 @@ def compute_value_at_elec(pos, func, metric=&#39;gaussian&#39;, kernel=8):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_functional(grid, func, metric=None, kernel=None):
+<pre><code class="python">def plot_fitting(parameters, mris, model):
 
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;value&#39;, &#39;f4&#39;),
-        ])
+    scatter_file = output / &#39;scatter&#39;
+    divs = plot_scatter(model)
+    to_html(divs, scatter_file)
 
-    dist = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
-    dist[&#39;label&#39;] = grid[&#39;label&#39;]
-    dist[&#39;value&#39;].fill(NaN)
+    grid_file = output / &#39;projected&#39;
+    fig = plot_electrodes(pial, model, &#39;ecog&#39;, angio=angio)
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f&#39;Exported merged model to {grid_file}&#39;)
 
-    for i_x in range(grid.shape[0]):
-        for i_y in range(grid.shape[1]):
-            if grid[&#39;label&#39;][i_x, i_y] == WIRE:
-                continue
-            dist[&#39;value&#39;][i_x, i_y] = compute_value_at_elec(
-                grid[&#39;pos&#39;][i_x, i_y], func, metric, kernel)
+    grid_file = output / &#39;morphology&#39;
+    fig0 = plot_grid2d(model[&#39;morphology&#39;], &#39;morphology&#39;)
+    fig1 = plot_electrodes(pial, model, &#39;morphology&#39;)
+    to_html([to_div(fig0), to_div(fig1)], grid_file)
 
-    return dist</code></pre>
+    if model[&#39;functional&#39;] is not None:
+        grid_file = output / &#39;functional&#39;
+        fig0 = plot_grid2d(model[&#39;functional&#39;], &#39;functional&#39;)
+        fig1 = plot_electrodes(pial, model, &#39;functional&#39;, angio=angio)
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f&#39;Exported vascular to {grid_file}&#39;)
+
+        grid_file = output / &#39;merged&#39;
+        fig0 = plot_grid2d(model[&#39;merged&#39;], &#39;merged&#39;)
+        fig1 = plot_electrodes(pial, model, &#39;merged&#39;, angio=angio)
+        to_html([to_div(fig0), to_div(fig1)], grid_file)
+        lg.debug(f&#39;Exported merged model to {grid_file}&#39;)</code></pre>
 </details>
 </dd>
-<dt id="gridgen.models.functional.compute_value_at_elec"><code class="name flex">
-<span>def <span class="ident">compute_value_at_elec</span></span>(<span>pos, func, metric='gaussian', kernel=8)</span>
+<dt id="gridgen.viz.results.plot_grid3d"><code class="name flex">
+<span>def <span class="ident">plot_grid3d</span></span>(<span>parameters, mris, model)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="todo">Todo</h2>
-<p>How to normalize:
-You need to think hard if you need to normalize value (because we only
-include voxels &gt; 0)</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compute_value_at_elec(pos, func, metric=&#39;gaussian&#39;, kernel=8):
-    &#34;&#34;&#34;
+<pre><code class="python">def plot_grid3d(parameters, mris, model):
+    output_dir = parameters[&#39;output_dir&#39;]
 
-    TODO
-    ----
-    How to normalize:
-    You need to think hard if you need to normalize value (because we only
-    include voxels &gt; 0)
-    &#34;&#34;&#34;
-    dist = norm(func[&#39;pos&#39;] - pos, axis=1)
+    fig = plot_electrodes(
+        mris[&#39;pial&#39;],
+        model[&#39;grid&#39;],
+        ref_label=parameters[&#39;initial&#39;][&#39;label&#39;])
+    grid_file = output_dir / &#39;electrodes.html&#39;
+    to_html([to_div(fig), ], grid_file)
 
-    if metric == &#39;gaussian&#39;:
-        m = normdistr.pdf(dist, scale=kernel)
-
-    elif metric == &#39;sphere&#39;:
-        m = zeros(dist.shape)
-        m[dist &lt;= kernel] = 1
-
-    elif metric == &#39;inverse&#39;:
-        m = power(dist, -1 * kernel)
-
-    v = func[&#39;value&#39;] * m
-    return nansum(v)</code></pre>
+    for mod in modalities:
+        grid_file = output_dir / mod
+        if mod == &#39;functional&#39;:
+            func = mris[&#39;func&#39;]
+        else:
+            func = None
+        fig1 = plot_grid2d(model[mod])
+        fig2 = plot_electrodes(mris[&#39;pial&#39;], model[&#39;grid&#39;], model[mod], functional=func)
+        to_html([to_div(fig1), to_div(fig2)], grid_file)
+        lg.debug(f&#39;Exported {mod} model to {grid_file}&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -174,13 +177,13 @@ include voxels &gt; 0)</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="gridgen.models" href="index.html">gridgen.models</a></code></li>
+<li><code><a title="gridgen.viz" href="index.html">gridgen.viz</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridgen.models.functional.compute_functional" href="#gridgen.models.functional.compute_functional">compute_functional</a></code></li>
-<li><code><a title="gridgen.models.functional.compute_value_at_elec" href="#gridgen.models.functional.compute_value_at_elec">compute_value_at_elec</a></code></li>
+<li><code><a title="gridgen.viz.results.plot_fitting" href="#gridgen.viz.results.plot_fitting">plot_fitting</a></code></li>
+<li><code><a title="gridgen.viz.results.plot_grid3d" href="#gridgen.viz.results.plot_grid3d">plot_grid3d</a></code></li>
 </ul>
 </li>
 </ul>

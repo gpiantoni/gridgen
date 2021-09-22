@@ -34,18 +34,14 @@ from ..utils import match_labels, normalize
 lg = getLogger(__name__)
 
 
-def plot_grid2d(grid2d, value):
+def plot_grid2d(grid2d):
     &#34;&#34;&#34;Plot the 2D grid to a plotly html
 
     Parameters
     ----------
     grid2d :
 
-    value : str
-        ecog, morphology, vasculature, merged
     &#34;&#34;&#34;
-    colorbar = default_colorbar(value)
-
     n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
@@ -53,16 +49,11 @@ def plot_grid2d(grid2d, value):
             text=grid2d[&#39;label&#39;],
             hoverinfo=&#39;text+z&#39;,
             colorscale=COLORSCALE,
-            colorbar=dict(
-                title=dict(
-                    text=colorbar.replace(&#39; &#39;, &#39;&lt;br&gt;&#39;),
-                    )
-                ),
             ),
         ]
 
     annots = [{
-        &#39;x&#39;: n_cols / 2,
+        &#39;x&#39;: n_cols / 2 - 0.5,
         &#39;y&#39;: n_rows,
         &#39;showarrow&#39;: False,
         &#39;text&#39;: &#39;WIRES&#39;,
@@ -96,7 +87,7 @@ def plot_scatter(model):
     labels, e, m, v = match_labels(
         model[&#39;ecog&#39;],
         model[&#39;morphology&#39;],
-        model[&#39;vasculature&#39;]
+        model[&#39;functional&#39;]
         )
 
     divs = []
@@ -104,7 +95,7 @@ def plot_scatter(model):
     fig = plot_correlation(labels, e, m, &#39;ecog&#39;, &#39;morphology&#39;)
     divs.append(to_div(fig))
 
-    fig = plot_correlation(labels, e, v, &#39;ecog&#39;, &#39;vasculature&#39;)
+    fig = plot_correlation(labels, e, v, &#39;ecog&#39;, &#39;functional&#39;)
     divs.append(to_div(fig))
 
     fig = plot_prediction(labels, e, m, v, percent_vasc=model[&#39;percent_vasc&#39;])
@@ -229,32 +220,24 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 </details>
 </dd>
 <dt id="gridgen.viz.viz2d.plot_grid2d"><code class="name flex">
-<span>def <span class="ident">plot_grid2d</span></span>(<span>grid2d, value)</span>
+<span>def <span class="ident">plot_grid2d</span></span>(<span>grid2d)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Plot the 2D grid to a plotly html</p>
 <h2 id="parameters">Parameters</h2>
-<p>grid2d :</p>
-<dl>
-<dt><strong><code>value</code></strong> :&ensp;<code>str</code></dt>
-<dd>ecog, morphology, vasculature, merged</dd>
-</dl></div>
+<p>grid2d :</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_grid2d(grid2d, value):
+<pre><code class="python">def plot_grid2d(grid2d):
     &#34;&#34;&#34;Plot the 2D grid to a plotly html
 
     Parameters
     ----------
     grid2d :
 
-    value : str
-        ecog, morphology, vasculature, merged
     &#34;&#34;&#34;
-    colorbar = default_colorbar(value)
-
     n_rows, n_cols = grid2d.shape
     traces = [
         go.Heatmap(
@@ -262,16 +245,11 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
             text=grid2d[&#39;label&#39;],
             hoverinfo=&#39;text+z&#39;,
             colorscale=COLORSCALE,
-            colorbar=dict(
-                title=dict(
-                    text=colorbar.replace(&#39; &#39;, &#39;&lt;br&gt;&#39;),
-                    )
-                ),
             ),
         ]
 
     annots = [{
-        &#39;x&#39;: n_cols / 2,
+        &#39;x&#39;: n_cols / 2 - 0.5,
         &#39;y&#39;: n_rows,
         &#39;showarrow&#39;: False,
         &#39;text&#39;: &#39;WIRES&#39;,
@@ -364,7 +342,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
     labels, e, m, v = match_labels(
         model[&#39;ecog&#39;],
         model[&#39;morphology&#39;],
-        model[&#39;vasculature&#39;]
+        model[&#39;functional&#39;]
         )
 
     divs = []
@@ -372,7 +350,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
     fig = plot_correlation(labels, e, m, &#39;ecog&#39;, &#39;morphology&#39;)
     divs.append(to_div(fig))
 
-    fig = plot_correlation(labels, e, v, &#39;ecog&#39;, &#39;vasculature&#39;)
+    fig = plot_correlation(labels, e, v, &#39;ecog&#39;, &#39;functional&#39;)
     divs.append(to_div(fig))
 
     fig = plot_prediction(labels, e, m, v, percent_vasc=model[&#39;percent_vasc&#39;])

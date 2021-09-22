@@ -25,44 +25,22 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from scipy.stats import spearmanr
-from numpy import dtype, zeros, array, argmin, corrcoef, arange, NaN, intersect1d, unravel_index
+from numpy import array, argmin, corrcoef, arange, intersect1d, unravel_index
 
 from ..utils import normalize, match_labels
 
 
-def merge_models(model):
+def merge_models(ecog, labels, vals):
 
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;value&#39;, &#39;f4&#39;),
-        ])
-    merged = zeros((model[&#39;ecog&#39;].shape[0], model[&#39;ecog&#39;].shape[1]), dtype=d_)
-    merged[&#39;label&#39;] = model[&#39;ecog&#39;][&#39;label&#39;]
-
-    if model[&#39;functional&#39;] is None:
-        merged[&#39;value&#39;] = normalize(model[&#39;ecog&#39;][&#39;value&#39;])
-
-    else:
-        merged[&#39;value&#39;].fill(NaN)
-
-        labels, e, m, v = match_labels(
-            model[&#39;ecog&#39;],
-            model[&#39;morphology&#39;],
-            model[&#39;functional&#39;]
-            )
-        percent_func = model[&#39;percent_functional&#39;]
-        M = normalize(m)
-        V = normalize(v)
-        prediction = V * percent_func / 100 + M * (100 - percent_func) / 100
-
-        [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
-        i0r, i0c = unravel_index(i0, merged.shape)
-        merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
+    merged = ecog.copy()
+    [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
+    i0r, i0c = unravel_index(i0, merged.shape)
+    merged[&#39;value&#39;][i0r, i0c] = vals[i1]
 
     return merged
 
 
-def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, functional_contribution=None):
+def compare_model_with_ecog(model, ecog2d, fit):
 
     if model[&#39;functional&#39;] is None:
         chan, e, m = match_labels(ecog2d, model[&#39;morphology&#39;])
@@ -73,20 +51,28 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
         chan, e, m, f = match_labels(ecog2d, model[&#39;morphology&#39;], model[&#39;functional&#39;])
         F = normalize(f)
 
-        if functional_contribution is None:
+        if fit[&#39;functional_contribution&#39;] is None:
             WEIGHTS = arange(0, 110, 10)
         else:
-            WEIGHTS = array(functional_contribution)
+            WEIGHTS = array(fit[&#39;functional_contribution&#39;])
 
     E = normalize(e)
     M = normalize(m)
 
+    if fit[&#39;morphology_weight&#39;] == &#39;negative&#39;:
+        E = 1 - E
+    if fit[&#39;functional_weight&#39;] == &#39;negative&#39;:
+        F = 1 - F
+
     x = []
+    preds = []
     for weight in WEIGHTS:
+
         w = weight / 100
         prediction = w * F + (1 - w) * M
+        preds.append(prediction)
 
-        if correlation == &#39;parametric&#39;:
+        if fit[&#39;correlation&#39;] == &#39;parametric&#39;:
             c = corrcoef(E, prediction)[0, 1]
         else:
             c = spearmanr(E, prediction).correlation
@@ -96,7 +82,7 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
     x = array(x)
     i = argmin(x)
 
-    return len(chan), WEIGHTS[i], x[i]</code></pre>
+    return WEIGHTS[i], x[i], chan, preds[i]</code></pre>
 </details>
 </section>
 <section>
@@ -107,7 +93,7 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridgen.models.combine.compare_model_with_ecog"><code class="name flex">
-<span>def <span class="ident">compare_model_with_ecog</span></span>(<span>model, ecog2d, correlation='parametric', functional_contribution=None)</span>
+<span>def <span class="ident">compare_model_with_ecog</span></span>(<span>model, ecog2d, fit)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -115,7 +101,7 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, functional_contribution=None):
+<pre><code class="python">def compare_model_with_ecog(model, ecog2d, fit):
 
     if model[&#39;functional&#39;] is None:
         chan, e, m = match_labels(ecog2d, model[&#39;morphology&#39;])
@@ -126,20 +112,28 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
         chan, e, m, f = match_labels(ecog2d, model[&#39;morphology&#39;], model[&#39;functional&#39;])
         F = normalize(f)
 
-        if functional_contribution is None:
+        if fit[&#39;functional_contribution&#39;] is None:
             WEIGHTS = arange(0, 110, 10)
         else:
-            WEIGHTS = array(functional_contribution)
+            WEIGHTS = array(fit[&#39;functional_contribution&#39;])
 
     E = normalize(e)
     M = normalize(m)
 
+    if fit[&#39;morphology_weight&#39;] == &#39;negative&#39;:
+        E = 1 - E
+    if fit[&#39;functional_weight&#39;] == &#39;negative&#39;:
+        F = 1 - F
+
     x = []
+    preds = []
     for weight in WEIGHTS:
+
         w = weight / 100
         prediction = w * F + (1 - w) * M
+        preds.append(prediction)
 
-        if correlation == &#39;parametric&#39;:
+        if fit[&#39;correlation&#39;] == &#39;parametric&#39;:
             c = corrcoef(E, prediction)[0, 1]
         else:
             c = spearmanr(E, prediction).correlation
@@ -149,11 +143,11 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
     x = array(x)
     i = argmin(x)
 
-    return len(chan), WEIGHTS[i], x[i]</code></pre>
+    return WEIGHTS[i], x[i], chan, preds[i]</code></pre>
 </details>
 </dd>
 <dt id="gridgen.models.combine.merge_models"><code class="name flex">
-<span>def <span class="ident">merge_models</span></span>(<span>model)</span>
+<span>def <span class="ident">merge_models</span></span>(<span>ecog, labels, vals)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -161,34 +155,12 @@ def compare_model_with_ecog(model, ecog2d, correlation=&#39;parametric&#39;, fun
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def merge_models(model):
+<pre><code class="python">def merge_models(ecog, labels, vals):
 
-    d_ = dtype([
-        (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-        (&#39;value&#39;, &#39;f4&#39;),
-        ])
-    merged = zeros((model[&#39;ecog&#39;].shape[0], model[&#39;ecog&#39;].shape[1]), dtype=d_)
-    merged[&#39;label&#39;] = model[&#39;ecog&#39;][&#39;label&#39;]
-
-    if model[&#39;functional&#39;] is None:
-        merged[&#39;value&#39;] = normalize(model[&#39;ecog&#39;][&#39;value&#39;])
-
-    else:
-        merged[&#39;value&#39;].fill(NaN)
-
-        labels, e, m, v = match_labels(
-            model[&#39;ecog&#39;],
-            model[&#39;morphology&#39;],
-            model[&#39;functional&#39;]
-            )
-        percent_func = model[&#39;percent_functional&#39;]
-        M = normalize(m)
-        V = normalize(v)
-        prediction = V * percent_func / 100 + M * (100 - percent_func) / 100
-
-        [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
-        i0r, i0c = unravel_index(i0, merged.shape)
-        merged[&#39;value&#39;][i0r, i0c] = prediction[i1]
+    merged = ecog.copy()
+    [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
+    i0r, i0c = unravel_index(i0, merged.shape)
+    merged[&#39;value&#39;][i0r, i0c] = vals[i1]
 
     return merged</code></pre>
 </details>

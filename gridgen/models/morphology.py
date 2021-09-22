@@ -1,4 +1,4 @@
-from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan
+from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan, errstate
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
@@ -28,7 +28,8 @@ def compute_morphology(grid, pial, distance='minimum', maximum_distance=None, pe
         dist = _distance_pdf(grid, pial)
 
     if maximum_distance and distance in ('ray', 'minimum'):
-        i = isnan(dist['value']) | (dist['value'] > maximum_distance)
+        with errstate(invalid='ignore'):
+            i = dist['value'] > maximum_distance
         dist['value'][i] = NaN
 
     dist['value'] = dist['value'] ** (-1 * penalty)

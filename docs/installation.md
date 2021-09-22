@@ -5,7 +5,8 @@ Make sure if you have at least python 3.6 installed.
 Then you can install it, by typing:
 
 ```bash
-git pull https://github.com/gpiantoni/gridgen.git
+git clone https://github.com/gpiantoni/gridgen.git
+cd gridgen
 pip install -e gridgen
 ```
 

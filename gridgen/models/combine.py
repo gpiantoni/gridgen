@@ -1,42 +1,20 @@
 from scipy.stats import spearmanr
-from numpy import dtype, zeros, array, argmin, corrcoef, arange, NaN, intersect1d, unravel_index
+from numpy import array, argmin, corrcoef, arange, intersect1d, unravel_index
 
 from ..utils import normalize, match_labels
 
 
-def merge_models(model):
+def merge_models(ecog, labels, vals):
 
-    d_ = dtype([
-        ('label', '<U256'),   # labels cannot be longer than 256 char
-        ('value', 'f4'),
-        ])
-    merged = zeros((model['ecog'].shape[0], model['ecog'].shape[1]), dtype=d_)
-    merged['label'] = model['ecog']['label']
-
-    if model['functional'] is None:
-        merged['value'] = normalize(model['ecog']['value'])
-
-    else:
-        merged['value'].fill(NaN)
-
-        labels, e, m, v = match_labels(
-            model['ecog'],
-            model['morphology'],
-            model['functional']
-            )
-        percent_func = model['percent_functional']
-        M = normalize(m)
-        V = normalize(v)
-        prediction = V * percent_func / 100 + M * (100 - percent_func) / 100
-
-        [i0, i1] = intersect1d(merged['label'], labels, return_indices=True)[1:]
-        i0r, i0c = unravel_index(i0, merged.shape)
-        merged['value'][i0r, i0c] = prediction[i1]
+    merged = ecog.copy()
+    [i0, i1] = intersect1d(merged['label'], labels, return_indices=True)[1:]
+    i0r, i0c = unravel_index(i0, merged.shape)
+    merged['value'][i0r, i0c] = vals[i1]
 
     return merged
 
 
-def compare_model_with_ecog(model, ecog2d, correlation='parametric', functional_contribution=None):
+def compare_model_with_ecog(model, ecog2d, fit):
 
     if model['functional'] is None:
         chan, e, m = match_labels(ecog2d, model['morphology'])
@@ -47,20 +25,28 @@ def compare_model_with_ecog(model, ecog2d, correlation='parametric', functional_
         chan, e, m, f = match_labels(ecog2d, model['morphology'], model['functional'])
         F = normalize(f)
 
-        if functional_contribution is None:
+        if fit['functional_contribution'] is None:
             WEIGHTS = arange(0, 110, 10)
         else:
-            WEIGHTS = array(functional_contribution)
+            WEIGHTS = array(fit['functional_contribution'])
 
     E = normalize(e)
     M = normalize(m)
 
+    if fit['morphology_weight'] == 'negative':
+        E = 1 - E
+    if fit['functional_weight'] == 'negative':
+        F = 1 - F
+
     x = []
+    preds = []
     for weight in WEIGHTS:
+
         w = weight / 100
         prediction = w * F + (1 - w) * M
+        preds.append(prediction)
 
-        if correlation == 'parametric':
+        if fit['correlation'] == 'parametric':
             c = corrcoef(E, prediction)[0, 1]
         else:
             c = spearmanr(E, prediction).correlation
@@ -70,4 +56,4 @@ def compare_model_with_ecog(model, ecog2d, correlation='parametric', functional_
     x = array(x)
     i = argmin(x)
 
-    return len(chan), WEIGHTS[i], x[i]
+    return WEIGHTS[i], x[i], chan, preds[i]

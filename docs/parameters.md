@@ -35,11 +35,13 @@ You can also use the command `gridgen parameters.json parameters` to generate a 
   - **penalty**: (float, optional) exponent when computing the penalty from the distance. Morphology = 1 / distance<sup>penalty</sup>. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance. Default: 1
 - **functional**
   - **threshold**: (float) value to threshold the func_file and binarize it. If None, func_file won't be binarized. Default: None
-  - **distance**: (str, optional) . Values: [gaussian, sphere, inverse]. Default: inverse
-  - **kernel**: (float, optional) . Default: 2
+  - **metric**: (str, optional) TODO. Values: [gaussian, sphere, inverse]. Default: inverse
+  - **kernel**: (float, optional) TODO. Default: 2
 - **fit** (required by command `fit`)
   - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
   - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
+  - **morphology_weight**: (str, optional) TODO. Values: [positive, negative]. Default: positive
+  - **functional_weight**: (str, optional) TODO. Values: [positive, negative]. Default: positive
   - **functional_contribution**: (list, optional) If both present, it's possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution). Default: [10, 20, 30, 40, 50, 60, 70, 80, 90]
   - **steps**
     - **x**: (float, optional) Step size in mm for x-direction, for method simplex

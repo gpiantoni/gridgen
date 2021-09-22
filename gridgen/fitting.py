@@ -116,8 +116,6 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
 
     Parameters
     ----------
-    ranges : None
-        ignored, but easier to pass when working with arguments
     """
     x, y, rotation = x0
     start_vertex = search_grid(mris["dura"], params['initial']["vertex"], x, y)
@@ -132,14 +130,14 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
 
     model = compute_model(mris, grid, params['morphology'], params['functional'])
 
-    n_chan, weight, cc = compare_model_with_ecog(
+    weight, cc, chans, vals = compare_model_with_ecog(
         model,
         ecog,
-        correlation=params['fit']['correlation'],
-        functional_contribution=params['fit']['functional_contribution'])
+        fit=params['fit'],
+        )
 
     if not final:
-        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vertex: 6d}) = {cc:+8.3f} (# included channels:{n_chan: 4d}, vascular contribution: {weight:.2f}%)')
+        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vertex: 6d}) = {cc:+8.3f} (# included channels:{len(chans): 4d}, vascular contribution: {weight:.2f}%)')
         return -1 * cc  # value to minimize
 
     else:
@@ -147,8 +145,8 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
         model['vertex'] = start_vertex
         model['percent_functional'] = weight
         model['corr_coef'] = cc
-        model['n_channels'] = n_chan
-        model['merged'] = merge_models(model)
+        model['n_channels'] = len(chans)
+        model['merged'] = merge_models(ecog, chans, vals)
         return model
 
 
