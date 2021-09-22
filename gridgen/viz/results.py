@@ -19,43 +19,39 @@ def plot_grid3d(parameters, mris, model):
     grid_file = output_dir / 'electrodes.html'
     to_html([to_div(fig), ], grid_file)
 
-    for mod in modalities:
+    _plot_2d_and_3d(output_dir, mris, model)
+
+
+def plot_fitting(output_dir, mris, model, fit):
+
+    scatter_file = output_dir / 'scatter'
+    divs = plot_scatter(model, fit)
+    to_html(divs, scatter_file)
+
+    grid_file = output_dir / 'projected'
+    fig = plot_electrodes(mris['pial'], model['grid'], model['ecog'], functional=mris['func'])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f'Exported projected to {grid_file}')
+
+    _plot_2d_and_3d(output_dir, mris, model, fit)
+
+
+def _plot_2d_and_3d(output_dir, mris, model, fit={}):
+    for mod in ('morphology', 'functional', 'merged'):
         grid_file = output_dir / mod
+        if model.get(mod, None) is None:
+            continue
+
         if mod == 'functional':
             func = mris['func']
         else:
             func = None
+
         fig1 = plot_grid2d(model[mod])
         fig2 = plot_electrodes(mris['pial'], model['grid'], model[mod], functional=func)
+        if fit.get(f'{mod}_weight', '') == 'negative':
+            fig1.data[-1]['reversescale'] = True
+            fig2.data[1]['marker']['reversescale'] = True
+
         to_html([to_div(fig1), to_div(fig2)], grid_file)
         lg.debug(f'Exported {mod} model to {grid_file}')
-
-
-def plot_fitting(parameters, mris, model):
-
-    scatter_file = output / 'scatter'
-    divs = plot_scatter(model)
-    to_html(divs, scatter_file)
-
-    grid_file = output / 'projected'
-    fig = plot_electrodes(pial, model, 'ecog', angio=angio)
-    to_html([to_div(fig), ], grid_file)
-    lg.debug(f'Exported merged model to {grid_file}')
-
-    grid_file = output / 'morphology'
-    fig0 = plot_grid2d(model['morphology'], 'morphology')
-    fig1 = plot_electrodes(pial, model, 'morphology')
-    to_html([to_div(fig0), to_div(fig1)], grid_file)
-
-    if model['functional'] is not None:
-        grid_file = output / 'functional'
-        fig0 = plot_grid2d(model['functional'], 'functional')
-        fig1 = plot_electrodes(pial, model, 'functional', angio=angio)
-        to_html([to_div(fig0), to_div(fig1)], grid_file)
-        lg.debug(f'Exported vascular to {grid_file}')
-
-        grid_file = output / 'merged'
-        fig0 = plot_grid2d(model['merged'], 'merged')
-        fig1 = plot_electrodes(pial, model, 'merged', angio=angio)
-        to_html([to_div(fig0), to_div(fig1)], grid_file)
-        lg.debug(f'Exported merged model to {grid_file}')

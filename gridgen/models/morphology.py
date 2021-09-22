@@ -1,4 +1,4 @@
-from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, isnan, errstate
+from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, errstate
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
@@ -108,7 +108,7 @@ def _distance_cylinder(grid, pial):
             norm0 = grid['norm'][i_x, i_y]
 
             d = norm(pial['pos'] - pos, axis=1)
-            points = pial['pos'][d < max_dist_to_elec, :]
+            # points = pial['pos'][d < max_dist_to_elec, :]
             dist_to_line = norm(cross(norm0, pos - pial['pos']), axis=1)
             distance['value'][i_x, i_y] = d[dist_to_line < max_dist_to_line].min()
 

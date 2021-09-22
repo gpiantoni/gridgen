@@ -31,6 +31,10 @@ jobs:
         python -m pip install flake8 pytest pytest-cov
         pip install -r requirements.txt
 
+    - name: Lint with flake8
+      run: |
+        flake8 gridgen/ --exclude=gridgen/matlab/ --count --ignore=E302,E501,E123,E731,W503 --show-source --statistics
+
     - name: Test with pytest
       run: |
         pytest -vv --cov=gridgen --cov-report=xml tests

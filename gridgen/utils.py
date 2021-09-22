@@ -1,7 +1,9 @@
 """Various utilities
 """
+from json import JSONEncoder
 from os import nice
-from numpy import nanmax, nanmin, intersect1d, isnan, array
+from numpy import nanmax, nanmin, intersect1d, isnan, array, integer
+from pathlib import Path
 
 WIRE = 'wire'
 
@@ -54,3 +56,11 @@ def remove_wires(model):
             model[field] = model[field][i_keep, :]
 
     return model
+
+
+class _JSONEncoder_path(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, integer):
+            return int(obj)
+        if isinstance(obj, Path):
+            return str(obj)

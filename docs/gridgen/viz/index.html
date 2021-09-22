@@ -29,7 +29,15 @@
 &#34;&#34;&#34;
 from .viz2d import plot_grid2d
 from .results import plot_fitting, plot_grid3d
-from .utils import to_html, to_div</code></pre>
+from .utils import to_html, to_div
+
+__all__ = [
+    &#39;plot_grid2d&#39;,
+    &#39;plot_grid3d&#39;,
+    &#39;plot_fitting&#39;,
+    &#39;to_div&#39;,
+    &#39;to_html&#39;,
+    ]</code></pre>
 </details>
 </section>
 <section>
@@ -56,6 +64,198 @@ from .utils import to_html, to_div</code></pre>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridgen.viz.plot_fitting"><code class="name flex">
+<span>def <span class="ident">plot_fitting</span></span>(<span>output_dir, mris, model, fit)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_fitting(output_dir, mris, model, fit):
+
+    scatter_file = output_dir / &#39;scatter&#39;
+    divs = plot_scatter(model, fit)
+    to_html(divs, scatter_file)
+
+    grid_file = output_dir / &#39;projected&#39;
+    fig = plot_electrodes(mris[&#39;pial&#39;], model[&#39;grid&#39;], model[&#39;ecog&#39;], functional=mris[&#39;func&#39;])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f&#39;Exported projected to {grid_file}&#39;)
+
+    _plot_2d_and_3d(output_dir, mris, model, fit)</code></pre>
+</details>
+</dd>
+<dt id="gridgen.viz.plot_grid2d"><code class="name flex">
+<span>def <span class="ident">plot_grid2d</span></span>(<span>grid2d)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plot the 2D grid to a plotly html</p>
+<h2 id="parameters">Parameters</h2>
+<p>grid2d :</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_grid2d(grid2d):
+    &#34;&#34;&#34;Plot the 2D grid to a plotly html
+
+    Parameters
+    ----------
+    grid2d :
+
+    &#34;&#34;&#34;
+    n_rows, n_cols = grid2d.shape
+    traces = [
+        go.Heatmap(
+            z=grid2d[&#39;value&#39;],
+            text=grid2d[&#39;label&#39;],
+            hoverinfo=&#39;text+z&#39;,
+            colorscale=COLORSCALE,
+            ),
+        ]
+
+    annots = [{
+        &#39;x&#39;: n_cols / 2 - 0.5,
+        &#39;y&#39;: n_rows,
+        &#39;showarrow&#39;: False,
+        &#39;text&#39;: &#39;WIRES&#39;,
+        &#39;xref&#39;: &#39;x&#39;,
+        &#39;yref&#39;: &#39;y&#39;,
+        &#39;align&#39;: &#39;right&#39;,
+        &#39;bgcolor&#39;: &#39;white&#39;
+        }]
+
+    layout = go.Layout(
+        width=n_cols * 60,
+        height=n_rows * 60,
+        annotations=annots,
+        autosize=False,
+        xaxis=dict(
+            visible=False,
+            ),
+        yaxis=dict(
+            autorange=&#39;reversed&#39;,
+            visible=False,
+            ),
+        )
+
+    fig = go.Figure(traces, layout=layout)
+
+    return fig</code></pre>
+</details>
+</dd>
+<dt id="gridgen.viz.plot_grid3d"><code class="name flex">
+<span>def <span class="ident">plot_grid3d</span></span>(<span>parameters, mris, model)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_grid3d(parameters, mris, model):
+    output_dir = parameters[&#39;output_dir&#39;]
+
+    fig = plot_electrodes(
+        mris[&#39;pial&#39;],
+        model[&#39;grid&#39;],
+        ref_label=parameters[&#39;initial&#39;][&#39;label&#39;])
+    grid_file = output_dir / &#39;electrodes.html&#39;
+    to_html([to_div(fig), ], grid_file)
+
+    _plot_2d_and_3d(output_dir, mris, model)</code></pre>
+</details>
+</dd>
+<dt id="gridgen.viz.to_div"><code class="name flex">
+<span>def <span class="ident">to_div</span></span>(<span>fig)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert plotly FIG into an HTML div</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>fig</code></strong> :&ensp;<code>instance</code> of <code>plotly.Figure</code></dt>
+<dd>figure to convert</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>html div, containing the figure as dynamic javascript plot</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_div(fig):
+    &#34;&#34;&#34;Convert plotly FIG into an HTML div
+
+    Parameters
+    ----------
+    fig : instance of plotly.Figure
+        figure to convert
+
+    Returns
+    -------
+    str
+        html div, containing the figure as dynamic javascript plot
+    &#34;&#34;&#34;
+    return plot(fig, output_type=&#39;div&#39;, show_link=False, include_plotlyjs=False)</code></pre>
+</details>
+</dd>
+<dt id="gridgen.viz.to_html"><code class="name flex">
+<span>def <span class="ident">to_html</span></span>(<span>divs, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert DIVs, obtained from 'to_div', into one HTML file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>divs</code></strong> :&ensp;<code>list</code> of <code>divs</code></dt>
+<dd>list of the output of 'to_div'</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>path</code></dt>
+<dd>path of the file to write (extension should be .html). It overwrites if
+it exists</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_html(divs, filename):
+    &#34;&#34;&#34;Convert DIVs, obtained from &#39;to_div&#39;, into one HTML file
+
+    Parameters
+    ----------
+    divs : list of divs
+        list of the output of &#39;to_div&#39;
+    filename : path
+        path of the file to write (extension should be .html). It overwrites if
+        it exists
+    &#34;&#34;&#34;
+    filename.parent.mkdir(exist_ok=True, parents=True)
+    lg.debug(f&#39;Saving {len(divs)} plots to {filename}&#39;)
+
+    html = dedent(&#39;&#39;&#39;\
+        &lt;html&gt;
+          &lt;head&gt;
+            &lt;meta charset=&#34;utf-8&#34; /&gt;
+          &lt;/head&gt;
+          &lt;body&gt;
+            &lt;div&gt;
+              &lt;script type=&#34;text/javascript&#34;&gt;window.PlotlyConfig = {MathJaxConfig: &#39;local&#39;};&lt;/script&gt;
+              &lt;script src=&#34;https://cdn.plot.ly/plotly-latest.min.js&#34;&gt;&lt;/script&gt;
+        &#39;&#39;&#39;) + &#39;\n&#39;.join(divs) + dedent(&#39;&#39;&#39;\
+            &lt;/div&gt;
+          &lt;/body&gt;
+        &lt;/html&gt;
+        &#39;&#39;&#39;)
+
+    with filename.with_suffix(&#39;.html&#39;).open(&#39;w&#39;) as f:
+        f.write(html)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -77,6 +277,15 @@ from .utils import to_html, to_div</code></pre>
 <li><code><a title="gridgen.viz.utils" href="utils.html">gridgen.viz.utils</a></code></li>
 <li><code><a title="gridgen.viz.viz2d" href="viz2d.html">gridgen.viz.viz2d</a></code></li>
 <li><code><a title="gridgen.viz.viz3d" href="viz3d.html">gridgen.viz.viz3d</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridgen.viz.plot_fitting" href="#gridgen.viz.plot_fitting">plot_fitting</a></code></li>
+<li><code><a title="gridgen.viz.plot_grid2d" href="#gridgen.viz.plot_grid2d">plot_grid2d</a></code></li>
+<li><code><a title="gridgen.viz.plot_grid3d" href="#gridgen.viz.plot_grid3d">plot_grid3d</a></code></li>
+<li><code><a title="gridgen.viz.to_div" href="#gridgen.viz.to_div">to_div</a></code></li>
+<li><code><a title="gridgen.viz.to_html" href="#gridgen.viz.to_html">to_html</a></code></li>
 </ul>
 </li>
 </ul>

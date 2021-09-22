@@ -11,7 +11,6 @@ from .parameters import (
     prepare_template,
     parse_parameters,
     TEMPLATE,
-    _JSONEncoder_path
     )
 
 from ..fitting import fitting
@@ -20,6 +19,7 @@ from ..models import make_grid3d_model
 from ..viz import to_html, to_div, plot_grid2d, plot_grid3d
 from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
+from ..utils import _JSONEncoder_path
 from ..io import (
     read_mri,
     read_grid2d,
@@ -195,7 +195,7 @@ def main(arguments=None):
         write_ecog2d(ecog_tsv, ecog2d)
 
         lg.info(f'Writing ECoG image to {ecog_fig}')
-        fig = plot_grid2d(ecog2d, 'ecog')
+        fig = plot_grid2d(ecog2d)
         to_html([to_div(fig), ], ecog_fig)
 
     if args.function == 'grid3d':

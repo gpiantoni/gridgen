@@ -1,5 +1,5 @@
-from gridgen.bin.command import main
-from gridgen.bin.parameters import REQUIRED, _JSONEncoder_path
+from gridgen.bin.command import main, _JSONEncoder_path
+from gridgen.bin.parameters import REQUIRED
 from json import dump
 from .paths import OUTPUT_PATH, ECOG_FILE, T1_FILE, SMOOTH_FILE, PIAL_FILE, FUNC_FILE
 

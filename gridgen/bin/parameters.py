@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from json import JSONEncoder, load
+from json import load
 from collections.abc import Iterable
+
 
 PKG_PATH = Path(__file__).parents[2]
 
@@ -438,12 +439,6 @@ def validate_template(temp, d):
             out[k] = validate_template(v, d[k])
 
     return out
-
-
-class _JSONEncoder_path(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Path):
-            return str(obj)
 
 
 def _invert_dict(d):

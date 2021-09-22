@@ -1,11 +1,13 @@
 from logging import getLogger
 import plotly.graph_objects as go
 
-from .utils import to_div, default_colorbar, COLORSCALE
-from ..utils import match_labels, normalize
+from .utils import to_div, COLORSCALE
+from ..utils import match_labels
 
 
 lg = getLogger(__name__)
+
+modalities = 'morphology', 'functional'
 
 
 def plot_grid2d(grid2d):
@@ -56,29 +58,31 @@ def plot_grid2d(grid2d):
     return fig
 
 
-def plot_scatter(model):
-
-    labels, e, m, v = match_labels(
-        model['ecog'],
-        model['morphology'],
-        model['functional']
-        )
+def plot_scatter(model, fit):
 
     divs = []
 
-    fig = plot_correlation(labels, e, m, 'ecog', 'morphology')
-    divs.append(to_div(fig))
+    for mod in modalities:
+        if model.get(mod, None) is None:
+            continue
+        fig = plot_correlation(model, 'ecog', mod)
 
-    fig = plot_correlation(labels, e, v, 'ecog', 'functional')
-    divs.append(to_div(fig))
+        if fit[f'{mod}_weight'] == 'negative':
+            fig.update_layout(yaxis=dict(autorange='reversed'))
+        divs.append(to_div(fig))
 
-    fig = plot_prediction(labels, e, m, v, percent_vasc=model['percent_vasc'])
+    fig = plot_correlation(model, 'ecog', 'merged')
     divs.append(to_div(fig))
 
     return divs
 
 
-def plot_correlation(labels, x, y, xname, yname):
+def plot_correlation(model, xname, yname):
+
+    labels, x, y = match_labels(
+        model[xname],
+        model[yname],
+        )
 
     traces = [
         go.Scatter(
@@ -92,56 +96,21 @@ def plot_correlation(labels, x, y, xname, yname):
         )
         ]
 
-    layout = go.Layout(
-        height=700,
-        width=700,
-        title=f'Correlation between {xname} and {yname} (not normalized)',
-        xaxis=dict(
-            title=default_colorbar(xname),
-            ),
-        yaxis=dict(
-            title=default_colorbar(yname),
-            ),
-        )
-
-    return go.Figure(data=traces, layout=layout)
-
-
-def plot_prediction(labels, e, m, v=None, percent_vasc=None):
-
-    E = normalize(e)
-    M = normalize(m)
-    title = 'Correlation between ecog and prediction (normalized)'
-    if v is not None:
-        V = normalize(v)
-        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
-        title = title + f'<br>{100 - percent_vasc:.0f}% morphology, {percent_vasc:.0f}% vasculature'
+    if yname == 'merged':
+        ranges = (-0.05, 1.05)
     else:
-        prediction = M
-
-    traces = [
-        go.Scatter(
-            y=prediction,
-            x=E,
-            mode='markers',
-            text=labels,
-            marker=dict(
-                color='black',
-            ),
-        )
-        ]
+        ranges = None
 
     layout = go.Layout(
-        title=title,
         height=700,
         width=700,
-        yaxis=dict(
-            title='predicted values',
-            range=(-0.05, 1.05),
-            ),
+        title=f'Correlation between {xname} and {yname}',
         xaxis=dict(
-            title='normalized observed values',
-            range=(-0.05, 1.05),
+            title=xname,
+            ),
+        yaxis=dict(
+            title=yname,
+            range=ranges,
             ),
         )
 

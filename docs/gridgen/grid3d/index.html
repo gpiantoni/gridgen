@@ -28,7 +28,15 @@
 <pre><code class="python">&#34;&#34;&#34;Functions to generate a 3D grid, based on normals to the dura surface&#34;&#34;&#34;
 from .construct import construct_grid
 from .geometry import find_vertex, search_grid
-from .examine import measure_distances, measure_angles</code></pre>
+from .examine import measure_distances, measure_angles
+
+__all__ = [
+    &#39;construct_grid&#39;,
+    &#39;find_vertex&#39;,
+    &#39;measure_distances&#39;,
+    &#39;measure_angles&#39;,
+    &#39;search_grid&#39;,
+    ]</code></pre>
 </details>
 </section>
 <section>
@@ -57,6 +65,376 @@ of the previous nodes</p></div>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridgen.grid3d.construct_grid"><code class="name flex">
+<span>def <span class="ident">construct_grid</span></span>(<span>surf, start_vert, start_label, labels, grid3d, rotation=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Construct 3D grid, based on a starting vertex on a surface</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>surface with normals. It's better to use the smooth surface to have
+reasonable results</dd>
+<dt><strong><code>start_vert</code></strong> :&ensp;<code>int</code></dt>
+<dd>index of the initial vertex</dd>
+<dt><strong><code>start_label</code></strong> :&ensp;<code>str</code></dt>
+<dd>label of the electrode, which is assumed to be in the initial vertex</dd>
+<dt><strong><code>labels</code></strong> :&ensp;<code>2d array</code></dt>
+<dd>a 2d array with the channel labels</dd>
+<dt><strong><code>grid3d</code></strong> :&ensp;<code>dict</code></dt>
+<dd>
+<ul>
+<li>interelec_distance : float</li>
+<li>maximum_angle : float</li>
+<li>step_angle : float</li>
+</ul>
+</dd>
+<dt><strong><code>rotation</code></strong> :&ensp;<code>float</code></dt>
+<dd>rotation from the inferior-superior axis (clockwise, in degrees)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ndarray</code> of <code>shape (n_rows, n_columns) with fields:</code></dt>
+<dd>
+<ul>
+<li>label : str (labels)</li>
+<li>pos : 3 floats (specifying the x, y, z position)</li>
+<li>norm : 3 floats (specifying the normals)</li>
+<li>done : bool (where the position has been computed or not)</li>
+</ul>
+</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def construct_grid(surf, start_vert, start_label, labels, grid3d, rotation=0):
+    &#34;&#34;&#34;Construct 3D grid, based on a starting vertex on a surface
+
+    Parameters
+    ----------
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    start_vert : int
+        index of the initial vertex
+    start_label : str
+        label of the electrode, which is assumed to be in the initial vertex
+    labels : 2d array
+        a 2d array with the channel labels
+    grid3d : dict
+        - interelec_distance : float
+        - maximum_angle : float
+        - step_angle : float
+    rotation : float
+        rotation from the inferior-superior axis (clockwise, in degrees)
+
+    Returns
+    -------
+    ndarray of shape (n_rows, n_columns) with fields:
+        - label : str (labels)
+        - pos : 3 floats (specifying the x, y, z position)
+        - norm : 3 floats (specifying the normals)
+        - done : bool (where the position has been computed or not)
+    &#34;&#34;&#34;
+    grid3d[&#39;angles&#39;] = arange(
+        -1 * grid3d[&#39;maximum_angle&#39;],
+        grid3d[&#39;maximum_angle&#39;],
+        grid3d[&#39;step_angle&#39;])
+
+    radians = rotation / 180 * pi
+    n_rows, n_cols = labels.shape
+
+    # make sure that grid is empty
+    grid = make_grid(n_rows, n_cols)
+    grid[&#39;label&#39;] = labels
+    grid[&#39;pos&#39;].fill(0)
+    grid[&#39;norm&#39;].fill(0)
+
+    if start_label not in grid[&#39;label&#39;]:
+        raise ValueError(f&#39;&#34;{start_label}&#34; is not one of the labels of the grid&#39;)
+    g = index_order(grid, start_label)
+    [x_start, y_start] = next(g)
+    grid[&#39;pos&#39;][x_start, y_start] = surf[&#39;pos&#39;][start_vert, :]
+    grid[&#39;norm&#39;][x_start, y_start] = surf[&#39;pos_norm&#39;][start_vert, :]
+    grid[&#39;done&#39;][x_start, y_start] = True
+
+    for x, y in g:
+        n_neighbors, neighbors = count_neighbors(grid, x, y)
+
+        if n_neighbors == 0:
+            raise ValueError(f&#39;Electrode {x:d}-{y:d} cannot have zero neighbors&#39;)
+
+        elif n_neighbors == 1:
+            opposite_x, opposite_y = 2 * neighbors[0] - (x, y)
+
+            if (0 &lt;= opposite_x &lt; n_rows) and (0 &lt;= opposite_y &lt; n_cols) and grid[&#39;done&#39;][opposite_x, opposite_y]:
+                find_new_pos_1d(grid, neighbors, surf, grid3d, x, y, (opposite_x, opposite_y))
+
+            else:
+                find_new_pos_0d(grid, neighbors, surf, grid3d, x, y, radians=radians)
+
+        elif n_neighbors == 2:
+            find_new_pos_2d(grid, neighbors, surf, grid3d, x, y)
+
+        else:
+            raise ValueError(f&#39;Electrode {x:d}-{y:d} has {n_neighbors:d} but it can only have one or two neighbors&#39;)
+
+    return grid</code></pre>
+</details>
+</dd>
+<dt id="gridgen.grid3d.find_vertex"><code class="name flex">
+<span>def <span class="ident">find_vertex</span></span>(<span>surf, ras)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find vertex closest to one point</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>hull surface</dd>
+<dt><strong><code>ras</code></strong> :&ensp;<code>(3, ) array</code></dt>
+<dd>point in the same space</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>index of the vertex closest to the point</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_vertex(surf, ras):
+    &#34;&#34;&#34;Find vertex closest to one point
+
+    Parameters
+    ----------
+    surf : dict
+        hull surface
+    ras : (3, ) array
+        point in the same space
+
+    Returns
+    -------
+    int
+        index of the vertex closest to the point
+    &#34;&#34;&#34;
+    init_ras = array(ras)
+    vertex = argmin(norm(surf[&#39;pos&#39;] - init_ras, axis=1))
+    vert_dist = norm(init_ras - surf[&#39;pos&#39;][vertex])
+
+    lg.debug(f&#39;Target RAS: {init_ras}, vertex #{vertex} RAS: {surf[&#34;pos&#34;][vertex]} (distance = {vert_dist:0.3}mm)&#39;)
+
+    return vertex</code></pre>
+</details>
+</dd>
+<dt id="gridgen.grid3d.measure_angles"><code class="name flex">
+<span>def <span class="ident">measure_angles</span></span>(<span>grid2d)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Measure the angles between rows and columns (mean, std and range).
+Values are shown in the log</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>(n_rows, n_columns) array</code></dt>
+<dd>grid where electrode positions have been computed. Does not require 'norm', only 'pos'</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def measure_angles(grid2d):
+    &#34;&#34;&#34;Measure the angles between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed. Does not require &#39;norm&#39;, only &#39;pos&#39;
+    &#34;&#34;&#34;
+    n_rows, n_columns = grid2d.shape
+
+    angle = []
+    for i_row in range(n_rows - 1):
+        for i_col in range(n_columns - 1):
+            pos0 = grid2d[i_row, i_col][&#39;pos&#39;]
+            pos1 = grid2d[i_row + 1, i_col][&#39;pos&#39;]
+            pos2 = grid2d[i_row, i_col + 1][&#39;pos&#39;]
+            angle.append(compute_angle(pos0, pos1, pos2))
+
+    for i_row in range(n_rows - 1, 0, -1):
+        for i_col in range(n_columns - 1):
+            pos0 = grid2d[i_row, i_col][&#39;pos&#39;]
+            pos1 = grid2d[i_row - 1, i_col][&#39;pos&#39;]
+            pos2 = grid2d[i_row, i_col + 1][&#39;pos&#39;]
+            angle.append(compute_angle(pos0, pos1, pos2))
+
+    for i_row in range(n_rows - 1):
+        for i_col in range(n_columns - 1, 0, -1):
+            pos0 = grid2d[i_row, i_col][&#39;pos&#39;]
+            pos1 = grid2d[i_row + 1, i_col][&#39;pos&#39;]
+            pos2 = grid2d[i_row, i_col - 1][&#39;pos&#39;]
+            angle.append(compute_angle(pos0, pos1, pos2))
+
+    for i_row in range(n_rows - 1, 0, -1):
+        for i_col in range(n_columns - 1, 0, -1):
+            pos0 = grid2d[i_row, i_col][&#39;pos&#39;]
+            pos1 = grid2d[i_row - 1, i_col][&#39;pos&#39;]
+            pos2 = grid2d[i_row, i_col - 1][&#39;pos&#39;]
+            angle.append(compute_angle(pos0, pos1, pos2))
+
+    m_angle = mean(angle)
+    lg.info(f&#39;Angle: {m_angle:0.3f}° (sd {std(angle):0.3f}°) [{min(angle):0.3f}° - {max(angle):0.3f}°]&#39;)
+
+    return m_angle</code></pre>
+</details>
+</dd>
+<dt id="gridgen.grid3d.measure_distances"><code class="name flex">
+<span>def <span class="ident">measure_distances</span></span>(<span>grid2d)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Measure the distances between rows and columns (mean, std and range).
+Values are shown in the log</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>(n_rows, n_columns) array</code></dt>
+<dd>grid where electrode positions have been computed</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>mean distances between columns</dd>
+<dt><code>float</code></dt>
+<dd>mean distances between rows</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def measure_distances(grid2d):
+    &#34;&#34;&#34;Measure the distances between rows and columns (mean, std and range).
+    Values are shown in the log
+
+    Parameters
+    ----------
+    grid2d : (n_rows, n_columns) array
+        grid where electrode positions have been computed
+
+    Returns
+    -------
+    float
+        mean distances between columns
+    float
+        mean distances between rows
+    &#34;&#34;&#34;
+    n_rows, n_columns = grid2d.shape
+
+    dist = []
+    for i_row in range(n_rows):
+        for i_col in range(n_columns - 1):
+            dist.append(norm(grid2d[i_row, i_col][&#39;pos&#39;] - grid2d[i_row, i_col + 1][&#39;pos&#39;]))
+    dist_col = array(dist)
+
+    dist = []
+    for i_col in range(n_columns):
+        for i_row in range(n_rows - 1):
+            dist.append(norm(grid2d[i_row, i_col][&#39;pos&#39;] - grid2d[i_row + 1, i_col][&#39;pos&#39;]))
+    dist_row = array(dist)
+
+    m_dist_col = mean(dist_col)
+    m_dist_row = mean(dist_row)
+
+    lg.info(f&#39;Distance between columns: {m_dist_col:0.3f}mm (sd {std(dist_col):0.3f}mm) [{min(dist_col):0.3f}mm - {max(dist_col):0.3f}mm]&#39;)
+    lg.info(f&#39;Distance between rows:    {m_dist_row:0.3f}mm (sd {std(dist_row):0.3f}mm) [{min(dist_row):0.3f}mm - {max(dist_row):0.3f}mm]&#39;)
+
+    return m_dist_col, m_dist_row</code></pre>
+</details>
+</dd>
+<dt id="gridgen.grid3d.search_grid"><code class="name flex">
+<span>def <span class="ident">search_grid</span></span>(<span>surf, ref_vert, x, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a reference vertex, compute a plane perpendicular to the normal of
+that point. Then, move x-mm in the x direction and y-mm in the y direction,
+then find the closest vertex to that point.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict</code></dt>
+<dd>surface with normals. It's better to use the smooth surface to have
+reasonable results</dd>
+<dt><strong><code>ref_vert</code></strong> :&ensp;<code>int</code></dt>
+<dd>index of the reference vertex (the plane will be computed relative to
+the normal of this vertex)</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dd>distance in mm from the reference vertex in one direction</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
+<dd>distance in mm from the reference vertex in the direction perpendicular
+to x</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>index of the vertex which is roughly x-mm and y-mm away</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Because vertices are not regularly distributed on the surface, the distance
+between the reference vertex and the output vertex does not need to be equal
+to <code>sqrt(x ** 2 + y ** 2)</code>, but it should be close enough.</p>
+<p>There are an infinite number of planes perpendicular to the normal. x-y
+define one of the possible planes. The plane is always the same for one
+normal (due to internal convention). You can rotate the plane later.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def search_grid(surf, ref_vert, x, y):
+    &#34;&#34;&#34;Given a reference vertex, compute a plane perpendicular to the normal of
+    that point. Then, move x-mm in the x direction and y-mm in the y direction,
+    then find the closest vertex to that point.
+
+    Parameters
+    ----------
+    surf : dict
+        surface with normals. It&#39;s better to use the smooth surface to have
+        reasonable results
+    ref_vert : int
+        index of the reference vertex (the plane will be computed relative to
+        the normal of this vertex)
+    x : float
+        distance in mm from the reference vertex in one direction
+    y : float
+        distance in mm from the reference vertex in the direction perpendicular
+        to x
+
+    Returns
+    -------
+    int
+        index of the vertex which is roughly x-mm and y-mm away
+
+    Notes
+    -----
+    Because vertices are not regularly distributed on the surface, the distance
+    between the reference vertex and the output vertex does not need to be equal
+    to `sqrt(x ** 2 + y ** 2)`, but it should be close enough.
+
+    There are an infinite number of planes perpendicular to the normal. x-y
+    define one of the possible planes. The plane is always the same for one
+    normal (due to internal convention). You can rotate the plane later.
+    &#34;&#34;&#34;
+    pos = surf[&#39;pos&#39;][ref_vert, :]
+    normal = surf[&#39;pos_norm&#39;][ref_vert, :]
+
+    coords_2d = array([x, y])
+    plane = calc_plane_to_axis(normal)
+    target = coords_2d @ plane + pos
+    new_vector = argmin(norm(surf[&#39;pos&#39;] - target, axis=1))
+
+    return new_vector</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -78,6 +456,15 @@ of the previous nodes</p></div>
 <li><code><a title="gridgen.grid3d.examine" href="examine.html">gridgen.grid3d.examine</a></code></li>
 <li><code><a title="gridgen.grid3d.geometry" href="geometry.html">gridgen.grid3d.geometry</a></code></li>
 <li><code><a title="gridgen.grid3d.search" href="search.html">gridgen.grid3d.search</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridgen.grid3d.construct_grid" href="#gridgen.grid3d.construct_grid">construct_grid</a></code></li>
+<li><code><a title="gridgen.grid3d.find_vertex" href="#gridgen.grid3d.find_vertex">find_vertex</a></code></li>
+<li><code><a title="gridgen.grid3d.measure_angles" href="#gridgen.grid3d.measure_angles">measure_angles</a></code></li>
+<li><code><a title="gridgen.grid3d.measure_distances" href="#gridgen.grid3d.measure_distances">measure_distances</a></code></li>
+<li><code><a title="gridgen.grid3d.search_grid" href="#gridgen.grid3d.search_grid">search_grid</a></code></li>
 </ul>
 </li>
 </ul>

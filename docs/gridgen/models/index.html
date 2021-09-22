@@ -34,7 +34,14 @@
 2) functional (a volume, such as fMRI data or angiogram)
 &#34;&#34;&#34;
 from .compute import compute_model, make_grid3d_model
-from .combine import merge_models, compare_model_with_ecog</code></pre>
+from .combine import merge_models, compare_model_with_ecog
+
+__all__ = [
+    &#39;compare_model_with_ecog&#39;,
+    &#39;compute_model&#39;,
+    &#39;make_grid3d_model&#39;,
+    &#39;merge_models&#39;,
+    ]</code></pre>
 </details>
 </section>
 <section>
@@ -56,15 +63,143 @@ from .combine import merge_models, compare_model_with_ecog</code></pre>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="gridgen.models.vascular" href="vascular.html">gridgen.models.vascular</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 </section>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridgen.models.compare_model_with_ecog"><code class="name flex">
+<span>def <span class="ident">compare_model_with_ecog</span></span>(<span>model, ecog2d, fit)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_model_with_ecog(model, ecog2d, fit):
+
+    if model[&#39;functional&#39;] is None:
+        chan, e, m = match_labels(ecog2d, model[&#39;morphology&#39;])
+        F = 0
+        WEIGHTS = [0, ]
+
+    else:
+        chan, e, m, f = match_labels(ecog2d, model[&#39;morphology&#39;], model[&#39;functional&#39;])
+        F = normalize(f)
+
+        if fit[&#39;functional_contribution&#39;] is None:
+            WEIGHTS = arange(0, 110, 10)
+        else:
+            WEIGHTS = array(fit[&#39;functional_contribution&#39;])
+
+    E = normalize(e)
+    M = normalize(m)
+
+    if fit[&#39;morphology_weight&#39;] == &#39;negative&#39;:
+        E = 1 - E
+    if fit[&#39;functional_weight&#39;] == &#39;negative&#39;:
+        F = 1 - F
+
+    x = []
+    preds = []
+    for weight in WEIGHTS:
+
+        w = weight / 100
+        prediction = w * F + (1 - w) * M
+        preds.append(prediction)
+
+        if fit[&#39;correlation&#39;] == &#39;parametric&#39;:
+            c = corrcoef(E, prediction)[0, 1]
+        else:
+            c = spearmanr(E, prediction).correlation
+
+        x.append(c)
+
+    x = array(x)
+    i = argmin(x)
+
+    return WEIGHTS[i], x[i], chan, preds[i]</code></pre>
+</details>
+</dd>
+<dt id="gridgen.models.compute_model"><code class="name flex">
+<span>def <span class="ident">compute_model</span></span>(<span>mri, grid, morphology={}, functional={})</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_model(mri, grid, morphology={}, functional={}):
+
+    if mri[&#39;pial&#39;] is None or morphology is None:
+        morpho = None
+    else:
+        morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
+
+    if mri[&#39;func&#39;] is None or functional is None:
+        func = None
+    else:
+        func = compute_functional(grid, mri[&#39;func&#39;], **functional)
+
+    model = {
+        &#39;grid&#39;: grid,
+        &#39;morphology&#39;: morpho,
+        &#39;functional&#39;: func,
+        }
+
+    return model</code></pre>
+</details>
+</dd>
+<dt id="gridgen.models.make_grid3d_model"><code class="name flex">
+<span>def <span class="ident">make_grid3d_model</span></span>(<span>mris, grid2d, grid3d, initial, morphology={}, functional={})</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_grid3d_model(mris, grid2d, grid3d, initial, morphology={}, functional={}):
+
+    vertex = find_vertex(mris[&#39;dura&#39;], initial[&#39;RAS&#39;])
+
+    grid = construct_grid(
+        mris[&#34;dura&#34;],
+        vertex,
+        initial[&#34;label&#34;],
+        grid2d[&#39;label&#39;],
+        grid3d,
+        rotation=initial[&#39;rotation&#39;])
+
+    model = compute_model(mris, grid, morphology, functional)
+
+    return model</code></pre>
+</details>
+</dd>
+<dt id="gridgen.models.merge_models"><code class="name flex">
+<span>def <span class="ident">merge_models</span></span>(<span>ecog, labels, vals)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def merge_models(ecog, labels, vals):
+
+    merged = ecog.copy()
+    [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
+    i0r, i0c = unravel_index(i0, merged.shape)
+    merged[&#39;value&#39;][i0r, i0c] = vals[i1]
+
+    return merged</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -86,7 +221,14 @@ from .combine import merge_models, compare_model_with_ecog</code></pre>
 <li><code><a title="gridgen.models.compute" href="compute.html">gridgen.models.compute</a></code></li>
 <li><code><a title="gridgen.models.functional" href="functional.html">gridgen.models.functional</a></code></li>
 <li><code><a title="gridgen.models.morphology" href="morphology.html">gridgen.models.morphology</a></code></li>
-<li><code><a title="gridgen.models.vascular" href="vascular.html">gridgen.models.vascular</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridgen.models.compare_model_with_ecog" href="#gridgen.models.compare_model_with_ecog">compare_model_with_ecog</a></code></li>
+<li><code><a title="gridgen.models.compute_model" href="#gridgen.models.compute_model">compute_model</a></code></li>
+<li><code><a title="gridgen.models.make_grid3d_model" href="#gridgen.models.make_grid3d_model">make_grid3d_model</a></code></li>
+<li><code><a title="gridgen.models.merge_models" href="#gridgen.models.merge_models">merge_models</a></code></li>
 </ul>
 </li>
 </ul>

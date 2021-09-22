@@ -27,11 +27,13 @@
 <pre><code class="python">from logging import getLogger
 import plotly.graph_objects as go
 
-from .utils import to_div, default_colorbar, COLORSCALE
-from ..utils import match_labels, normalize
+from .utils import to_div, COLORSCALE
+from ..utils import match_labels
 
 
 lg = getLogger(__name__)
+
+modalities = &#39;morphology&#39;, &#39;functional&#39;
 
 
 def plot_grid2d(grid2d):
@@ -82,29 +84,31 @@ def plot_grid2d(grid2d):
     return fig
 
 
-def plot_scatter(model):
-
-    labels, e, m, v = match_labels(
-        model[&#39;ecog&#39;],
-        model[&#39;morphology&#39;],
-        model[&#39;functional&#39;]
-        )
+def plot_scatter(model, fit):
 
     divs = []
 
-    fig = plot_correlation(labels, e, m, &#39;ecog&#39;, &#39;morphology&#39;)
-    divs.append(to_div(fig))
+    for mod in modalities:
+        if model.get(mod, None) is None:
+            continue
+        fig = plot_correlation(model, &#39;ecog&#39;, mod)
 
-    fig = plot_correlation(labels, e, v, &#39;ecog&#39;, &#39;functional&#39;)
-    divs.append(to_div(fig))
+        if fit[f&#39;{mod}_weight&#39;] == &#39;negative&#39;:
+            fig.update_layout(yaxis=dict(autorange=&#39;reversed&#39;))
+        divs.append(to_div(fig))
 
-    fig = plot_prediction(labels, e, m, v, percent_vasc=model[&#39;percent_vasc&#39;])
+    fig = plot_correlation(model, &#39;ecog&#39;, &#39;merged&#39;)
     divs.append(to_div(fig))
 
     return divs
 
 
-def plot_correlation(labels, x, y, xname, yname):
+def plot_correlation(model, xname, yname):
+
+    labels, x, y = match_labels(
+        model[xname],
+        model[yname],
+        )
 
     traces = [
         go.Scatter(
@@ -118,56 +122,21 @@ def plot_correlation(labels, x, y, xname, yname):
         )
         ]
 
-    layout = go.Layout(
-        height=700,
-        width=700,
-        title=f&#39;Correlation between {xname} and {yname} (not normalized)&#39;,
-        xaxis=dict(
-            title=default_colorbar(xname),
-            ),
-        yaxis=dict(
-            title=default_colorbar(yname),
-            ),
-        )
-
-    return go.Figure(data=traces, layout=layout)
-
-
-def plot_prediction(labels, e, m, v=None, percent_vasc=None):
-
-    E = normalize(e)
-    M = normalize(m)
-    title = &#39;Correlation between ecog and prediction (normalized)&#39;
-    if v is not None:
-        V = normalize(v)
-        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
-        title = title + f&#39;&lt;br&gt;{100 - percent_vasc:.0f}% morphology, {percent_vasc:.0f}% vasculature&#39;
+    if yname == &#39;merged&#39;:
+        ranges = (-0.05, 1.05)
     else:
-        prediction = M
-
-    traces = [
-        go.Scatter(
-            y=prediction,
-            x=E,
-            mode=&#39;markers&#39;,
-            text=labels,
-            marker=dict(
-                color=&#39;black&#39;,
-            ),
-        )
-        ]
+        ranges = None
 
     layout = go.Layout(
-        title=title,
         height=700,
         width=700,
-        yaxis=dict(
-            title=&#39;predicted values&#39;,
-            range=(-0.05, 1.05),
-            ),
+        title=f&#39;Correlation between {xname} and {yname}&#39;,
         xaxis=dict(
-            title=&#39;normalized observed values&#39;,
-            range=(-0.05, 1.05),
+            title=xname,
+            ),
+        yaxis=dict(
+            title=yname,
+            range=ranges,
             ),
         )
 
@@ -182,7 +151,7 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridgen.viz.viz2d.plot_correlation"><code class="name flex">
-<span>def <span class="ident">plot_correlation</span></span>(<span>labels, x, y, xname, yname)</span>
+<span>def <span class="ident">plot_correlation</span></span>(<span>model, xname, yname)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -190,7 +159,12 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_correlation(labels, x, y, xname, yname):
+<pre><code class="python">def plot_correlation(model, xname, yname):
+
+    labels, x, y = match_labels(
+        model[xname],
+        model[yname],
+        )
 
     traces = [
         go.Scatter(
@@ -204,15 +178,21 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
         )
         ]
 
+    if yname == &#39;merged&#39;:
+        ranges = (-0.05, 1.05)
+    else:
+        ranges = None
+
     layout = go.Layout(
         height=700,
         width=700,
-        title=f&#39;Correlation between {xname} and {yname} (not normalized)&#39;,
+        title=f&#39;Correlation between {xname} and {yname}&#39;,
         xaxis=dict(
-            title=default_colorbar(xname),
+            title=xname,
             ),
         yaxis=dict(
-            title=default_colorbar(yname),
+            title=yname,
+            range=ranges,
             ),
         )
 
@@ -278,58 +258,8 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
     return fig</code></pre>
 </details>
 </dd>
-<dt id="gridgen.viz.viz2d.plot_prediction"><code class="name flex">
-<span>def <span class="ident">plot_prediction</span></span>(<span>labels, e, m, v=None, percent_vasc=None)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def plot_prediction(labels, e, m, v=None, percent_vasc=None):
-
-    E = normalize(e)
-    M = normalize(m)
-    title = &#39;Correlation between ecog and prediction (normalized)&#39;
-    if v is not None:
-        V = normalize(v)
-        prediction = V * percent_vasc / 100 + M * (100 - percent_vasc) / 100
-        title = title + f&#39;&lt;br&gt;{100 - percent_vasc:.0f}% morphology, {percent_vasc:.0f}% vasculature&#39;
-    else:
-        prediction = M
-
-    traces = [
-        go.Scatter(
-            y=prediction,
-            x=E,
-            mode=&#39;markers&#39;,
-            text=labels,
-            marker=dict(
-                color=&#39;black&#39;,
-            ),
-        )
-        ]
-
-    layout = go.Layout(
-        title=title,
-        height=700,
-        width=700,
-        yaxis=dict(
-            title=&#39;predicted values&#39;,
-            range=(-0.05, 1.05),
-            ),
-        xaxis=dict(
-            title=&#39;normalized observed values&#39;,
-            range=(-0.05, 1.05),
-            ),
-        )
-
-    return go.Figure(data=traces, layout=layout)</code></pre>
-</details>
-</dd>
 <dt id="gridgen.viz.viz2d.plot_scatter"><code class="name flex">
-<span>def <span class="ident">plot_scatter</span></span>(<span>model)</span>
+<span>def <span class="ident">plot_scatter</span></span>(<span>model, fit)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -337,23 +267,20 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_scatter(model):
-
-    labels, e, m, v = match_labels(
-        model[&#39;ecog&#39;],
-        model[&#39;morphology&#39;],
-        model[&#39;functional&#39;]
-        )
+<pre><code class="python">def plot_scatter(model, fit):
 
     divs = []
 
-    fig = plot_correlation(labels, e, m, &#39;ecog&#39;, &#39;morphology&#39;)
-    divs.append(to_div(fig))
+    for mod in modalities:
+        if model.get(mod, None) is None:
+            continue
+        fig = plot_correlation(model, &#39;ecog&#39;, mod)
 
-    fig = plot_correlation(labels, e, v, &#39;ecog&#39;, &#39;functional&#39;)
-    divs.append(to_div(fig))
+        if fit[f&#39;{mod}_weight&#39;] == &#39;negative&#39;:
+            fig.update_layout(yaxis=dict(autorange=&#39;reversed&#39;))
+        divs.append(to_div(fig))
 
-    fig = plot_prediction(labels, e, m, v, percent_vasc=model[&#39;percent_vasc&#39;])
+    fig = plot_correlation(model, &#39;ecog&#39;, &#39;merged&#39;)
     divs.append(to_div(fig))
 
     return divs</code></pre>
@@ -379,7 +306,6 @@ def plot_prediction(labels, e, m, v=None, percent_vasc=None):
 <ul class="">
 <li><code><a title="gridgen.viz.viz2d.plot_correlation" href="#gridgen.viz.viz2d.plot_correlation">plot_correlation</a></code></li>
 <li><code><a title="gridgen.viz.viz2d.plot_grid2d" href="#gridgen.viz.viz2d.plot_grid2d">plot_grid2d</a></code></li>
-<li><code><a title="gridgen.viz.viz2d.plot_prediction" href="#gridgen.viz.viz2d.plot_prediction">plot_prediction</a></code></li>
 <li><code><a title="gridgen.viz.viz2d.plot_scatter" href="#gridgen.viz.viz2d.plot_scatter">plot_scatter</a></code></li>
 </ul>
 </li>

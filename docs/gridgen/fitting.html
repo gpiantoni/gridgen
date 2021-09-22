@@ -39,9 +39,10 @@ try:
 except ImportError:
     mkl = None
 
-from .grid3d import construct_grid, search_grid, find_vertex
+from .grid3d import construct_grid, search_grid, find_vertex, measure_distances, measure_angles
 from .models import compute_model, merge_models, compare_model_with_ecog
-from .utils import be_nice
+from .utils import be_nice, remove_wires
+from .viz import plot_fitting
 
 lg = getLogger(__name__)
 
@@ -105,22 +106,22 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
     lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_functional&#34;]:.2f}%)&#39;)
 
-    # plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
+    plot_fitting(output, mris, model, fit)
 
-    # model = remove_wires(model)
+    model = remove_wires(model)
 
-    # measure_distances(model[&#39;grid&#39;])
-    # measure_angles(model[&#39;grid&#39;])
     out = {
         &#39;label&#39;: initial[&#39;label&#39;],
-        &#39;vertex&#39;: int(model[&#39;vertex&#39;]),
+        &#39;vertex&#39;: model[&#39;vertex&#39;],
         &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
         &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
-        &#39;percent_functional&#39;: int(model[&#39;percent_functional&#39;]),
-        &#39;n_included_channels&#39;: int(model[&#39;n_channels&#39;]),
+        &#39;percent_functional&#39;: model[&#39;percent_functional&#39;],
+        &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
         &#39;corr_coef&#39;: int(model[&#39;corr_coef&#39;]),
         &#39;duration&#39;: comp_dur,
+        &#39;mean_elec_distance&#39;: measure_distances(model[&#39;grid&#39;]),
+        &#39;mean_angle&#39;: measure_angles(model[&#39;grid&#39;]),
         }
     results_file = output / &#39;results.json&#39;
     with results_file.open(&#39;w&#39;) as f:
@@ -393,22 +394,22 @@ reading)</p>
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
     lg.info(f&#39;Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model[&#34;vertex&#34;]: 6d}) = {model[&#34;corr_coef&#34;]:+8.3f} (# included channels:{model[&#34;n_channels&#34;]: 4d}, vascular contribution: {model[&#34;percent_functional&#34;]:.2f}%)&#39;)
 
-    # plot_results(model, mris[&#39;pial&#39;], output, angio=mris[&#39;angio&#39;])
+    plot_fitting(output, mris, model, fit)
 
-    # model = remove_wires(model)
+    model = remove_wires(model)
 
-    # measure_distances(model[&#39;grid&#39;])
-    # measure_angles(model[&#39;grid&#39;])
     out = {
         &#39;label&#39;: initial[&#39;label&#39;],
-        &#39;vertex&#39;: int(model[&#39;vertex&#39;]),
+        &#39;vertex&#39;: model[&#39;vertex&#39;],
         &#39;pos&#39;: list(mris[&#39;dura&#39;][&#39;pos&#39;][model[&#39;vertex&#39;], :]),
         &#39;normals&#39;: list(mris[&#39;dura&#39;][&#39;pos_norm&#39;][model[&#39;vertex&#39;], :]),
         &#39;rotation&#39;: rotation,
-        &#39;percent_functional&#39;: int(model[&#39;percent_functional&#39;]),
-        &#39;n_included_channels&#39;: int(model[&#39;n_channels&#39;]),
+        &#39;percent_functional&#39;: model[&#39;percent_functional&#39;],
+        &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
         &#39;corr_coef&#39;: int(model[&#39;corr_coef&#39;]),
         &#39;duration&#39;: comp_dur,
+        &#39;mean_elec_distance&#39;: measure_distances(model[&#39;grid&#39;]),
+        &#39;mean_angle&#39;: measure_angles(model[&#39;grid&#39;]),
         }
     results_file = output / &#39;results.json&#39;
     with results_file.open(&#39;w&#39;) as f:
