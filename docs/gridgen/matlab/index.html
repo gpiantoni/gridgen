@@ -31,7 +31,12 @@ for those matlab functions.</p>
 for those matlab functions.
 &#34;&#34;&#34;
 from .compat import projectElectrodes
-from .comparison import compare_to_matlab</code></pre>
+from .comparison import compare_to_matlab
+
+__all__ = [
+    &#39;projectElectrodes&#39;,
+    &#39;compare_to_matlab&#39;,
+    ]</code></pre>
 </details>
 </section>
 <section>
@@ -71,6 +76,137 @@ of the Matlab functions, for compatibility</p></div>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gridgen.matlab.compare_to_matlab"><code class="name flex">
+<span>def <span class="ident">compare_to_matlab</span></span>(<span>parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_to_matlab(parameters):
+    convert_neuralAct_surfaces(parameters)
+
+    m_out = parameters[&#39;output_dir&#39;] / &#39;matlab&#39;
+    m_out.mkdir(exist_ok=True)
+
+    compare_values(parameters, m_out)
+
+    compare_position_in_space(parameters)
+
+    cc = compare_ecog(parameters)
+    lg.info(f&#39;Correlation of gamma activity between matlab and python: {cc:0.3f}&#39;)
+    savetxt(str(m_out / &#39;gamma.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
+
+    cc = compare_angio(parameters)
+    if cc is not None:
+        savetxt(str(m_out / &#39;angio.txt&#39;), atleast_1d(cc), fmt=&#39;%.3f&#39;)
+        lg.info(f&#39;Correlation of angiogram projection between matlab and python: {cc:0.3f}&#39;)
+
+    compare_fitting(parameters)</code></pre>
+</details>
+</dd>
+<dt id="gridgen.matlab.projectElectrodes"><code class="name flex">
+<span>def <span class="ident">projectElectrodes</span></span>(<span>surf, subjstructs, normway, normUse=False, interstype='', intersval=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replicate projectElectrodes. This function is a ray-triangle intersection.
+The normal of the point is specified in <code>normway</code> if normway has three values.
+Otherwise, it computes the normal based on the direction of the points of the
+mesh which are closer than <code>normway</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>surf</code></strong> :&ensp;<code>dict with 'pos', 'tri'</code></dt>
+<dd>surface of the brain use to project the electrodes (it's not necessary
+to have 'tri_norm')</dd>
+<dt><strong><code>subjstructs</code></strong> :&ensp;<code>dict with 'electrodes'</code></dt>
+<dd>location of the electrodes</dd>
+<dt><strong><code>normway</code></strong> :&ensp;<code>float</code></dt>
+<dd>distance to use to include mesh points when computing the normal</dd>
+<dt><strong><code>normUse</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if true, it uses the normals of <code>subjstructs</code>, if false it recomputes them</dd>
+<dt><strong><code>interstype</code></strong> :&ensp;<code>str</code></dt>
+<dd>if <code>''</code> all triangles of the model are processed; if <code>'fixed'</code>, you need
+to specify a radius <code>intersval</code></dd>
+<dt><strong><code>intersval</code></strong> :&ensp;<code>float</code></dt>
+<dd>radius when <code>interstype</code> == <code>'fixed'</code></dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict with 'electrodes', 'normals', 'trielectrodes'</code></dt>
+<dd>for each electrode, it returns its normal (based on neighboring mesh
+vertices) and the projection onto the surface.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def projectElectrodes(surf, subjstructs, normway, normUse=False, interstype=&#39;&#39;,
+                      intersval=0):
+    &#34;&#34;&#34;Replicate projectElectrodes. This function is a ray-triangle intersection.
+    The normal of the point is specified in `normway` if normway has three values.
+    Otherwise, it computes the normal based on the direction of the points of the
+    mesh which are closer than `normway`.
+
+    Parameters
+    ----------
+    surf : dict with &#39;pos&#39;, &#39;tri&#39;
+        surface of the brain use to project the electrodes (it&#39;s not necessary
+        to have &#39;tri_norm&#39;)
+    subjstructs : dict with &#39;electrodes&#39;
+        location of the electrodes
+    normway : float
+        distance to use to include mesh points when computing the normal
+    normUse : bool
+        if true, it uses the normals of `subjstructs`, if false it recomputes them
+    interstype : str
+        if `&#39;&#39;` all triangles of the model are processed; if `&#39;fixed&#39;`, you need
+        to specify a radius `intersval`
+    intersval : float
+        radius when `interstype` == `&#39;fixed&#39;`
+
+    Returns
+    -------
+    dict with &#39;electrodes&#39;, &#39;normals&#39;, &#39;trielectrodes&#39;
+        for each electrode, it returns its normal (based on neighboring mesh
+        vertices) and the projection onto the surface.
+    &#34;&#34;&#34;
+    assert interstype in (&#39;&#39;, &#39;fixed&#39;)
+
+    normdist = normway  # if normway is scalar
+
+    normals = []
+    pints = []
+    for i in range(subjstructs[&#39;electrodes&#39;].shape[0]):
+        electrode = subjstructs[&#39;electrodes&#39;][i, :]
+
+        if normUse:
+            normal = subjstructs[&#39;normal&#39;][i, :]
+        else:
+            normal = normElec(surf, electrode, normdist)
+
+        if interstype == &#39;fixed&#39;:
+            sorttri = _sort_closest_triangles(surf, electrode, intersval)
+
+        else:
+            sorttri = None
+
+        # note the sign of normal is inverted
+        pint = project_to_cortex(surf, electrode, normal, sorted_triangles=sorttri)[1]  # l. 198-237
+
+        normals.append(normal)
+        pints.append(pint)
+
+    subjstructs[&#39;normal&#39;] = array(normals)
+    subjstructs[&#39;trielectrodes&#39;] = array(pints)
+
+    return subjstructs</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -95,6 +231,12 @@ of the Matlab functions, for compatibility</p></div>
 <li><code><a title="gridgen.matlab.pipeline" href="pipeline.html">gridgen.matlab.pipeline</a></code></li>
 <li><code><a title="gridgen.matlab.utils" href="utils.html">gridgen.matlab.utils</a></code></li>
 <li><code><a title="gridgen.matlab.vascular" href="vascular.html">gridgen.matlab.vascular</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gridgen.matlab.compare_to_matlab" href="#gridgen.matlab.compare_to_matlab">compare_to_matlab</a></code></li>
+<li><code><a title="gridgen.matlab.projectElectrodes" href="#gridgen.matlab.projectElectrodes">projectElectrodes</a></code></li>
 </ul>
 </li>
 </ul>

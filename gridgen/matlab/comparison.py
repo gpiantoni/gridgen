@@ -3,16 +3,14 @@ from numpy import corrcoef, isnan, mean, std, savetxt, array, atleast_1d
 from numpy.linalg import norm
 from logging import getLogger
 
-"""
 from .vascular import calculateAngioMap
-from ..io import read_ecog2d, read_surf, read_surface_ras_shift, read_elec, read_ecog2d_matlab
 from .io import read_matlab
 from .utils import get_initial_from_matlab
-from ..fitting import fitting
-from ..examine import measure_distances, measure_angles
 from .pipeline import compute_ROI
-"""
 
+from ..io import read_ecog2d, read_surf, read_surface_ras_shift, read_elec, read_ecog2d_matlab
+from ..fitting import fitting
+from ..grid3d.examine import measure_distances, measure_angles
 
 lg = getLogger(__name__)
 

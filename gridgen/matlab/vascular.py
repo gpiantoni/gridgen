@@ -7,7 +7,7 @@ from scipy.stats import zscore
 from nibabel import load
 from nibabel.affines import apply_affine
 
-from .utils import be_nice
+from ..utils import be_nice
 
 
 def calculateAngioMap(subj_info, Tthreshold, voxelDepth, plotAngio=False, cortex=None):

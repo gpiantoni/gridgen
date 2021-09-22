@@ -33,7 +33,7 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        flake8 gridgen/ --exclude=gridgen/matlab/ --count --ignore=E302,E501,E123,E731,W503 --show-source --statistics
+        flake8 gridgen/ --count --ignore=E302,E501,E123,E731,W503 --show-source --statistics
 
     - name: Test with pytest
       run: |

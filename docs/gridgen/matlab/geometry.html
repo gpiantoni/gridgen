@@ -24,10 +24,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from numpy import cross, NaN, einsum, empty, isnan, nanargmin, array, dot, sum, where, ones
+<pre><code class="python">from numpy import NaN, isnan, nanargmin, array, dot, sum, where
 from numpy.linalg import norm
 
-EPSILON = 1e-5
+from ..models.morphology import intersect_ray_triangle
 
 
 def project_to_cortex(surf, point, normal, sorted_triangles=None):
@@ -83,72 +83,6 @@ def project_to_cortex(surf, point, normal, sorted_triangles=None):
     projected_point = point + normal * t[i]
 
     return t[i], projected_point
-
-
-def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
-    &#34;&#34;&#34;Implementation of the Möller-Trumbore algorithm to detect ray-triangle
-    intersection.
-
-
-    Parameters
-    ----------
-    vertex0 : (n, 3) array
-        the first vertex for all the triangles of the mesh
-    vertex1 : (n, 3) array
-        the second vertex for all the triangles of the mesh
-    vertex2 : (n, 3) array
-        the third vertex for all the triangles of the mesh
-    rayOrigin : (3, ) array
-        start position of the ray
-    rayVector : (3, ) array
-        direction of the ray vector
-    line : bool
-        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
-        if True, it detects intersection in both direction (treated as a line
-        with two directions)
-
-    Returns
-    -------
-    array (n, )
-        distance of each triangle to the point of interest. It&#39;s NaN if 1.
-        the direction of the point is parallel to the triangle, 2. the projected
-        point is outside the triangle, 3. the direction is in the opposite direction
-        to the triangle (so, this is a ray, not a line).
-
-    Notes
-    -----
-    Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    &#34;&#34;&#34;
-    i_good = ones(vertex0.shape[0], dtype=bool)
-    edge1 = vertex1 - vertex0
-    edge2 = vertex2 - vertex0
-    h = cross(rayVector, edge2, axis=-1)
-    a = einsum(&#39;ij,ij-&gt;i&#39;, edge1, h)  # dot product
-
-    i_parallel = (a &gt; -EPSILON) &amp; (a &lt; EPSILON)
-    i_good[i_parallel] = False
-
-    f = 1 / a
-
-    s = rayOrigin - vertex0
-    u = f * einsum(&#39;ij,ij-&gt;i&#39;, s, h)
-    i_outside = (u &lt; 0.0) | (u &gt; 1.0)
-    i_good[i_outside] = False
-
-    q = cross(s, edge1)
-    v = f * einsum(&#39;j,ij-&gt;i&#39;, rayVector, q)
-
-    i_outside = (v &lt; 0.0) | (u + v &gt; 1.0)
-    i_good[i_outside] = False
-
-    t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
-    if not line:
-        i_opposite = t &lt; EPSILON
-        i_good[i_opposite] = NaN
-
-    t[~i_good] = NaN
-
-    return t
 
 
 def check_if_point_in_triangle(v0, v1, v2, p):
@@ -231,109 +165,6 @@ def cartesian_to_barycentric(v0, v1, v2, p):
     t = (dot(tri_norm, vertex0) - dot(tri_norm, pos)) / dot(pos_norm, tri_norm)
     intersection = pos + pos_norm * t
     return t, intersection</code></pre>
-</details>
-</dd>
-<dt id="gridgen.matlab.geometry.intersect_ray_triangle"><code class="name flex">
-<span>def <span class="ident">intersect_ray_triangle</span></span>(<span>vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Implementation of the Möller-Trumbore algorithm to detect ray-triangle
-intersection.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>vertex0</code></strong> :&ensp;<code>(n, 3) array</code></dt>
-<dd>the first vertex for all the triangles of the mesh</dd>
-<dt><strong><code>vertex1</code></strong> :&ensp;<code>(n, 3) array</code></dt>
-<dd>the second vertex for all the triangles of the mesh</dd>
-<dt><strong><code>vertex2</code></strong> :&ensp;<code>(n, 3) array</code></dt>
-<dd>the third vertex for all the triangles of the mesh</dd>
-<dt><strong><code>rayOrigin</code></strong> :&ensp;<code>(3, ) array</code></dt>
-<dd>start position of the ray</dd>
-<dt><strong><code>rayVector</code></strong> :&ensp;<code>(3, ) array</code></dt>
-<dd>direction of the ray vector</dd>
-<dt><strong><code>line</code></strong> :&ensp;<code>bool</code></dt>
-<dd>if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
-if True, it detects intersection in both direction (treated as a line
-with two directions)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>array (n, )</code></dt>
-<dd>distance of each triangle to the point of interest. It's NaN if 1.
-the direction of the point is parallel to the triangle, 2. the projected
-point is outside the triangle, 3. the direction is in the opposite direction
-to the triangle (so, this is a ray, not a line).</dd>
-</dl>
-<h2 id="notes">Notes</h2>
-<p>Implementation derived from <a href="https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm">https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm</a></p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line=False):
-    &#34;&#34;&#34;Implementation of the Möller-Trumbore algorithm to detect ray-triangle
-    intersection.
-
-
-    Parameters
-    ----------
-    vertex0 : (n, 3) array
-        the first vertex for all the triangles of the mesh
-    vertex1 : (n, 3) array
-        the second vertex for all the triangles of the mesh
-    vertex2 : (n, 3) array
-        the third vertex for all the triangles of the mesh
-    rayOrigin : (3, ) array
-        start position of the ray
-    rayVector : (3, ) array
-        direction of the ray vector
-    line : bool
-        if False, the sign of the normal is important (treated as a ray, leaving rayOrigin).
-        if True, it detects intersection in both direction (treated as a line
-        with two directions)
-
-    Returns
-    -------
-    array (n, )
-        distance of each triangle to the point of interest. It&#39;s NaN if 1.
-        the direction of the point is parallel to the triangle, 2. the projected
-        point is outside the triangle, 3. the direction is in the opposite direction
-        to the triangle (so, this is a ray, not a line).
-
-    Notes
-    -----
-    Implementation derived from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    &#34;&#34;&#34;
-    i_good = ones(vertex0.shape[0], dtype=bool)
-    edge1 = vertex1 - vertex0
-    edge2 = vertex2 - vertex0
-    h = cross(rayVector, edge2, axis=-1)
-    a = einsum(&#39;ij,ij-&gt;i&#39;, edge1, h)  # dot product
-
-    i_parallel = (a &gt; -EPSILON) &amp; (a &lt; EPSILON)
-    i_good[i_parallel] = False
-
-    f = 1 / a
-
-    s = rayOrigin - vertex0
-    u = f * einsum(&#39;ij,ij-&gt;i&#39;, s, h)
-    i_outside = (u &lt; 0.0) | (u &gt; 1.0)
-    i_good[i_outside] = False
-
-    q = cross(s, edge1)
-    v = f * einsum(&#39;j,ij-&gt;i&#39;, rayVector, q)
-
-    i_outside = (v &lt; 0.0) | (u + v &gt; 1.0)
-    i_good[i_outside] = False
-
-    t = f * einsum(&#39;ij,ij-&gt;i&#39;, edge2, q)
-    if not line:
-        i_opposite = t &lt; EPSILON
-        i_good[i_opposite] = NaN
-
-    t[~i_good] = NaN
-
-    return t</code></pre>
 </details>
 </dd>
 <dt id="gridgen.matlab.geometry.project_to_cortex"><code class="name flex">
@@ -444,7 +275,6 @@ the line</dd>
 <li><code><a title="gridgen.matlab.geometry.cartesian_to_barycentric" href="#gridgen.matlab.geometry.cartesian_to_barycentric">cartesian_to_barycentric</a></code></li>
 <li><code><a title="gridgen.matlab.geometry.check_if_point_in_triangle" href="#gridgen.matlab.geometry.check_if_point_in_triangle">check_if_point_in_triangle</a></code></li>
 <li><code><a title="gridgen.matlab.geometry.intersect_line_plane" href="#gridgen.matlab.geometry.intersect_line_plane">intersect_line_plane</a></code></li>
-<li><code><a title="gridgen.matlab.geometry.intersect_ray_triangle" href="#gridgen.matlab.geometry.intersect_ray_triangle">intersect_ray_triangle</a></code></li>
 <li><code><a title="gridgen.matlab.geometry.project_to_cortex" href="#gridgen.matlab.geometry.project_to_cortex">project_to_cortex</a></code></li>
 </ul>
 </li>
