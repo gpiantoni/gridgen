@@ -13,13 +13,13 @@ GRID_FILE = GENERATED_PATH / 'grid_020.fcsv'
 
 
 def test_geometry_construct():
-    # test geometry
-    smooth = read_surf(SMOOTH_FILE, normals=True)
-    out_vertex = find_vertex(smooth, [10, 42, 40])
-    assert out_vertex == 50747
+    offset = read_surface_ras_shift(T1_FILE)
+    smooth = read_surf(SMOOTH_FILE, ras_shift=offset, normals=True)
+    out_vertex = find_vertex(smooth, [-54, 3, 5])
+    assert out_vertex == 37613
 
-    vertex = search_grid(smooth, 50747, 5, -5)
-    assert vertex == 49086
+    vertex = search_grid(smooth, out_vertex, 5, -5)
+    assert vertex == 39945
 
     # test construct
     grid2d = make_grid_with_labels(4, 3, 'TBLR', chan_pattern='elec{}')
@@ -29,10 +29,10 @@ def test_geometry_construct():
         'step_angle': 0.2,
         }
 
-    grid = construct_grid(smooth, 33154, 'elec1', grid2d['label'], grid3d, rotation=20)
+    grid = construct_grid(smooth, out_vertex, 'elec1', grid2d['label'], grid3d, rotation=20)
     assert_array_almost_equal(
         grid['pos'][4, 2],
-        array([9.4082, 2.3719, 40.0682]),
+        array([-57.797, 1.639, -9.119]),
         decimal=3)
 
     offset = read_surface_ras_shift(T1_FILE)
@@ -40,10 +40,10 @@ def test_geometry_construct():
     export_grid(grid, offset, GRID_FILE, 'freeview')
 
     m_col, m_row = measure_distances(grid)
-    assert_array_almost_equal(m_col, 2.991, decimal=3)
-    assert_array_almost_equal(m_row, 2.993, decimal=3)
+    assert_array_almost_equal(m_col, 3.000, decimal=3)
+    assert_array_almost_equal(m_row, 3.000, decimal=3)
     m_angle = measure_angles(grid)
-    assert_array_almost_equal(m_angle, 89.981, decimal=3)
+    assert_array_almost_equal(m_angle, 89.999, decimal=3)
 
 
 def test_make_grids_with_labels():

@@ -2,7 +2,7 @@
 """
 from scipy.optimize import brute, minimize
 from multiprocessing import Pool
-from numpy import array
+from numpy import array, mean
 from logging import getLogger
 from datetime import datetime
 from json import dump
@@ -94,7 +94,7 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         'n_included_channels': model['n_channels'],
         'corr_coef': int(model['corr_coef']),
         'duration': comp_dur,
-        'mean_elec_distance': measure_distances(model['grid']),
+        'mean_elec_distance': mean(measure_distances(model['grid'])),
         'mean_angle': measure_angles(model['grid']),
         }
     results_file = output / 'results.json'

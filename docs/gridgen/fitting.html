@@ -29,7 +29,7 @@
 &#34;&#34;&#34;
 from scipy.optimize import brute, minimize
 from multiprocessing import Pool
-from numpy import array
+from numpy import array, mean
 from logging import getLogger
 from datetime import datetime
 from json import dump
@@ -121,7 +121,7 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
         &#39;corr_coef&#39;: int(model[&#39;corr_coef&#39;]),
         &#39;duration&#39;: comp_dur,
-        &#39;mean_elec_distance&#39;: measure_distances(model[&#39;grid&#39;]),
+        &#39;mean_elec_distance&#39;: mean(measure_distances(model[&#39;grid&#39;])),
         &#39;mean_angle&#39;: measure_angles(model[&#39;grid&#39;]),
         }
     results_file = output / &#39;results.json&#39;
@@ -409,7 +409,7 @@ reading)</p>
         &#39;n_included_channels&#39;: model[&#39;n_channels&#39;],
         &#39;corr_coef&#39;: int(model[&#39;corr_coef&#39;]),
         &#39;duration&#39;: comp_dur,
-        &#39;mean_elec_distance&#39;: measure_distances(model[&#39;grid&#39;]),
+        &#39;mean_elec_distance&#39;: mean(measure_distances(model[&#39;grid&#39;])),
         &#39;mean_angle&#39;: measure_angles(model[&#39;grid&#39;]),
         }
     results_file = output / &#39;results.json&#39;
