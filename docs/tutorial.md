@@ -410,11 +410,56 @@ The fitting procedure will run for a while.
 Here we specify a very sparse range value (the step value is 5) for quicker computation.
 
 The results show:
-
+  - `parameters.json` : summary of the parameters used for the fit
+  - `results.json` : summary of the results to recompute the grid and fit
+  - `electrodes.tsv` : electrode locations for the best fit in T1 space
+  - `electrodes.label` : electrode locations for the best fit for freeview
+  - `electrodes.fcsv` : electrode locations for the best fit for 3DSlicer
+  - `projected.html` : interactive plot with electrode locations for the best fit (with ECoG values)
+  - `morphology.html` : the values for each electrode based on morphology of the pial surface
+  - `functional.html` : the values for each electrode based on functional MRI
+  - `merged.html` : the combined values of functional and morphology values
 
 ### Brute Force
+Compute the model at each combination of the values in the range. 
+The ranges are specificied with [`start point`, `step size`, `end point`].
+It runs in parallel and at the end it runs the simplex method as well (for increased accuracy).
 
-### Nelder-Mead
+```json
+  "fit": {
+    "method": "brute",
+    "ranges": {
+      "x": [-10, 1, 10],
+      "y": [-10, 1, 10],
+      "rotation": [-10, 1, 10]
+      }
+  }
+```
+
+### Simplex (Nelder-Mead)
+Fitting procedure is based on the [Nelder-Mead method](https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method).
+You should specify the step sizes in each direction, then it computes the value at each node of the simplex:
 
 ![nelder-mead method](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Nelder-Mead_Rosenbrock.gif/240px-Nelder-Mead_Rosenbrock.gif)
 
+
+You should specify the size of the simplex in each direction with `steps`:
+```json
+  "fit": {
+    "method": "simplex",
+    "steps": {
+      "x": 5,
+      "y": 5,
+      "rotation": 4
+      }
+  }
+```
+
+There are no bounds, so it can get out of the start position, if it can find a better fit.
+It's a good idea to run:
+
+```bash 
+gridgen --log debug parameters.json grid2d
+```
+
+So that you see the steps and values computed at each node of the simplex.

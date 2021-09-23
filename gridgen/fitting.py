@@ -157,9 +157,9 @@ def fitting_brute(func, args):
         ranges[k][1] += ranges[k][2]
 
     ranges = (
-        slice(ranges['x']),
-        slice(ranges['y']),
-        slice(ranges['rotation']),
+        slice(*ranges['x']),
+        slice(*ranges['y']),
+        slice(*ranges['rotation']),
         )
 
     if mkl is not None:
