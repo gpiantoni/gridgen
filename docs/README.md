@@ -6,7 +6,7 @@
 See [documentation](https://gpiantoni.github.io/gridgen) for instructions on how to install or follow the [tutorial](https://gpiantoni.github.io/gridgen/tutorial.html).
 
 ## Quick Start
-This package will allow you to create 3D meshes onto the convex hull (dura surface):
+This pure-python3 package will allow you to create 3D meshes onto the convex hull (dura surface):
 
 ![grid3d](img/grid3d_1.png)
 
@@ -32,4 +32,4 @@ Finally, this script will allow you to fit the ECoG values onto the most likely 
 
 ## References
   - [Piantoni, G et al. *"Size of the spatial correlation between ECoG and fMRI activity."* *NeuroImage* 242(2021): 118459](https://doi.org/10.1016/j.neuroimage.2021.118459)
-  - [Branco, MP et al. *"GridLoc: An automatic and unsupervised localization method for high-density ECoG grids."* *NeuroImage* 179(2018): 225-234](https://doi.org/10.1016/j.neuroimage.2018.06.050
+  - [Branco, MP et al. *"GridLoc: An automatic and unsupervised localization method for high-density ECoG grids."* *NeuroImage* 179(2018): 225-234](https://doi.org/10.1016/j.neuroimage.2018.06.050)
