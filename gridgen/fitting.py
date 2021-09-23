@@ -12,7 +12,7 @@ try:
 except ImportError:
     mkl = None
 
-from .io import export_grid, write_tsv
+from .io import export_electrodes
 from .grid3d import construct_grid, search_grid, find_vertex, measure_distances, measure_angles
 from .models import compute_model, merge_models, compare_model_with_ecog
 from .utils import be_nice, remove_wires, _JSONEncoder_path
@@ -101,11 +101,7 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
     with results_file.open('w') as f:
         dump(out, f, indent=2, cls=_JSONEncoder_path)
 
-    grid_file = output / 'electrodes'
-    export_grid(model['grid'], mris['ras_shift'], grid_file)
-    write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
-    lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')
-
+    export_electrodes(output, model, mris)
     return model['grid']
 
 

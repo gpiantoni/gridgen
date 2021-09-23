@@ -52,7 +52,7 @@ def remove_wires(model):
     i_keep = model['grid']['label'] != WIRE
     i_keep = i_keep.all(axis=1)
     for field in ['ecog', 'grid', 'morphology', 'functional']:
-        if model[field] is not None:
+        if model.get(field) is not None:
             model[field] = model[field][i_keep, :]
 
     return model

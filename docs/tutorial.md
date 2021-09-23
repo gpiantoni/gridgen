@@ -1,8 +1,8 @@
 # Tutorial
 **gridgen** consists of some functions (commands) that allow you to:
   - create the 2d grid (`grid2d`)
-  - compute the power spectral density (PSD) at each electrode (`ecog`)
   - create the 3d grid (`grid3d`)
+  - compute the power spectral density (PSD) at each electrode (`ecog`)
   - fit the 3d grid onto the surface, by fitting the ecog values (`fit`)
   - compare the results (`matlab`)
 
@@ -52,12 +52,56 @@ By convention, the wires are at the bottom.
 `chan_pattern` is used to generate the channel labels. 
 `chan{}` will create `chan1`, `chan2`, `chan3` and `chan{:03d}` will create `chan001`, `chan002`, `chan003` (see [Python string formatting](https://docs.python.org/3/library/string.html#formatspec)).
 
+The command
+
 ```bash 
 gridgen parameters.json grid2d
 ```
 
-which will create a file called `grid2d_labels.tsv` like this:
+will create a file called `grid2d_labels.tsv` like this:
 
 ![grid2d_labels.tsv](img/grid2d.png)
 
+This file will be used by the other commands (`ecog`, `grid3d`, `fit`).
 
+Note that you can modify this text file as you want (f.e. by moving the channels around, in case the grid labels are in a different order).
+
+## grid3d
+After having created `grid2d_labels.tsv`, you can create a 3d grid, onto the smooth surface (convex hull).
+You'll need to pass additional parameters.
+At the minimum, you need to specifiy:
+
+```json
+{
+  "grid3d": {
+    "interelec_distance": 3,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "/home/giovanni/tools/gridgen/tests/analysis/data/brain.mgz",
+    "dura_file": "/home/giovanni/tools/gridgen/tests/analysis/data/lh_smooth.pial"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 0
+  }
+}
+```
+
+The command
+
+```bash 
+gridgen parameters.json grid3d
+```
+
+will create a folder with:
+
+  - `electrodes.tsv` : electrode locations in T1 space
+  - `electrodes.label` : electrode locations for freeview
+  - `electrodes.fcsv` : electrode locations for 3DSlicer
+  - `electrodes.html` : interactive plot with electrode locations
+
+which looks like this:
+
+![grid3d](img/grid3d_1.png)

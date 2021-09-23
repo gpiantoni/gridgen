@@ -1,0 +1,15 @@
+{
+  "grid3d": {
+    "interelec_distance": 3,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "/home/giovanni/tools/gridgen/tests/analysis/data/brain.mgz",
+    "dura_file": "/home/giovanni/tools/gridgen/tests/analysis/data/lh_smooth.pial"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 0
+  }
+}

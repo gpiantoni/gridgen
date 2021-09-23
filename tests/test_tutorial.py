@@ -12,3 +12,13 @@ def test_grid2d():
         str(output),
         'grid2d'
         ])
+
+
+def test_grid3d():
+    param_json = TUTORIAL_PATH / 'grid3d_1.json'
+    main([
+        str(param_json),
+        '--output_dir',
+        str(output),
+        'grid3d'
+        ])

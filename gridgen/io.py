@@ -470,3 +470,10 @@ def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=
         "func": func,
         }
     return out
+
+
+def export_electrodes(output, model, mris):
+    grid_file = output / 'electrodes'
+    export_grid(model['grid'], mris['ras_shift'], grid_file)
+    write_tsv(model['grid']['label'], model['grid']['pos'], grid_file)
+    lg.debug(f'Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)')

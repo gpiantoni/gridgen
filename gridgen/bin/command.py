@@ -19,7 +19,7 @@ from ..models import make_grid3d_model
 from ..viz import to_html, to_div, plot_grid2d, plot_grid3d
 from ..grid2d import make_grid_with_labels
 from ..ecog import read_ecog, put_ecog_on_grid2d
-from ..utils import _JSONEncoder_path
+from ..utils import _JSONEncoder_path, remove_wires
 from ..io import (
     read_mri,
     read_grid2d,
@@ -28,6 +28,7 @@ from ..io import (
     write_ecog2d,
     read_surface_ras_shift,
     export_transform,
+    export_electrodes,
     )
 
 lg = getLogger('gridgen')
@@ -83,6 +84,22 @@ def create_arguments():
         """))
     subfun0.set_defaults(function='grid2d')
 
+    subfun2 = list_functions.add_parser(
+        'grid3d', help=dedent("""\
+        Generate 3D grid.
+
+        Input:
+          grid2d_labels.tsv (from grid2d)
+
+        Output (in subfolder):
+          electrodes.tsv : electrode locations in T1 space
+          electrodes.label : electrode locations for freeview
+          electrodes.fcsv : electrode locations for 3DSlicer
+          electrodes.html : interactive plot with electrode locations
+
+        """))
+    subfun2.set_defaults(function='grid3d')
+
     # ecog
     subfun1 = list_functions.add_parser(
         'ecog', help=dedent("""\
@@ -97,19 +114,6 @@ def create_arguments():
 
         """))
     subfun1.set_defaults(function='ecog')
-
-    subfun2 = list_functions.add_parser(
-        'grid3d', help=dedent("""\
-        Generate 3D grid.
-
-        Input:
-          grid2d_labels.tsv (from grid2d)
-
-        Output:
-          ???
-
-        """))
-    subfun2.set_defaults(function='grid3d')
 
     subfun3 = list_functions.add_parser(
         'fit', help=dedent("""\
@@ -216,6 +220,8 @@ def main(arguments=None):
             )
 
         plot_grid3d(parameters, mris, model)
+        model = remove_wires(model)
+        export_electrodes(output_dir, model, mris)
 
     if args.function == 'fit':
         ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)

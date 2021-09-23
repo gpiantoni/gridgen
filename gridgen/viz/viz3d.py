@@ -20,13 +20,18 @@ MARKER_SIZE = 5
 lg = getLogger(__name__)
 
 
-def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
+def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
     """
     """
-    right_or_left = sign(mean(pial['pos'][:, 0]))
+    surf = mris.get('pial', None)
+    if surf is None:
+        surf = mris.get('dura', None)
+
     pos = grid['pos'].reshape(-1, 3)
     norm = grid['norm'].reshape(-1, 3)
     labels = grid['label'].reshape(-1)
+
+    right_or_left = sign(mean(surf['pos'][:, 0]))
 
     if values is None:
         iswire = labels == WIRE
@@ -56,12 +61,12 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
 
     traces = [
         go.Mesh3d(
-            x=pial['pos'][:, 0],
-            y=pial['pos'][:, 1],
-            z=pial['pos'][:, 2],
-            i=pial['tri'][:, 0],
-            j=pial['tri'][:, 1],
-            k=pial['tri'][:, 2],
+            x=surf['pos'][:, 0],
+            y=surf['pos'][:, 1],
+            z=surf['pos'][:, 2],
+            i=surf['tri'][:, 0],
+            j=surf['tri'][:, 1],
+            k=surf['tri'][:, 2],
             color='pink',
             hoverinfo='skip',
             flatshading=False,
@@ -77,16 +82,6 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
                 y=0,
                 z=-1,
                 ),
-            ),
-        go.Scatter3d(
-            x=pos[:, 0],
-            y=pos[:, 1],
-            z=pos[:, 2],
-            text=labels,
-            mode='markers',
-            hovertext=hovertext,
-            hoverinfo='text',
-            marker=marker,
             ),
         ]
 
@@ -129,6 +124,19 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
                 hoverinfo='skip',
                 ),
             )
+
+    traces.append(
+        go.Scatter3d(
+            x=pos[:, 0],
+            y=pos[:, 1],
+            z=pos[:, 2],
+            text=labels,
+            mode='markers',
+            hovertext=hovertext,
+            hoverinfo='text',
+            marker=marker,
+            ),
+        )
 
     fig = go.Figure(
         data=traces,
