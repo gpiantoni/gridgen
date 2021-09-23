@@ -38,6 +38,10 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         see parameters.md
     fit : dict
         see parameters.md
+    morphology : dict
+        see parameters.md
+    functional : dict
+        see parameters.md
 
     Returns
     -------
@@ -108,12 +112,33 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
 def corr_ecog_model(x0, ecog, mris, params, final=False):
     """Main model to minimize
 
-    Note that when final=False, cc should be minimized (the smaller the better)
-    while when final=True, cc should be as large as possible (more intuitive
-    reading)
 
     Parameters
     ----------
+    x0 : list of 3 floats
+        start point to look for vertex
+    ecog : (n_rows, n_cols) array
+        array with ecog values
+    mris : dict
+        MRIs and meshes useful for computing the model
+    params : dict
+        initial, grid3d, morphology, functional
+    final : bool
+        whether to compute only the correlation value (False) or the full model
+        (True)
+
+    Returns
+    -------
+    float (when final=False)
+        value to minimize
+    dict (when final=True)
+        full model
+
+    Note
+    ----
+    When final=False, cc should be minimized (the smaller the better)
+    while when final=True, cc should be as large as possible (more intuitive
+    reading)
     """
     x, y, rotation = x0
     start_vertex = search_grid(mris["dura"], params['initial']["vertex"], x, y)
@@ -149,7 +174,19 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
 
 
 def fitting_brute(func, args):
+    """Run the fitting procedure using the brute approach
 
+    Parameters
+    ----------
+    func : func
+        function to minimize
+    args : tuple
+        rest of the parameters
+
+    Returns
+    -------
+    output of the model
+    """
     ranges = args[2]['fit']['ranges']
     # make sure that the last point is included in the range
     for k, v in ranges.items():
@@ -180,6 +217,19 @@ def fitting_brute(func, args):
 
 
 def fitting_simplex(func, init, args):
+    """Run the fitting procedure using the simplex approach
+
+    Parameters
+    ----------
+    func : func
+        function to minimize
+    args : tuple
+        rest of the parameters
+
+    Returns
+    -------
+    output of the model
+    """
 
     if init is None:  # when called stand alone
         x = y = rotation = 0

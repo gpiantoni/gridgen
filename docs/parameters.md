@@ -35,8 +35,8 @@ You can also use the command `gridgen parameters.json parameters` to generate a 
   - **penalty**: (float, optional) exponent when computing the penalty from the distance. Morphology = 1 / distance<sup>penalty</sup>. More simply, 1 = activity decreases linearly with distance; 2 = activity decreases with the square of the distance. Default: 1
 - **functional**
   - **threshold**: (float) value to threshold the func_file and binarize it. If None, func_file won't be binarized. Default: None
-  - **metric**: (str, optional) TODO. Values: [gaussian, sphere, inverse]. Default: inverse
-  - **kernel**: (float, optional) TODO. Default: 2
+  - **metric**: (str, optional) method to compute the value at each electrode. `sphere` is the sum of the voxels around the electrodes, within `kernel` distance. `gaussian` is the weighted average of the voxels around an electrode, weighted by a 3d gaussian kernel. With `inverse`, the weights are based on the inverse of the distance.. Values: [gaussian, sphere, inverse]. Default: inverse
+  - **kernel**: (float, optional) With method `sphere`, this is the size of the sphere. With method `gaussian`, this is the size of the sigma of the 3D weighting kernel. With method `inverse`, this is the exponent (1 -> linear, 2 -> quadratic).. Default: 2
 - **fit** (required by command `fit`)
   - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
   - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric

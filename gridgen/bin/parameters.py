@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-
+"""Specify the parameters for all the commands in gridgen
+"""
 from pathlib import Path
 from json import load
 from collections.abc import Iterable
@@ -329,6 +330,18 @@ def convert_to_path(d, parent):
 
 
 def prepare_template(temp):
+    """Prepare template by reading the TEMPLATE and converting it to markdown
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE (or its subfields)
+
+    Returns
+    -------
+    dict
+        with default values and necessary
+    """
     out = {}
     for k, v in temp.items():
         if 'type' in v:
@@ -353,6 +366,18 @@ def prepare_template(temp):
 
 
 def help_template(temp):
+    """Prepare template by reading the TEMPLATE and converting it to markdown
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE (or its subfields)
+
+    Returns
+    -------
+    list of str
+        dict converted to list, so that it can be exported to markdown
+    """
     modules = _invert_dict(REQUIRED)
 
     out = []
@@ -400,6 +425,21 @@ def help_template(temp):
 
 
 def validate_template(temp, d):
+    """Check whether the parameters passed in json file are in accordance with
+    the template
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE of parameters
+    d : dict
+        actual parameters
+
+    Returns
+    -------
+    dict
+        input dictionary, with checked values and added defaults if necessary
+    """
     out = {}
     for k, v in temp.items():
 
@@ -450,6 +490,22 @@ def _invert_dict(d):
 
 
 def parse_parameters(parameters, function, output_dir=None):
+    """Read the parameters file, for a specific command
+
+    Parameters
+    ----------
+    parameters : str
+        path to json file
+    function : str
+        one of the commands (grid2d, ecog, grid3d etc)
+    output_dir : path
+        path to use as output, if not specified in parameters
+
+    Returns
+    -------
+    dict
+        complete parameters
+    """
     p_json = Path(parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
@@ -486,6 +542,7 @@ def parse_parameters(parameters, function, output_dir=None):
 
 
 def main():
+    """Simple function to create parameters.md"""
     md = [
         '## Parameters',
         '',

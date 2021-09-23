@@ -50,7 +50,7 @@ def test_cmd_param():
 
 def test_cmd():
 
-    for cmd in list(REQUIRED)[:4]:
+    for cmd in ('grid2d', 'ecog'):
 
         params = {}
         params['output_dir'] = OUTPUT_PATH

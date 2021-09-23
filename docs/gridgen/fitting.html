@@ -65,6 +65,10 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         see parameters.md
     fit : dict
         see parameters.md
+    morphology : dict
+        see parameters.md
+    functional : dict
+        see parameters.md
 
     Returns
     -------
@@ -135,12 +139,33 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
 def corr_ecog_model(x0, ecog, mris, params, final=False):
     &#34;&#34;&#34;Main model to minimize
 
-    Note that when final=False, cc should be minimized (the smaller the better)
-    while when final=True, cc should be as large as possible (more intuitive
-    reading)
 
     Parameters
     ----------
+    x0 : list of 3 floats
+        start point to look for vertex
+    ecog : (n_rows, n_cols) array
+        array with ecog values
+    mris : dict
+        MRIs and meshes useful for computing the model
+    params : dict
+        initial, grid3d, morphology, functional
+    final : bool
+        whether to compute only the correlation value (False) or the full model
+        (True)
+
+    Returns
+    -------
+    float (when final=False)
+        value to minimize
+    dict (when final=True)
+        full model
+
+    Note
+    ----
+    When final=False, cc should be minimized (the smaller the better)
+    while when final=True, cc should be as large as possible (more intuitive
+    reading)
     &#34;&#34;&#34;
     x, y, rotation = x0
     start_vertex = search_grid(mris[&#34;dura&#34;], params[&#39;initial&#39;][&#34;vertex&#34;], x, y)
@@ -176,7 +201,19 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
 
 
 def fitting_brute(func, args):
+    &#34;&#34;&#34;Run the fitting procedure using the brute approach
 
+    Parameters
+    ----------
+    func : func
+        function to minimize
+    args : tuple
+        rest of the parameters
+
+    Returns
+    -------
+    output of the model
+    &#34;&#34;&#34;
     ranges = args[2][&#39;fit&#39;][&#39;ranges&#39;]
     # make sure that the last point is included in the range
     for k, v in ranges.items():
@@ -184,9 +221,9 @@ def fitting_brute(func, args):
         ranges[k][1] += ranges[k][2]
 
     ranges = (
-        slice(ranges[&#39;x&#39;]),
-        slice(ranges[&#39;y&#39;]),
-        slice(ranges[&#39;rotation&#39;]),
+        slice(*ranges[&#39;x&#39;]),
+        slice(*ranges[&#39;y&#39;]),
+        slice(*ranges[&#39;rotation&#39;]),
         )
 
     if mkl is not None:
@@ -207,6 +244,19 @@ def fitting_brute(func, args):
 
 
 def fitting_simplex(func, init, args):
+    &#34;&#34;&#34;Run the fitting procedure using the simplex approach
+
+    Parameters
+    ----------
+    func : func
+        function to minimize
+    args : tuple
+        rest of the parameters
+
+    Returns
+    -------
+    output of the model
+    &#34;&#34;&#34;
 
     if init is None:  # when called stand alone
         x = y = rotation = 0
@@ -252,10 +302,31 @@ def fitting_simplex(func, init, args):
 </code></dt>
 <dd>
 <div class="desc"><p>Main model to minimize</p>
-<p>Note that when final=False, cc should be minimized (the smaller the better)
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x0</code></strong> :&ensp;<code>list</code> of <code>3 floats</code></dt>
+<dd>start point to look for vertex</dd>
+<dt><strong><code>ecog</code></strong> :&ensp;<code>(n_rows, n_cols) array</code></dt>
+<dd>array with ecog values</dd>
+<dt><strong><code>mris</code></strong> :&ensp;<code>dict</code></dt>
+<dd>MRIs and meshes useful for computing the model</dd>
+<dt><strong><code>params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>initial, grid3d, morphology, functional</dd>
+<dt><strong><code>final</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to compute only the correlation value (False) or the full model
+(True)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float (when final=False)</code></dt>
+<dd>value to minimize</dd>
+<dt><code>dict (when final=True)</code></dt>
+<dd>full model</dd>
+</dl>
+<h2 id="note">Note</h2>
+<p>When final=False, cc should be minimized (the smaller the better)
 while when final=True, cc should be as large as possible (more intuitive
-reading)</p>
-<h2 id="parameters">Parameters</h2></div>
+reading)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -263,12 +334,33 @@ reading)</p>
 <pre><code class="python">def corr_ecog_model(x0, ecog, mris, params, final=False):
     &#34;&#34;&#34;Main model to minimize
 
-    Note that when final=False, cc should be minimized (the smaller the better)
-    while when final=True, cc should be as large as possible (more intuitive
-    reading)
 
     Parameters
     ----------
+    x0 : list of 3 floats
+        start point to look for vertex
+    ecog : (n_rows, n_cols) array
+        array with ecog values
+    mris : dict
+        MRIs and meshes useful for computing the model
+    params : dict
+        initial, grid3d, morphology, functional
+    final : bool
+        whether to compute only the correlation value (False) or the full model
+        (True)
+
+    Returns
+    -------
+    float (when final=False)
+        value to minimize
+    dict (when final=True)
+        full model
+
+    Note
+    ----
+    When final=False, cc should be minimized (the smaller the better)
+    while when final=True, cc should be as large as possible (more intuitive
+    reading)
     &#34;&#34;&#34;
     x, y, rotation = x0
     start_vertex = search_grid(mris[&#34;dura&#34;], params[&#39;initial&#39;][&#34;vertex&#34;], x, y)
@@ -322,6 +414,10 @@ reading)</p>
 <dd>see parameters.md</dd>
 <dt><strong><code>fit</code></strong> :&ensp;<code>dict</code></dt>
 <dd>see parameters.md</dd>
+<dt><strong><code>morphology</code></strong> :&ensp;<code>dict</code></dt>
+<dd>see parameters.md</dd>
+<dt><strong><code>functional</code></strong> :&ensp;<code>dict</code></dt>
+<dd>see parameters.md</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -348,6 +444,10 @@ reading)</p>
     mri : dict
         see parameters.md
     fit : dict
+        see parameters.md
+    morphology : dict
+        see parameters.md
+    functional : dict
         see parameters.md
 
     Returns
@@ -420,13 +520,37 @@ reading)</p>
 <span>def <span class="ident">fitting_brute</span></span>(<span>func, args)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Run the fitting procedure using the brute approach</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>func</code></dt>
+<dd>function to minimize</dd>
+<dt><strong><code>args</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>rest of the parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>output</code> of <code>the model</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fitting_brute(func, args):
+    &#34;&#34;&#34;Run the fitting procedure using the brute approach
 
+    Parameters
+    ----------
+    func : func
+        function to minimize
+    args : tuple
+        rest of the parameters
+
+    Returns
+    -------
+    output of the model
+    &#34;&#34;&#34;
     ranges = args[2][&#39;fit&#39;][&#39;ranges&#39;]
     # make sure that the last point is included in the range
     for k, v in ranges.items():
@@ -434,9 +558,9 @@ reading)</p>
         ranges[k][1] += ranges[k][2]
 
     ranges = (
-        slice(ranges[&#39;x&#39;]),
-        slice(ranges[&#39;y&#39;]),
-        slice(ranges[&#39;rotation&#39;]),
+        slice(*ranges[&#39;x&#39;]),
+        slice(*ranges[&#39;y&#39;]),
+        slice(*ranges[&#39;rotation&#39;]),
         )
 
     if mkl is not None:
@@ -460,12 +584,37 @@ reading)</p>
 <span>def <span class="ident">fitting_simplex</span></span>(<span>func, init, args)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Run the fitting procedure using the simplex approach</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>func</code></strong> :&ensp;<code>func</code></dt>
+<dd>function to minimize</dd>
+<dt><strong><code>args</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>rest of the parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>output</code> of <code>the model</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fitting_simplex(func, init, args):
+    &#34;&#34;&#34;Run the fitting procedure using the simplex approach
+
+    Parameters
+    ----------
+    func : func
+        function to minimize
+    args : tuple
+        rest of the parameters
+
+    Returns
+    -------
+    output of the model
+    &#34;&#34;&#34;
 
     if init is None:  # when called stand alone
         x = y = rotation = 0

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.1" />
 <title>gridgen.bin.parameters API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Specify the parameters for all the commands in gridgen" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,12 +20,14 @@
 <h1 class="title">Module <code>gridgen.bin.parameters</code></h1>
 </header>
 <section id="section-intro">
+<p>Specify the parameters for all the commands in gridgen</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
-
+&#34;&#34;&#34;Specify the parameters for all the commands in gridgen
+&#34;&#34;&#34;
 from pathlib import Path
 from json import load
 from collections.abc import Iterable
@@ -211,13 +213,13 @@ TEMPLATE = {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
             &#34;values&#34;: [&#39;gaussian&#39;, &#39;sphere&#39;, &#39;inverse&#39;],
-            &#34;help&#34;: &#34;TODO&#34;,
+            &#34;help&#34;: &#34;method to compute the value at each electrode. `sphere` is the sum of the voxels around the electrodes, within `kernel` distance. `gaussian` is the weighted average of the voxels around an electrode, weighted by a 3d gaussian kernel. With `inverse`, the weights are based on the inverse of the distance.&#34;,
             &#34;default&#34;: &#34;inverse&#34;,
             },
         &#34;kernel&#34;: {
             &#34;type&#34;: &#34;float&#34;,
             &#34;necessary&#34;: False,
-            &#34;help&#34;: &#34;TODO&#34;,
+            &#34;help&#34;: &#34;With method `sphere`, this is the size of the sphere. With method `gaussian`, this is the size of the sigma of the 3D weighting kernel. With method `inverse`, this is the exponent (1 -&gt; linear, 2 -&gt; quadratic).&#34;,
             &#34;default&#34;: 2,
             },
         },
@@ -355,6 +357,18 @@ def convert_to_path(d, parent):
 
 
 def prepare_template(temp):
+    &#34;&#34;&#34;Prepare template by reading the TEMPLATE and converting it to markdown
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE (or its subfields)
+
+    Returns
+    -------
+    dict
+        with default values and necessary
+    &#34;&#34;&#34;
     out = {}
     for k, v in temp.items():
         if &#39;type&#39; in v:
@@ -379,6 +393,18 @@ def prepare_template(temp):
 
 
 def help_template(temp):
+    &#34;&#34;&#34;Prepare template by reading the TEMPLATE and converting it to markdown
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE (or its subfields)
+
+    Returns
+    -------
+    list of str
+        dict converted to list, so that it can be exported to markdown
+    &#34;&#34;&#34;
     modules = _invert_dict(REQUIRED)
 
     out = []
@@ -426,6 +452,21 @@ def help_template(temp):
 
 
 def validate_template(temp, d):
+    &#34;&#34;&#34;Check whether the parameters passed in json file are in accordance with
+    the template
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE of parameters
+    d : dict
+        actual parameters
+
+    Returns
+    -------
+    dict
+        input dictionary, with checked values and added defaults if necessary
+    &#34;&#34;&#34;
     out = {}
     for k, v in temp.items():
 
@@ -476,6 +517,22 @@ def _invert_dict(d):
 
 
 def parse_parameters(parameters, function, output_dir=None):
+    &#34;&#34;&#34;Read the parameters file, for a specific command
+
+    Parameters
+    ----------
+    parameters : str
+        path to json file
+    function : str
+        one of the commands (grid2d, ecog, grid3d etc)
+    output_dir : path
+        path to use as output, if not specified in parameters
+
+    Returns
+    -------
+    dict
+        complete parameters
+    &#34;&#34;&#34;
     p_json = Path(parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
@@ -512,6 +569,7 @@ def parse_parameters(parameters, function, output_dir=None):
 
 
 def main():
+    &#34;&#34;&#34;Simple function to create parameters.md&#34;&#34;&#34;
     md = [
         &#39;## Parameters&#39;,
         &#39;&#39;,
@@ -593,12 +651,34 @@ it absolute in reference to "parent"</p>
 <span>def <span class="ident">help_template</span></span>(<span>temp)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Prepare template by reading the TEMPLATE and converting it to markdown</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>temp</code></strong> :&ensp;<code>dict</code></dt>
+<dd>TEMPLATE (or its subfields)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code> of <code>str</code></dt>
+<dd>dict converted to list, so that it can be exported to markdown</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def help_template(temp):
+    &#34;&#34;&#34;Prepare template by reading the TEMPLATE and converting it to markdown
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE (or its subfields)
+
+    Returns
+    -------
+    list of str
+        dict converted to list, so that it can be exported to markdown
+    &#34;&#34;&#34;
     modules = _invert_dict(REQUIRED)
 
     out = []
@@ -649,12 +729,13 @@ it absolute in reference to "parent"</p>
 <span>def <span class="ident">main</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Simple function to create parameters.md</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def main():
+    &#34;&#34;&#34;Simple function to create parameters.md&#34;&#34;&#34;
     md = [
         &#39;## Parameters&#39;,
         &#39;&#39;,
@@ -674,12 +755,42 @@ it absolute in reference to "parent"</p>
 <span>def <span class="ident">parse_parameters</span></span>(<span>parameters, function, output_dir=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Read the parameters file, for a specific command</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>parameters</code></strong> :&ensp;<code>str</code></dt>
+<dd>path to json file</dd>
+<dt><strong><code>function</code></strong> :&ensp;<code>str</code></dt>
+<dd>one of the commands (grid2d, ecog, grid3d etc)</dd>
+<dt><strong><code>output_dir</code></strong> :&ensp;<code>path</code></dt>
+<dd>path to use as output, if not specified in parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>complete parameters</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def parse_parameters(parameters, function, output_dir=None):
+    &#34;&#34;&#34;Read the parameters file, for a specific command
+
+    Parameters
+    ----------
+    parameters : str
+        path to json file
+    function : str
+        one of the commands (grid2d, ecog, grid3d etc)
+    output_dir : path
+        path to use as output, if not specified in parameters
+
+    Returns
+    -------
+    dict
+        complete parameters
+    &#34;&#34;&#34;
     p_json = Path(parameters).resolve()
     with p_json.open() as f:
         parameters = load(f)
@@ -719,12 +830,34 @@ it absolute in reference to "parent"</p>
 <span>def <span class="ident">prepare_template</span></span>(<span>temp)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Prepare template by reading the TEMPLATE and converting it to markdown</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>temp</code></strong> :&ensp;<code>dict</code></dt>
+<dd>TEMPLATE (or its subfields)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>with default values and necessary</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def prepare_template(temp):
+    &#34;&#34;&#34;Prepare template by reading the TEMPLATE and converting it to markdown
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE (or its subfields)
+
+    Returns
+    -------
+    dict
+        with default values and necessary
+    &#34;&#34;&#34;
     out = {}
     for k, v in temp.items():
         if &#39;type&#39; in v:
@@ -752,12 +885,40 @@ it absolute in reference to "parent"</p>
 <span>def <span class="ident">validate_template</span></span>(<span>temp, d)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Check whether the parameters passed in json file are in accordance with
+the template</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>temp</code></strong> :&ensp;<code>dict</code></dt>
+<dd>TEMPLATE of parameters</dd>
+<dt><strong><code>d</code></strong> :&ensp;<code>dict</code></dt>
+<dd>actual parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>input dictionary, with checked values and added defaults if necessary</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def validate_template(temp, d):
+    &#34;&#34;&#34;Check whether the parameters passed in json file are in accordance with
+    the template
+
+    Parameters
+    ----------
+    temp : dict
+        TEMPLATE of parameters
+    d : dict
+        actual parameters
+
+    Returns
+    -------
+    dict
+        input dictionary, with checked values and added defaults if necessary
+    &#34;&#34;&#34;
     out = {}
     for k, v in temp.items():
 

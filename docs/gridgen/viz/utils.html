@@ -33,21 +33,6 @@ lg = getLogger(__name__)
 COLORSCALE = &#39;Viridis&#39;
 
 
-def default_colorbar(value):
-    &#34;&#34;&#34;this hsould come from parameters&#34;&#34;&#34;
-    raise NotImplementedError
-    if value == &#39;ecog&#39;:
-        colorbar = &#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;
-    elif value == &#39;morphology&#39;:
-        colorbar = &#39;Distance Penalty (1 / mm&lt;sup&gt;PENALTY&lt;/sup&gt;)&#39;
-    elif value == &#39;functional&#39;:
-        colorbar = &#39;Functional Value (weighted average of neighboring voxels)&#39;
-    elif value == &#39;merged&#39;:
-        colorbar = &#39;estimated ecog activity (a.u.)&#39;
-
-    return colorbar
-
-
 def to_div(fig):
     &#34;&#34;&#34;Convert plotly FIG into an HTML div
 
@@ -104,30 +89,6 @@ def to_html(divs, filename):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gridgen.viz.utils.default_colorbar"><code class="name flex">
-<span>def <span class="ident">default_colorbar</span></span>(<span>value)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>this hsould come from parameters</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def default_colorbar(value):
-    &#34;&#34;&#34;this hsould come from parameters&#34;&#34;&#34;
-    raise NotImplementedError
-    if value == &#39;ecog&#39;:
-        colorbar = &#39;PSD (Hz&lt;sup&gt;-1&lt;/sup&gt;)&#39;
-    elif value == &#39;morphology&#39;:
-        colorbar = &#39;Distance Penalty (1 / mm&lt;sup&gt;PENALTY&lt;/sup&gt;)&#39;
-    elif value == &#39;functional&#39;:
-        colorbar = &#39;Functional Value (weighted average of neighboring voxels)&#39;
-    elif value == &#39;merged&#39;:
-        colorbar = &#39;estimated ecog activity (a.u.)&#39;
-
-    return colorbar</code></pre>
-</details>
-</dd>
 <dt id="gridgen.viz.utils.to_div"><code class="name flex">
 <span>def <span class="ident">to_div</span></span>(<span>fig)</span>
 </code></dt>
@@ -231,7 +192,6 @@ it exists</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gridgen.viz.utils.default_colorbar" href="#gridgen.viz.utils.default_colorbar">default_colorbar</a></code></li>
 <li><code><a title="gridgen.viz.utils.to_div" href="#gridgen.viz.utils.to_div">to_div</a></code></li>
 <li><code><a title="gridgen.viz.utils.to_html" href="#gridgen.viz.utils.to_html">to_html</a></code></li>
 </ul>

@@ -60,7 +60,8 @@ def compute_morphology(grid, pial, distance=&#39;minimum&#39;, maximum_distance=
         dist[&#39;value&#39;][i] = NaN
 
     if distance != &#39;pdf&#39;:
-        dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
+        with errstate(divide=&#39;ignore&#39;):
+            dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
 
     return dist
 
@@ -258,7 +259,8 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line
         dist[&#39;value&#39;][i] = NaN
 
     if distance != &#39;pdf&#39;:
-        dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
+        with errstate(divide=&#39;ignore&#39;):
+            dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
 
     return dist</code></pre>
 </details>

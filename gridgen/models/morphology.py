@@ -34,7 +34,8 @@ def compute_morphology(grid, pial, distance='minimum', maximum_distance=None, pe
         dist['value'][i] = NaN
 
     if distance != 'pdf':
-        dist['value'] = dist['value'] ** (-1 * penalty)
+        with errstate(divide='ignore'):
+            dist['value'] = dist['value'] ** (-1 * penalty)
 
     return dist
 

@@ -7,21 +7,6 @@ lg = getLogger(__name__)
 COLORSCALE = 'Viridis'
 
 
-def default_colorbar(value):
-    """this hsould come from parameters"""
-    raise NotImplementedError
-    if value == 'ecog':
-        colorbar = 'PSD (Hz<sup>-1</sup>)'
-    elif value == 'morphology':
-        colorbar = 'Distance Penalty (1 / mm<sup>PENALTY</sup>)'
-    elif value == 'functional':
-        colorbar = 'Functional Value (weighted average of neighboring voxels)'
-    elif value == 'merged':
-        colorbar = 'estimated ecog activity (a.u.)'
-
-    return colorbar
-
-
 def to_div(fig):
     """Convert plotly FIG into an HTML div
 
