@@ -1,0 +1,6 @@
+{    
+  "ecog": {
+    "ecog_file": "../analysis/generated/ecog.eeg",
+    "freq_range": [60, 90]
+  }
+}

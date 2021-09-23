@@ -207,7 +207,7 @@ You can also change the distance between electrodes:
     },
   "mri": {
     "T1_file": "analysis/data/brain.mgz",
-    "dura_file": "analysis/data/lh_smooth.pial"
+    "dura_file": "analysis/data/lh_smooth.pial",
     "pial_file": "analysis/data/lh.pial"
   },
   "initial": {
@@ -226,7 +226,7 @@ You can also change the distance between electrodes:
 
 ### Grid Rigidity
 
-You can also modify the rgidity of the grid, whic is controlled by the `maximum_angle` paramter (which is the maximum angle between two neighboring electrodes).
+You can also modify the rigidity of the grid, which is controlled by the `maximum_angle` parameter (i.e. the maximum angle between two neighboring electrodes).
 
 ```json
 {
@@ -236,12 +236,12 @@ You can also modify the rgidity of the grid, whic is controlled by the `maximum_
     },
   "mri": {
     "T1_file": "analysis/data/brain.mgz",
-    "dura_file": "analysis/data/lh_smooth.pial"
+    "dura_file": "analysis/data/lh_smooth.pial",
     "pial_file": "analysis/data/lh.pial"
   },
   "initial": {
     "label": "chan4",
-    "RAS": [-47, -1, 3],
+    "RAS": [-18, -81, -31],
     "rotation": 90
   },
   "morphology": {
@@ -251,4 +251,118 @@ You can also modify the rgidity of the grid, whic is controlled by the `maximum_
 }
 ```
 
-![grid3d interelec distance](img/grid3d_4.png)
+![grid3d grid rigidity](img/grid3d_5.png)
+
+
+### Functional Data (Angiogram)
+In addition to the morphology (based on a mesh), you can calculate some metrics at each electrode based on a 3D MRI volume.
+The MRI volume can be an angiogram (which gives you the location of the blood vessels) or a t-map with activity at each voxel, so that you can combine fMRI results with the ECoG electrodes.
+
+### Angiogram
+First, make sure that the angiogram is realigned to the T1 (see [Preparation](preparation.md)).
+Then you specify the parameters in `functional`. 
+In this case, you only include voxels above 90 (all the voxels above the threshold are given a value of 1 and those below the threshold are given a value of 0).
+Then you compute the number of voxels in a sphere of a radius of 8mm around each electrode:
+
+```json
+{
+  "grid3d": {
+    "interelec_distance": 10,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "analysis/data/brain.mgz",
+    "dura_file": "analysis/data/lh_smooth.pial",
+    "pial_file": "analysis/data/lh.pial",
+    "func_file": "analysis/data/angiogram.nii.gz"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 90
+  },
+  "morphology": {
+    "distance": "ray",
+    "penalty": 2
+  },
+  "functional": {
+    "threshold": 90,
+    "metric": "sphere",
+    "kernel": 8
+  }
+}
+```
+
+The output will also return a plot called `functional.html` which shows the angiogram and the values for each electrode:
+
+![grid3d angiogram](img/grid3d_6.png)
+
+
+### fMRI
+If you have the results of the fMRI as t-maps, you can compute the weighted 3D average, based on a 3D gaussian weighting kernel, as described in [Piantoni, G. et al. *"Size of the spatial correlation between ECoG and fMRI activity."* *NeuroImage* 242(2021): 118459](https://doi.org/10.1016/j.neuroimage.2021.118459) .
+
+Note that we do not binarize the MRI in this case.
+
+```json
+{
+  "grid3d": {
+    "interelec_distance": 10,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "analysis/data/brain.mgz",
+    "dura_file": "analysis/data/lh_smooth.pial",
+    "pial_file": "analysis/data/lh.pial",
+    "func_file": "analysis/data/angiogram.nii.gz"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 90
+  },
+  "morphology": {
+    "distance": "ray",
+    "penalty": 2
+  },
+  "functional": {
+    "threshold": null,
+    "metric": "gaussian",
+    "kernel": 8
+  }
+}
+```
+Because there is no fMRI available for this patient, I use the angiogram for this example.
+Because of this, the results of this example are not easy to interpret.
+
+![grid3d gaussian](img/grid3d_7.png)
+
+Another useful metric is `inverse` in which the value at each electrode is the sum of the voxels around the electrode, weighted by the inverse of the distance.
+
+## ecog
+You can compute the PSD in the high-frequency range with this `parameters.json`:
+
+```json
+{    
+  "ecog": {
+    "ecog_file": "../analysis/generated/ecog.eeg",
+    "freq_range": [60, 90]
+  }
+}
+```
+
+which generates 
+  - `grid2d_ecog.tsv` : values of the power spectrum per electrode
+  - `grid2d_ecog.html` : plot of the estimated activity of the power spectrum
+
+Note that these values are not projected on the 3D grid or surface yet.
+
+## fit
+You can fit the most likely 3d grid location based on the morphology of the cortex
+ECoG values onto the 
+
+### Nelder-Mead
+
+![nelder-mead method](https://upload.wikimedia.org/wikipedia/commons/e/e4/Nelder-Mead_Rosenbrock.gif)
+
+
+### Brute Force

@@ -14,10 +14,19 @@ def test_grid2d():
         ])
 
 
-def test_grid3d():
+def test_ecog():
+    param_json = TUTORIAL_PATH / 'ecog.json'
+    main([
+        str(param_json),
+        '--output_dir',
+        str(output),
+        'ecog'
+        ])
 
-    for param in ('grid3d_4.json', ):  # ('grid3d_1.json', 'grid3d_2.json', 'grid3d_3.json', ):
-        param_json = TUTORIAL_PATH / param
+
+def test_grid3d():
+    for param in range(5):
+        param_json = TUTORIAL_PATH / f'grid3d_{param + 1}.json'
         main([
             str(param_json),
             '--output_dir',
