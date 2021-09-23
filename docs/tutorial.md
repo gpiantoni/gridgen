@@ -197,6 +197,58 @@ You can then add rotation (in degrees, clockwise):
 The start electrode is shown in green, the other electrodes are in black and the wires are in red.
 
 ### Inter-electrode Distance
+You can also change the distance between electrodes:
 
+```json
+{
+  "grid3d": {
+    "interelec_distance": 10,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "analysis/data/brain.mgz",
+    "dura_file": "analysis/data/lh_smooth.pial"
+    "pial_file": "analysis/data/lh.pial"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 90
+  },
+  "morphology": {
+    "distance": "ray",
+    "penalty": 2
+  }
+}
+```
+
+![grid3d interelec distance](img/grid3d_4.png)
 
 ### Grid Rigidity
+
+You can also modify the rgidity of the grid, whic is controlled by the `maximum_angle` paramter (which is the maximum angle between two neighboring electrodes).
+
+```json
+{
+  "grid3d": {
+    "interelec_distance": 10,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "analysis/data/brain.mgz",
+    "dura_file": "analysis/data/lh_smooth.pial"
+    "pial_file": "analysis/data/lh.pial"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 90
+  },
+  "morphology": {
+    "distance": "ray",
+    "penalty": 2
+  }
+}
+```
+
+![grid3d interelec distance](img/grid3d_4.png)
