@@ -511,8 +511,7 @@ def parse_parameters(parameters, function, output_dir=None):
     return parameters
 
 
-if __name__ == &#39;__main__&#39;:
-
+def main():
     md = [
         &#39;## Parameters&#39;,
         &#39;&#39;,
@@ -525,7 +524,11 @@ if __name__ == &#39;__main__&#39;:
     parameters_file = PKG_PATH / &#39;docs&#39; / &#39;parameters.md&#39;
 
     with parameters_file.open(&#39;w&#39;) as f:
-        f.write(&#39;\n&#39;.join(md))</code></pre>
+        f.write(&#39;\n&#39;.join(md))
+
+
+if __name__ == &#39;__main__&#39;:
+    main()</code></pre>
 </details>
 </section>
 <section>
@@ -640,6 +643,31 @@ it absolute in reference to "parent"</p>
             out.extend([f&#39;  {x}&#39; for x in out_])
 
     return out</code></pre>
+</details>
+</dd>
+<dt id="gridgen.bin.parameters.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main():
+    md = [
+        &#39;## Parameters&#39;,
+        &#39;&#39;,
+        &#39;Parameters should be saved as a `json` file.&#39;,
+        &#39;You can pass the parameters with the command `gridgen parameters.json func` where `func` is one of the possible functions (`grid2d`, `ecog`, `fit` etc).&#39;,
+        &#39;You can also use the command `gridgen parameters.json parameters` to generate a template `parameters.json` file.&#39;,
+        &#39;&#39;,
+        ]
+    md = md + help_template(TEMPLATE)
+    parameters_file = PKG_PATH / &#39;docs&#39; / &#39;parameters.md&#39;
+
+    with parameters_file.open(&#39;w&#39;) as f:
+        f.write(&#39;\n&#39;.join(md))</code></pre>
 </details>
 </dd>
 <dt id="gridgen.bin.parameters.parse_parameters"><code class="name flex">
@@ -788,9 +816,10 @@ it absolute in reference to "parent"</p>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="gridgen.bin.parameters.convert_to_path" href="#gridgen.bin.parameters.convert_to_path">convert_to_path</a></code></li>
 <li><code><a title="gridgen.bin.parameters.help_template" href="#gridgen.bin.parameters.help_template">help_template</a></code></li>
+<li><code><a title="gridgen.bin.parameters.main" href="#gridgen.bin.parameters.main">main</a></code></li>
 <li><code><a title="gridgen.bin.parameters.parse_parameters" href="#gridgen.bin.parameters.parse_parameters">parse_parameters</a></code></li>
 <li><code><a title="gridgen.bin.parameters.prepare_template" href="#gridgen.bin.parameters.prepare_template">prepare_template</a></code></li>
 <li><code><a title="gridgen.bin.parameters.validate_template" href="#gridgen.bin.parameters.validate_template">validate_template</a></code></li>

@@ -485,8 +485,7 @@ def parse_parameters(parameters, function, output_dir=None):
     return parameters
 
 
-if __name__ == '__main__':
-
+def main():
     md = [
         '## Parameters',
         '',
@@ -500,3 +499,7 @@ if __name__ == '__main__':
 
     with parameters_file.open('w') as f:
         f.write('\n'.join(md))
+
+
+if __name__ == '__main__':
+    main()

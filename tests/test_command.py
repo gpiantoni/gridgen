@@ -1,13 +1,15 @@
 from gridgen.bin.command import main, _JSONEncoder_path
 from gridgen.bin.parameters import REQUIRED
+from gridgen.bin.parameters import main as main_parameters
 from json import dump
+
 from .paths import OUTPUT_PATH, ECOG_FILE, T1_FILE, SMOOTH_FILE, PIAL_FILE, FUNC_FILE
 
 EXAMPLES = {
     "grid2d": {
         "n_rows": 3,
         "n_columns": 2,
-        "direction": "TBLR",
+        "direction": "RLBT",
         "chan_pattern": "chan{}"
         },
     "ecog": {
@@ -67,3 +69,7 @@ def test_cmd():
             dump(params, f, indent=2, cls=_JSONEncoder_path)
 
         main([str(param_json), cmd])
+
+
+def test_help():
+    main_parameters()

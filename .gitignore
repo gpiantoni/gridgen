@@ -4,3 +4,4 @@ htmlcov/
 
 tests/analysis/generated/
 tests/analysis/output/
+tests/tutorial/output/

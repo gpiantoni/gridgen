@@ -1,0 +1,8 @@
+{
+  "grid2d": {
+    "n_rows": 4,
+    "n_columns": 3,
+    "direction": "TBLR",
+    "chan_pattern": "chan{}"
+    }
+}

@@ -4,6 +4,7 @@ from .utils import simulate_data
 TEST_PATH = Path(__file__).resolve().parent
 ANALYSIS_PATH = TEST_PATH / 'analysis'
 DATA_PATH = ANALYSIS_PATH / 'data'
+TUTORIAL_PATH = TEST_PATH / 'tutorial'
 
 SMOOTH_FILE = DATA_PATH / 'lh_smooth.pial'
 PIAL_FILE = DATA_PATH / 'lh.pial'
