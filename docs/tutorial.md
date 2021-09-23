@@ -295,6 +295,7 @@ Then you compute the number of voxels in a sphere of a radius of 8mm around each
 
 The output will also return a plot called `functional.html` which shows the angiogram and the values for each electrode:
 
+![grid3d angiogram](img/grid3d_6_scale.png)
 ![grid3d angiogram](img/grid3d_6.png)
 
 
@@ -334,6 +335,7 @@ Note that we do not binarize the MRI in this case.
 Because there is no fMRI available for this patient, I use the angiogram for this example.
 Because of this, the results of this example are not easy to interpret.
 
+![grid3d gaussian](img/grid3d_7_scale.png)
 ![grid3d gaussian](img/grid3d_7.png)
 
 Another useful metric is `inverse` in which the value at each electrode is the sum of the voxels around the electrode, weighted by the inverse of the distance.
@@ -357,12 +359,62 @@ which generates
 Note that these values are not projected on the 3D grid or surface yet.
 
 ## fit
-You can fit the most likely 3d grid location based on the morphology of the cortex
-ECoG values onto the 
+You can fit the most likely 3d grid location based on the morphology of the cortex and the functional maps (especially angiogram), so that they match the ECoG values.
+After running `gridgen parameters.json grid2d` and `gridgen parameters.json ecog`, you can use the following parameters:
 
-### Nelder-Mead
+```json
+{
+  "grid3d": {
+    "interelec_distance": 10,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "analysis/data/brain.mgz",
+    "dura_file": "analysis/data/lh_smooth.pial",
+    "pial_file": "analysis/data/lh.pial",
+    "func_file": "analysis/data/angiogram.nii.gz"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-47, -1, 3],
+    "rotation": 90
+  },
+  "morphology": {
+    "distance": "ray",
+    "penalty": 2
+  },
+  "functional": {
+    "threshold": 100,
+    "metric": "sphere",
+    "kernel": 8
+  },
+  "fit": {
+    "morphology_weight": "positive",
+    "functional_weight": "negative",
+    "method": "brute",
+    "ranges": {
+      "x": [-10, 5, 10],
+      "y": [-10, 5, 10],
+      "rotation": [-10, 5, 10]
+      }
+  }
+}
+```
+There are two methods available (see below).
+The fitting procedure will correlate the ECoG values with those computed with a combination of morphology and functional maps.
+You can specify the direction of the correlation:
+  - `"morphology_weight": "positive"` means that the higher the morphology values, the **higher** the ECoG values are expected to be (because the vertices are closer to the electrode),
+  - `"functional_weight": "negative"` means that the higher the functional values, the **lower** the ECoG values are expected to be (because the blood vessels suppress the ecog activity).
 
-![nelder-mead method](https://upload.wikimedia.org/wikipedia/commons/e/e4/Nelder-Mead_Rosenbrock.gif)
+The fitting procedure will run for a while.
+Here we specify a very sparse range value (the step value is 5) for quicker computation.
+
+The results show:
 
 
 ### Brute Force
+
+### Nelder-Mead
+
+![nelder-mead method](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Nelder-Mead_Rosenbrock.gif/240px-Nelder-Mead_Rosenbrock.gif)
+

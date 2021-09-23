@@ -25,7 +25,7 @@ def test_ecog():
 
 
 def test_grid3d():
-    for param in range(5):
+    for param in range(7):
         param_json = TUTORIAL_PATH / f'grid3d_{param + 1}.json'
         main([
             str(param_json),
@@ -33,3 +33,13 @@ def test_grid3d():
             str(output),
             'grid3d'
             ])
+
+
+def test_fit():
+    param_json = TUTORIAL_PATH / 'fit.json'
+    main([
+        str(param_json),
+        '--output_dir',
+        str(output),
+        'fit'
+        ])
