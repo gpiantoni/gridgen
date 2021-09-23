@@ -82,7 +82,7 @@ __all__ = [
     to_html(divs, scatter_file)
 
     grid_file = output_dir / &#39;projected&#39;
-    fig = plot_electrodes(mris[&#39;pial&#39;], model[&#39;grid&#39;], model[&#39;ecog&#39;], functional=mris[&#39;func&#39;])
+    fig = plot_electrodes(mris, model[&#39;grid&#39;], model[&#39;ecog&#39;], functional=mris[&#39;func&#39;])
     to_html([to_div(fig), ], grid_file)
     lg.debug(f&#39;Exported projected to {grid_file}&#39;)
 
@@ -161,7 +161,7 @@ __all__ = [
     output_dir = parameters[&#39;output_dir&#39;]
 
     fig = plot_electrodes(
-        mris[&#39;pial&#39;],
+        mris,
         model[&#39;grid&#39;],
         ref_label=parameters[&#39;initial&#39;][&#39;label&#39;])
     grid_file = output_dir / &#39;electrodes.html&#39;

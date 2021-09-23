@@ -46,13 +46,18 @@ MARKER_SIZE = 5
 lg = getLogger(__name__)
 
 
-def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
+def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
     &#34;&#34;&#34;
     &#34;&#34;&#34;
-    right_or_left = sign(mean(pial[&#39;pos&#39;][:, 0]))
+    surf = mris.get(&#39;pial&#39;, None)
+    if surf is None:
+        surf = mris.get(&#39;dura&#39;, None)
+
     pos = grid[&#39;pos&#39;].reshape(-1, 3)
     norm = grid[&#39;norm&#39;].reshape(-1, 3)
     labels = grid[&#39;label&#39;].reshape(-1)
+
+    right_or_left = sign(mean(surf[&#39;pos&#39;][:, 0]))
 
     if values is None:
         iswire = labels == WIRE
@@ -82,12 +87,12 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
 
     traces = [
         go.Mesh3d(
-            x=pial[&#39;pos&#39;][:, 0],
-            y=pial[&#39;pos&#39;][:, 1],
-            z=pial[&#39;pos&#39;][:, 2],
-            i=pial[&#39;tri&#39;][:, 0],
-            j=pial[&#39;tri&#39;][:, 1],
-            k=pial[&#39;tri&#39;][:, 2],
+            x=surf[&#39;pos&#39;][:, 0],
+            y=surf[&#39;pos&#39;][:, 1],
+            z=surf[&#39;pos&#39;][:, 2],
+            i=surf[&#39;tri&#39;][:, 0],
+            j=surf[&#39;tri&#39;][:, 1],
+            k=surf[&#39;tri&#39;][:, 2],
             color=&#39;pink&#39;,
             hoverinfo=&#39;skip&#39;,
             flatshading=False,
@@ -103,16 +108,6 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
                 y=0,
                 z=-1,
                 ),
-            ),
-        go.Scatter3d(
-            x=pos[:, 0],
-            y=pos[:, 1],
-            z=pos[:, 2],
-            text=labels,
-            mode=&#39;markers&#39;,
-            hovertext=hovertext,
-            hoverinfo=&#39;text&#39;,
-            marker=marker,
             ),
         ]
 
@@ -155,6 +150,19 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
                 hoverinfo=&#39;skip&#39;,
                 ),
             )
+
+    traces.append(
+        go.Scatter3d(
+            x=pos[:, 0],
+            y=pos[:, 1],
+            z=pos[:, 2],
+            text=labels,
+            mode=&#39;markers&#39;,
+            hovertext=hovertext,
+            hoverinfo=&#39;text&#39;,
+            marker=marker,
+            ),
+        )
 
     fig = go.Figure(
         data=traces,
@@ -189,7 +197,7 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridgen.viz.viz3d.plot_electrodes"><code class="name flex">
-<span>def <span class="ident">plot_electrodes</span></span>(<span>pial, grid, values=None, ref_label=None, functional=None)</span>
+<span>def <span class="ident">plot_electrodes</span></span>(<span>mris, grid, values=None, ref_label=None, functional=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -197,13 +205,18 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
+<pre><code class="python">def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
     &#34;&#34;&#34;
     &#34;&#34;&#34;
-    right_or_left = sign(mean(pial[&#39;pos&#39;][:, 0]))
+    surf = mris.get(&#39;pial&#39;, None)
+    if surf is None:
+        surf = mris.get(&#39;dura&#39;, None)
+
     pos = grid[&#39;pos&#39;].reshape(-1, 3)
     norm = grid[&#39;norm&#39;].reshape(-1, 3)
     labels = grid[&#39;label&#39;].reshape(-1)
+
+    right_or_left = sign(mean(surf[&#39;pos&#39;][:, 0]))
 
     if values is None:
         iswire = labels == WIRE
@@ -233,12 +246,12 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
 
     traces = [
         go.Mesh3d(
-            x=pial[&#39;pos&#39;][:, 0],
-            y=pial[&#39;pos&#39;][:, 1],
-            z=pial[&#39;pos&#39;][:, 2],
-            i=pial[&#39;tri&#39;][:, 0],
-            j=pial[&#39;tri&#39;][:, 1],
-            k=pial[&#39;tri&#39;][:, 2],
+            x=surf[&#39;pos&#39;][:, 0],
+            y=surf[&#39;pos&#39;][:, 1],
+            z=surf[&#39;pos&#39;][:, 2],
+            i=surf[&#39;tri&#39;][:, 0],
+            j=surf[&#39;tri&#39;][:, 1],
+            k=surf[&#39;tri&#39;][:, 2],
             color=&#39;pink&#39;,
             hoverinfo=&#39;skip&#39;,
             flatshading=False,
@@ -254,16 +267,6 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
                 y=0,
                 z=-1,
                 ),
-            ),
-        go.Scatter3d(
-            x=pos[:, 0],
-            y=pos[:, 1],
-            z=pos[:, 2],
-            text=labels,
-            mode=&#39;markers&#39;,
-            hovertext=hovertext,
-            hoverinfo=&#39;text&#39;,
-            marker=marker,
             ),
         ]
 
@@ -306,6 +309,19 @@ def plot_electrodes(pial, grid, values=None, ref_label=None, functional=None):
                 hoverinfo=&#39;skip&#39;,
                 ),
             )
+
+    traces.append(
+        go.Scatter3d(
+            x=pos[:, 0],
+            y=pos[:, 1],
+            z=pos[:, 2],
+            text=labels,
+            mode=&#39;markers&#39;,
+            hovertext=hovertext,
+            hoverinfo=&#39;text&#39;,
+            marker=marker,
+            ),
+        )
 
     fig = go.Figure(
         data=traces,

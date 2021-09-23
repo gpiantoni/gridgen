@@ -5,11 +5,16 @@
     },
   "mri": {
     "T1_file": "../analysis/data/brain.mgz",
-    "dura_file": "../analysis/data/lh_smooth.pial"
+    "dura_file": "../analysis/data/lh_smooth.pial",
+    "pial_file": "../analysis/data/lh.pial"
   },
   "initial": {
     "label": "chan4",
     "RAS": [-47, -1, 3],
     "rotation": 0
+  },
+  "morphology": {
+    "distance": "ray",
+    "penalty": 2
   }
 }

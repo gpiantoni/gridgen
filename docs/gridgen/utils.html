@@ -79,7 +79,7 @@ def remove_wires(model):
     i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
     i_keep = i_keep.all(axis=1)
     for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;functional&#39;]:
-        if model[field] is not None:
+        if model.get(field) is not None:
             model[field] = model[field][i_keep, :]
 
     return model
@@ -189,7 +189,7 @@ data with values between 0 and 1 (might contain NaN)</p></div>
     i_keep = model[&#39;grid&#39;][&#39;label&#39;] != WIRE
     i_keep = i_keep.all(axis=1)
     for field in [&#39;ecog&#39;, &#39;grid&#39;, &#39;morphology&#39;, &#39;functional&#39;]:
-        if model[field] is not None:
+        if model.get(field) is not None:
             model[field] = model[field][i_keep, :]
 
     return model</code></pre>

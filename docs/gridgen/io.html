@@ -496,7 +496,14 @@ def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=
         &#34;pial&#34;: pial,
         &#34;func&#34;: func,
         }
-    return out</code></pre>
+    return out
+
+
+def export_electrodes(output, model, mris):
+    grid_file = output / &#39;electrodes&#39;
+    export_grid(model[&#39;grid&#39;], mris[&#39;ras_shift&#39;], grid_file)
+    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
+    lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -506,6 +513,22 @@ def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gridgen.io.export_electrodes"><code class="name flex">
+<span>def <span class="ident">export_electrodes</span></span>(<span>output, model, mris)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def export_electrodes(output, model, mris):
+    grid_file = output / &#39;electrodes&#39;
+    export_grid(model[&#39;grid&#39;], mris[&#39;ras_shift&#39;], grid_file)
+    write_tsv(model[&#39;grid&#39;][&#39;label&#39;], model[&#39;grid&#39;][&#39;pos&#39;], grid_file)
+    lg.debug(f&#39;Exported electrodes to {grid_file} (coordinates in MRI volume space, not mesh space)&#39;)</code></pre>
+</details>
+</dd>
 <dt id="gridgen.io.export_grid"><code class="name flex">
 <span>def <span class="ident">export_grid</span></span>(<span>grid, ras_shift, grid_file, format=None)</span>
 </code></dt>
@@ -1210,6 +1233,7 @@ MRI space or in mesh space.</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gridgen.io.export_electrodes" href="#gridgen.io.export_electrodes">export_electrodes</a></code></li>
 <li><code><a title="gridgen.io.export_grid" href="#gridgen.io.export_grid">export_grid</a></code></li>
 <li><code><a title="gridgen.io.export_transform" href="#gridgen.io.export_transform">export_transform</a></code></li>
 <li><code><a title="gridgen.io.read_ecog2d" href="#gridgen.io.read_ecog2d">read_ecog2d</a></code></li>

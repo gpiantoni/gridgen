@@ -20,20 +20,21 @@ def compute_morphology(grid, pial, distance='minimum', maximum_distance=None, pe
         dist = _distance_minimum(grid, pial)
 
     elif distance == 'view':
-        dist = _distance_view(grid, pial)
+        dist = _distance_view(grid, pial, maximum_distance)
 
     elif distance == 'cylinder':
         dist = _distance_cylinder(grid, pial)
 
     elif distance == 'pdf':
-        dist = _distance_pdf(grid, pial)
+        dist = _distance_pdf(grid, pial, penalty)
 
     if maximum_distance and distance in ('ray', 'minimum'):
         with errstate(invalid='ignore'):
             i = dist['value'] > maximum_distance
         dist['value'][i] = NaN
 
-    dist['value'] = dist['value'] ** (-1 * penalty)
+    if distance != 'pdf':
+        dist['value'] = dist['value'] ** (-1 * penalty)
 
     return dist
 
@@ -73,8 +74,7 @@ def _distance_minimum(grid, pial):
     return distance
 
 
-def _distance_view(grid, pial):
-    max_dist = 8
+def _distance_view(grid, pial, max_dist):
     max_angle = 15
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
     distance['value'][:, :] = max_dist
@@ -117,12 +117,12 @@ def _distance_cylinder(grid, pial):
     return distance
 
 
-def _distance_pdf(grid, pial):
+def _distance_pdf(grid, pial, scale):
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance['value'][i_x, i_y] = normal_dist.pdf(norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1), scale=2).sum()
+            distance['value'][i_x, i_y] = normal_dist.pdf(norm(pial['pos'] - grid['pos'][i_x, i_y], axis=1), scale=scale).sum()
 
     distance['label'] = grid['label']
     return distance

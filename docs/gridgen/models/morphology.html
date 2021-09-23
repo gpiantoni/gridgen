@@ -46,20 +46,21 @@ def compute_morphology(grid, pial, distance=&#39;minimum&#39;, maximum_distance=
         dist = _distance_minimum(grid, pial)
 
     elif distance == &#39;view&#39;:
-        dist = _distance_view(grid, pial)
+        dist = _distance_view(grid, pial, maximum_distance)
 
     elif distance == &#39;cylinder&#39;:
         dist = _distance_cylinder(grid, pial)
 
     elif distance == &#39;pdf&#39;:
-        dist = _distance_pdf(grid, pial)
+        dist = _distance_pdf(grid, pial, penalty)
 
     if maximum_distance and distance in (&#39;ray&#39;, &#39;minimum&#39;):
         with errstate(invalid=&#39;ignore&#39;):
             i = dist[&#39;value&#39;] &gt; maximum_distance
         dist[&#39;value&#39;][i] = NaN
 
-    dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
+    if distance != &#39;pdf&#39;:
+        dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
 
     return dist
 
@@ -99,8 +100,7 @@ def _distance_minimum(grid, pial):
     return distance
 
 
-def _distance_view(grid, pial):
-    max_dist = 8
+def _distance_view(grid, pial, max_dist):
     max_angle = 15
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
     distance[&#39;value&#39;][:, :] = max_dist
@@ -143,12 +143,12 @@ def _distance_cylinder(grid, pial):
     return distance
 
 
-def _distance_pdf(grid, pial):
+def _distance_pdf(grid, pial, scale):
     distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
-            distance[&#39;value&#39;][i_x, i_y] = normal_dist.pdf(norm(pial[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=2).sum()
+            distance[&#39;value&#39;][i_x, i_y] = normal_dist.pdf(norm(pial[&#39;pos&#39;] - grid[&#39;pos&#39;][i_x, i_y], axis=1), scale=scale).sum()
 
     distance[&#39;label&#39;] = grid[&#39;label&#39;]
     return distance
@@ -244,20 +244,21 @@ def intersect_ray_triangle(vertex0, vertex1, vertex2, rayOrigin, rayVector, line
         dist = _distance_minimum(grid, pial)
 
     elif distance == &#39;view&#39;:
-        dist = _distance_view(grid, pial)
+        dist = _distance_view(grid, pial, maximum_distance)
 
     elif distance == &#39;cylinder&#39;:
         dist = _distance_cylinder(grid, pial)
 
     elif distance == &#39;pdf&#39;:
-        dist = _distance_pdf(grid, pial)
+        dist = _distance_pdf(grid, pial, penalty)
 
     if maximum_distance and distance in (&#39;ray&#39;, &#39;minimum&#39;):
         with errstate(invalid=&#39;ignore&#39;):
             i = dist[&#39;value&#39;] &gt; maximum_distance
         dist[&#39;value&#39;][i] = NaN
 
-    dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
+    if distance != &#39;pdf&#39;:
+        dist[&#39;value&#39;] = dist[&#39;value&#39;] ** (-1 * penalty)
 
     return dist</code></pre>
 </details>
