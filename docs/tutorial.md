@@ -509,6 +509,9 @@ Here is a minimum parameter file:
 }
 ```
 
+The results should look like this:
+
+
 In principle, you can also use the morphology values.
 The morphology and functional values are then merged based on `morphology_weight` and `functional_weight`.
 Values are not normalized between 0 and 1 in this case, so you can adjust the parameters to adjust for the differences in magnitude.
@@ -519,3 +522,9 @@ Values are not normalized between 0 and 1 in this case, so you can adjust the pa
 ```
 
 In practice, it's tricky to find the right balance between the two weights.
+
+![fit sum](img/fit_sum.png)
+
+## Notes
+
+The `json` files used to compute the analysis of this tutorial can be found [here](https://github.com/gpiantoni/gridgen/tree/master/tests/tutorial)

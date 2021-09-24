@@ -32,7 +32,7 @@ from nibabel.affines import apply_affine
 from logging import getLogger
 
 from .grid2d import make_grid
-from .utils import DTYPE, DTYPE_ECOG, DTYPE_VOLUME, WIRE
+from .utils import DTYPE, DTYPE_ECOG, DTYPE_VOLUME
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
