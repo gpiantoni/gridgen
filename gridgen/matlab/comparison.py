@@ -8,7 +8,8 @@ from .io import read_matlab
 from .utils import get_initial_from_matlab
 from .pipeline import compute_ROI
 
-from ..io import read_ecog2d, read_surf, read_surface_ras_shift, read_elec, read_ecog2d_matlab
+from ..io import read_ecog2d, read_surf, read_surface_ras_shift
+from .io import read_elec, read_ecog2d_matlab
 from ..fitting import fitting
 from ..grid3d.examine import measure_distances, measure_angles
 

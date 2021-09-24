@@ -4,10 +4,10 @@ from logging import getLogger
 
 from numpy import isnan, intersect1d, corrcoef, array
 
-from .io import read_matlab
+from .io import read_matlab, read_ecog2d_matlab
 from .compat import projectElectrodes, createGrid, projectToCoarser, calculateModel, indexFuncLegacy
 
-from ..io import read_surf, read_ecog2d_matlab
+from ..io import read_surf
 from ..utils import normalize
 
 

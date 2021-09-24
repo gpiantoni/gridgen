@@ -3,18 +3,14 @@
 from numpy import (
     abs,
     array,
-    c_,
     cross,
     empty,
-    genfromtxt,
     Inf,
-    intersect1d,
     isnan,
     loadtxt,
     NaN,
     savetxt,
     unique,
-    unravel_index,
     where,
     zeros,
     )
@@ -32,7 +28,7 @@ from nibabel.affines import apply_affine
 from logging import getLogger
 
 from .grid2d import make_grid
-from .utils import DTYPE, DTYPE_ECOG, DTYPE_VOLUME
+from .utils import DTYPE_ECOG, DTYPE_VOLUME
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
@@ -115,34 +111,6 @@ def read_ecog2d(ecog_file, grid_file):
     ecog_on_grid['value'] = ecog
     ecog_on_grid['good'] = ~isnan(ecog)
     ecog_on_grid['label'] = read_grid2d(grid_file)['label']
-
-    return ecog_on_grid
-
-
-def read_ecog2d_matlab(gamma_file, grid_file):
-    """Read the values of ECoG analysis
-
-    Parameters
-    ----------
-    ecog_file : Path
-        file with ecog data from matlab ('gamma mean')
-    grid_file : Path
-        file with labels (in 2d)
-
-    Returns
-    -------
-    ecog2d : 2d ndarray
-        ecog (n_rows, n_columns) with fields (label, ecog)
-    """
-    from .matlab.io import read_matlab
-
-    grid2d = read_grid2d(grid_file)
-    gamma_mean = read_matlab(gamma_file)
-
-    ecog_on_grid = zeros(grid2d.shape, dtype=DTYPE_ECOG)
-    ecog_on_grid['label'] = grid2d['label']
-    ecog_on_grid['value'] = gamma_mean.reshape(grid2d.shape, order='F')
-    ecog_on_grid['good'] = ~isnan(ecog_on_grid['value'])
 
     return ecog_on_grid
 
@@ -384,40 +352,6 @@ def read_volume(volume_file, threshold=-Inf):
         output['value'] = data[i]
 
     return output
-
-
-def read_elec(grid2d, elec_file):
-    """Read electrode locations and match them to a grid2d
-
-    Parameters
-    ----------
-    grid2d : instance of grid2d
-        grid2d with labels
-    elec_file : path to .mat or .tsv
-
-    Returns
-    -------
-    instance of grid2d
-        where 'pos' are taken from elec_file
-    """
-    grid2d = grid2d.copy()  # prevents changing the input file
-
-    if elec_file.suffix == '.mat':
-        from .matlab.io import read_matlab
-
-        xyz = read_matlab(elec_file)
-        labels = array([f'chan{x + 1}' for x in range(xyz.shape[0])])
-
-    elif elec_file.suffix == '.tsv':
-        elec = genfromtxt(elec_file, skip_header=1, dtype=DTYPE)
-        labels = elec['name']
-        xyz = c_[elec['x'], elec['y'], elec['z']]
-
-    i_grid, i_mat = intersect1d(grid2d['label'], labels, return_indices=True)[1:]
-    i = unravel_index(i_grid, grid2d.shape)
-    grid2d['pos'][i] = xyz[i_mat]
-
-    return grid2d
 
 
 def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=None):
