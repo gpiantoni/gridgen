@@ -231,32 +231,30 @@ TEMPLATE = {
             &#34;help&#34;: &#34;method to use (brute includes simplex as a second step)&#34;,
             &#34;default&#34;: &#34;brute&#34;,
             },
-        &#34;correlation&#34;: {
+        &#34;metric&#34;: {
             &#34;type&#34;: &#34;str&#34;,
             &#34;necessary&#34;: False,
-            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;],
-            &#34;help&#34;: &#34;&#39;parametric&#39; (Pearson, default) or &#39;nonparametric&#39; (rank)&#34;,
+            &#34;values&#34;: [&#39;parametric&#39;, &#39;nonparametric&#39;, &#39;sum&#39;],
+            &#34;help&#34;: &#34;&#39;parametric&#39; correlation (Pearson, default), &#39;nonparametric&#39; correlation (rank) or &#39;sum&#39; (grid position where the sum of the electrode values is highest)&#34;,
             &#34;default&#34;: &#34;parametric&#34;,
             },
         &#34;morphology_weight&#34;: {
-            &#34;type&#34;: &#34;str&#34;,
+            &#34;type&#34;: &#34;float&#34;,
             &#34;necessary&#34;: False,
-            &#34;values&#34;: [&#39;positive&#39;, &#39;negative&#39;],
-            &#34;help&#34;: &#34;TODO&#34;,
-            &#34;default&#34;: &#34;positive&#34;,
+            &#34;help&#34;: &#34;whether morphology is positively (+1) or negatively (-1) correlated to ECoG (or whether morphology contributes positively or negatively to the highest sum). You can also adjust this value to adjust the scale of the morphology values.&#34;,
+            &#34;default&#34;: 1,
             },
         &#34;functional_weight&#34;: {
-            &#34;type&#34;: &#34;str&#34;,
+            &#34;type&#34;: &#34;float&#34;,
             &#34;necessary&#34;: False,
-            &#34;values&#34;: [&#39;positive&#39;, &#39;negative&#39;],
-            &#34;help&#34;: &#34;TODO&#34;,
-            &#34;default&#34;: &#34;positive&#34;,
+            &#34;help&#34;: &#34;whether functional is positively (+1) or negatively (-1) correlated to ECoG (or whether functional contributes positively or negatively to the highest sum). You can also adjust this value to adjust the scale of the functional values.&#34;,
+            &#34;default&#34;: 1,
             },
         &#34;functional_contribution&#34;: {
             &#34;type&#34;: &#34;list&#34;,
             &#34;necessary&#34;: False,
             &#34;help&#34;: &#34;If both present, it&#39;s possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution)&#34;,
-            &#34;default&#34;: [10, 20, 30, 40, 50, 60, 70, 80, 90],
+            &#34;default&#34;: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
             },
         &#34;steps&#34;: {
             &#34;x&#34;: {

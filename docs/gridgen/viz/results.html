@@ -35,7 +35,24 @@ lg = getLogger(__name__)
 modalities = &#39;morphology&#39;, &#39;functional&#39;
 
 
+def plot_fitting(parameters, mris, model):
+
+    output_dir = parameters[&#39;output_dir&#39;]
+
+    scatter_file = output_dir / &#39;scatter&#39;
+    divs = plot_scatter(model, parameters[&#39;fit&#39;])
+    to_html(divs, scatter_file)
+
+    grid_file = output_dir / &#39;projected&#39;
+    fig = plot_electrodes(mris, model[&#39;grid&#39;], model[&#39;ecog&#39;], functional=mris[&#39;func&#39;])
+    to_html([to_div(fig), ], grid_file)
+    lg.debug(f&#39;Exported projected to {grid_file}&#39;)
+
+    plot_grid3d(parameters, mris, model)
+
+
 def plot_grid3d(parameters, mris, model):
+
     output_dir = parameters[&#39;output_dir&#39;]
 
     fig = plot_electrodes(
@@ -45,24 +62,6 @@ def plot_grid3d(parameters, mris, model):
     grid_file = output_dir / &#39;electrodes.html&#39;
     to_html([to_div(fig), ], grid_file)
 
-    _plot_2d_and_3d(output_dir, mris, model)
-
-
-def plot_fitting(output_dir, mris, model, fit):
-
-    scatter_file = output_dir / &#39;scatter&#39;
-    divs = plot_scatter(model, fit)
-    to_html(divs, scatter_file)
-
-    grid_file = output_dir / &#39;projected&#39;
-    fig = plot_electrodes(mris, model[&#39;grid&#39;], model[&#39;ecog&#39;], functional=mris[&#39;func&#39;])
-    to_html([to_div(fig), ], grid_file)
-    lg.debug(f&#39;Exported projected to {grid_file}&#39;)
-
-    _plot_2d_and_3d(output_dir, mris, model, fit)
-
-
-def _plot_2d_and_3d(output_dir, mris, model, fit={}):
     for mod in (&#39;morphology&#39;, &#39;functional&#39;, &#39;merged&#39;):
         grid_file = output_dir / mod
         if model.get(mod, None) is None:
@@ -75,7 +74,7 @@ def _plot_2d_and_3d(output_dir, mris, model, fit={}):
 
         fig1 = plot_grid2d(model[mod])
         fig2 = plot_electrodes(mris, model[&#39;grid&#39;], model[mod], functional=func)
-        if fit.get(f&#39;{mod}_weight&#39;, &#39;&#39;) == &#39;negative&#39;:
+        if parameters.get(&#39;fit&#39;, {}).get(f&#39;{mod}_weight&#39;, 1) &lt; 0:
             fig1.data[-1][&#39;reversescale&#39;] = True
             fig2.data[-1][&#39;marker&#39;][&#39;reversescale&#39;] = True
 
@@ -91,7 +90,7 @@ def _plot_2d_and_3d(output_dir, mris, model, fit={}):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="gridgen.viz.results.plot_fitting"><code class="name flex">
-<span>def <span class="ident">plot_fitting</span></span>(<span>output_dir, mris, model, fit)</span>
+<span>def <span class="ident">plot_fitting</span></span>(<span>parameters, mris, model)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -99,10 +98,12 @@ def _plot_2d_and_3d(output_dir, mris, model, fit={}):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_fitting(output_dir, mris, model, fit):
+<pre><code class="python">def plot_fitting(parameters, mris, model):
+
+    output_dir = parameters[&#39;output_dir&#39;]
 
     scatter_file = output_dir / &#39;scatter&#39;
-    divs = plot_scatter(model, fit)
+    divs = plot_scatter(model, parameters[&#39;fit&#39;])
     to_html(divs, scatter_file)
 
     grid_file = output_dir / &#39;projected&#39;
@@ -110,7 +111,7 @@ def _plot_2d_and_3d(output_dir, mris, model, fit={}):
     to_html([to_div(fig), ], grid_file)
     lg.debug(f&#39;Exported projected to {grid_file}&#39;)
 
-    _plot_2d_and_3d(output_dir, mris, model, fit)</code></pre>
+    plot_grid3d(parameters, mris, model)</code></pre>
 </details>
 </dd>
 <dt id="gridgen.viz.results.plot_grid3d"><code class="name flex">
@@ -123,6 +124,7 @@ def _plot_2d_and_3d(output_dir, mris, model, fit={}):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_grid3d(parameters, mris, model):
+
     output_dir = parameters[&#39;output_dir&#39;]
 
     fig = plot_electrodes(
@@ -132,7 +134,24 @@ def _plot_2d_and_3d(output_dir, mris, model, fit={}):
     grid_file = output_dir / &#39;electrodes.html&#39;
     to_html([to_div(fig), ], grid_file)
 
-    _plot_2d_and_3d(output_dir, mris, model)</code></pre>
+    for mod in (&#39;morphology&#39;, &#39;functional&#39;, &#39;merged&#39;):
+        grid_file = output_dir / mod
+        if model.get(mod, None) is None:
+            continue
+
+        if mod == &#39;functional&#39;:
+            func = mris[&#39;func&#39;]
+        else:
+            func = None
+
+        fig1 = plot_grid2d(model[mod])
+        fig2 = plot_electrodes(mris, model[&#39;grid&#39;], model[mod], functional=func)
+        if parameters.get(&#39;fit&#39;, {}).get(f&#39;{mod}_weight&#39;, 1) &lt; 0:
+            fig1.data[-1][&#39;reversescale&#39;] = True
+            fig2.data[-1][&#39;marker&#39;][&#39;reversescale&#39;] = True
+
+        to_html([to_div(fig1), to_div(fig2)], grid_file)
+        lg.debug(f&#39;Exported {mod} model to {grid_file}&#39;)</code></pre>
 </details>
 </dd>
 </dl>

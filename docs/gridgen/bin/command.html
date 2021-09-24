@@ -251,9 +251,12 @@ def main(arguments=None):
         export_electrodes(output_dir, model, mris)
 
     if args.function == &#39;fit&#39;:
-        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+        if parameters[&#39;fit&#39;][&#39;metric&#39;] == &#39;sum&#39;:
+            ecog2d = read_grid2d(grid2d_tsv)
+        else:
+            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;))
+        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;metric&#39;, &#39;method&#39;))
         output_dir = parameters[&#39;output_dir&#39;] / (&#39;fit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing fitting results to {output_dir}&#39;)
@@ -491,9 +494,12 @@ def main(arguments=None):
         export_electrodes(output_dir, model, mris)
 
     if args.function == &#39;fit&#39;:
-        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+        if parameters[&#39;fit&#39;][&#39;metric&#39;] == &#39;sum&#39;:
+            ecog2d = read_grid2d(grid2d_tsv)
+        else:
+            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;method&#39;, &#39;correlation&#39;))
+        folder_name = &#39;_&#39;.join(str(parameters[&#39;fit&#39;][k]) for k in (&#39;metric&#39;, &#39;method&#39;))
         output_dir = parameters[&#39;output_dir&#39;] / (&#39;fit_&#39; + start_time.strftime(&#39;%Y%m%d_%H%M%S&#39;) + &#39;_&#39; + folder_name)
         output_dir.mkdir(parents=True)
         lg.info(f&#39;Writing fitting results to {output_dir}&#39;)

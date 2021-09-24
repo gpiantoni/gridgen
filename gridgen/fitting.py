@@ -14,11 +14,12 @@ except ImportError:
 
 from .io import export_electrodes
 from .grid3d import construct_grid, search_grid, find_vertex, measure_distances, measure_angles
-from .models import compute_model, merge_models, compare_model_with_ecog
+from .models import compute_model, merge_models, compare_model_with_ecog, sum_models
 from .utils import be_nice, remove_wires, _JSONEncoder_path
-from .viz import plot_fitting
+from .viz import plot_fitting, plot_grid3d
 
 lg = getLogger(__name__)
+MAXITER = 200
 
 
 def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
@@ -82,9 +83,14 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
     # create grid with best values
     x, y, rotation = best_fit
     model = corr_ecog_model(best_fit, *minimizer_args, final=True)
-    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vertex"]: 6d}) = {model["corr_coef"]:+8.3f} (# included channels:{model["n_channels"]: 4d}, vascular contribution: {model["percent_functional"]:.2f}%)')
+    lg.info(f'Best fit at {x:+8.3f}mm {y:+8.3f}mm {rotation:+8.3f}° (vert{model["vertex"]: 6d}) = {model["summary"]:+8.3f} (# included channels:{model["n_channels"]: 4d}, functional contribution: {model["percent_functional"]:.2f}%)')
 
-    plot_fitting(output, mris, model, fit)
+    params['output_dir'] = output
+
+    if fit['metric'] == 'sum':
+        plot_grid3d(params, mris, model)
+    else:
+        plot_fitting(params, mris, model)
 
     model = remove_wires(model)
 
@@ -93,10 +99,10 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         'vertex': model['vertex'],
         'pos': list(mris['dura']['pos'][model['vertex'], :]),
         'normals': list(mris['dura']['pos_norm'][model['vertex'], :]),
-        'rotation': rotation,
+        'rotation': initial['rotation'] + rotation,
         'percent_functional': model['percent_functional'],
         'n_included_channels': model['n_channels'],
-        'corr_coef': int(model['corr_coef']),
+        'summary': model['summary'],
         'duration': comp_dur,
         'mean_elec_distance': mean(measure_distances(model['grid'])),
         'mean_angle': measure_angles(model['grid']),
@@ -106,7 +112,8 @@ def fitting(output, ecog, mris, grid3d, initial, fit, morphology, functional):
         dump(out, f, indent=2, cls=_JSONEncoder_path)
 
     export_electrodes(output, model, mris)
-    return model['grid']
+
+    return model
 
 
 def corr_ecog_model(x0, ecog, mris, params, final=False):
@@ -118,7 +125,7 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
     x0 : list of 3 floats
         start point to look for vertex
     ecog : (n_rows, n_cols) array
-        array with ecog values
+        array with ecog values (can be None when fit['metric'] is sum)
     mris : dict
         MRIs and meshes useful for computing the model
     params : dict
@@ -153,21 +160,21 @@ def corr_ecog_model(x0, ecog, mris, params, final=False):
 
     model = compute_model(mris, grid, params['morphology'], params['functional'])
 
-    weight, cc, chans, vals = compare_model_with_ecog(
-        model,
-        ecog,
-        fit=params['fit'],
-        )
+    if params['fit']['metric'] == 'sum':
+        weight, cc, chans, vals = sum_models(model, fit=params['fit'])
+
+    else:
+        weight, cc, chans, vals = compare_model_with_ecog(model, ecog, fit=params['fit'])
 
     if not final:
-        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vertex: 6d}) = {cc:+8.3f} (# included channels:{len(chans): 4d}, vascular contribution: {weight:.2f}%)')
+        lg.debug(f'{x0[0]:+8.3f}mm {x0[1]:+8.3f}mm {x0[2]:+8.3f}° (vert{start_vertex: 6d}) = {cc:+8.3f} (# included channels:{len(chans): 4d}, functional contribution: {weight:.2f}%)')
         return -1 * cc  # value to minimize
 
     else:
         model['ecog'] = ecog
         model['vertex'] = start_vertex
         model['percent_functional'] = weight
-        model['corr_coef'] = cc
+        model['summary'] = cc
         model['n_channels'] = len(chans)
         model['merged'] = merge_models(ecog, chans, vals)
         return model
@@ -253,7 +260,7 @@ def fitting_simplex(func, init, args):
         method='Nelder-Mead',
         args=args,
         options=dict(
-            maxiter=100,
+            maxiter=MAXITER,
             initial_simplex=simplex,
             xatol=0.5,
             fatol=0.05,

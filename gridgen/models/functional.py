@@ -4,23 +4,18 @@ from numpy import (power,
                    zeros,
                    NaN,
                    nansum,
-                   dtype,
                    )
 from numpy.linalg import norm
 from scipy.stats import norm as normdistr
-from ..io import WIRE
+
+from ..utils import DTYPE, WIRE
 
 lg = getLogger(__name__)
 
 
 def compute_functional(grid, func, metric=None, kernel=None):
 
-    d_ = dtype([
-        ('label', '<U256'),   # labels cannot be longer than 256 char
-        ('value', 'f4'),
-        ])
-
-    dist = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    dist = zeros((grid.shape[0], grid.shape[1]), dtype=DTYPE)
     dist['label'] = grid['label']
     dist['value'].fill(NaN)
 

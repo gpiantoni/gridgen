@@ -27,20 +27,12 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Function to build a grid from a starting point, in 2D
 &#34;&#34;&#34;
-from numpy import NaN, dtype, zeros, array, fliplr, flipud, vstack
+from numpy import NaN, zeros, array, fliplr, flipud, vstack
 from logging import getLogger
-from .utils import WIRE
+from .utils import DTYPE_MESH, WIRE
 
 
 lg = getLogger(__name__)
-
-
-d_ = dtype([
-    (&#39;label&#39;, &#39;&lt;U256&#39;),   # labels cannot be longer than 256 char
-    (&#39;pos&#39;, &#39;f4&#39;, (3, )),
-    (&#39;norm&#39;, &#39;f4&#39;, (3, )),
-    (&#39;done&#39;, &#39;bool&#39;),
-    ])
 
 
 def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39;):
@@ -88,7 +80,7 @@ def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern=&#39;{}&#39
         labels = flipud(labels)
     grid[&#39;label&#39;] = labels
 
-    wires = zeros((1, n_columns), dtype=d_)
+    wires = zeros((1, n_columns), dtype=DTYPE_MESH)
     wires[&#39;label&#39;] = WIRE
 
     return vstack([grid, wires])
@@ -112,7 +104,7 @@ def make_grid(n_rows, n_columns):
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
     &#34;&#34;&#34;
-    grid = zeros((n_rows, n_columns), dtype=d_)
+    grid = zeros((n_rows, n_columns), dtype=DTYPE_MESH)
     grid[&#39;pos&#39;].fill(NaN)
     grid[&#39;norm&#39;].fill(NaN)
     grid[&#39;done&#39;] = False
@@ -173,7 +165,7 @@ def make_grid(n_rows, n_columns):
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
     &#34;&#34;&#34;
-    grid = zeros((n_rows, n_columns), dtype=d_)
+    grid = zeros((n_rows, n_columns), dtype=DTYPE_MESH)
     grid[&#39;pos&#39;].fill(NaN)
     grid[&#39;norm&#39;].fill(NaN)
     grid[&#39;done&#39;] = False
@@ -266,7 +258,7 @@ def make_grid(n_rows, n_columns):
         labels = flipud(labels)
     grid[&#39;label&#39;] = labels
 
-    wires = zeros((1, n_columns), dtype=d_)
+    wires = zeros((1, n_columns), dtype=DTYPE_MESH)
     wires[&#39;label&#39;] = WIRE
 
     return vstack([grid, wires])</code></pre>

@@ -3,7 +3,9 @@
   - create the 2d grid (`grid2d`)
   - create the 3d grid (`grid3d`)
   - compute the power spectral density (PSD) at each electrode (`ecog`)
-  - fit the 3d grid onto the surface, by fitting the ecog values (`fit`)
+  - fit the 3d grid onto the surface (`fit`)
+    - by correlating the morphology and/or functional values with the ECoG values (`metric = parametric` or `metric = nonparametric`)
+    - by finding the highest sum of the electrodes estimated from the morphology and/or functional values (`metric = sum`)
   - compare the results (`matlab`)
 
 In addition, you need to pass the parameters for your analysis.
@@ -302,23 +304,23 @@ The output will also return a plot called `functional.html` which shows the angi
 ### fMRI
 If you have the results of the fMRI as t-maps, you can compute the weighted 3D average, based on a 3D gaussian weighting kernel, as described in [Piantoni, G. et al. *"Size of the spatial correlation between ECoG and fMRI activity."* *NeuroImage* 242(2021): 118459](https://doi.org/10.1016/j.neuroimage.2021.118459) .
 
-Note that we do not binarize the MRI in this case.
+Note that we do not binarize the MRI in this case, so `threshold` should be set to `null`.
 
 ```json
 {
   "grid3d": {
-    "interelec_distance": 10,
+    "interelec_distance": 5,
     "maximum_angle": 5
     },
   "mri": {
-    "T1_file": "analysis/data/brain.mgz",
-    "dura_file": "analysis/data/lh_smooth.pial",
-    "pial_file": "analysis/data/lh.pial",
-    "func_file": "analysis/data/angiogram.nii.gz"
+    "T1_file": "../analysis/data/brain.mgz",
+    "dura_file": "../analysis/data/lh_smooth.pial",
+    "pial_file": "../analysis/data/lh.pial",
+    "func_file": "../analysis/generated/tmap.nii.gz"
   },
   "initial": {
     "label": "chan4",
-    "RAS": [-47, -1, 3],
+    "RAS": [-32, 25, 12],
     "rotation": 90
   },
   "morphology": {
@@ -332,8 +334,8 @@ Note that we do not binarize the MRI in this case.
   }
 }
 ```
-Because there is no fMRI available for this patient, I use the angiogram for this example.
-Because of this, the results of this example are not easy to interpret.
+
+Because there is no fMRI available for this patient, the fMRI tmap is just random numbers above zeros in one region.
 
 ![grid3d gaussian](img/grid3d_7_scale.png)
 ![grid3d gaussian](img/grid3d_7.png)
@@ -346,7 +348,7 @@ You can compute the PSD in the high-frequency range with this `parameters.json`:
 ```json
 {    
   "ecog": {
-    "ecog_file": "../analysis/generated/ecog.eeg",
+    "ecog_file": "analysis/generated/ecog.eeg",
     "freq_range": [60, 90]
   }
 }
@@ -389,8 +391,8 @@ After running `gridgen parameters.json grid2d` and `gridgen parameters.json ecog
     "kernel": 8
   },
   "fit": {
-    "morphology_weight": "positive",
-    "functional_weight": "negative",
+    "morphology_weight": 1,
+    "functional_weight": -1,
     "method": "brute",
     "ranges": {
       "x": [-10, 5, 10],
@@ -403,8 +405,9 @@ After running `gridgen parameters.json grid2d` and `gridgen parameters.json ecog
 There are two methods available (see below).
 The fitting procedure will correlate the ECoG values with those computed with a combination of morphology and functional maps.
 You can specify the direction of the correlation:
-  - `"morphology_weight": "positive"` means that the higher the morphology values, the **higher** the ECoG values are expected to be (because the vertices are closer to the electrode),
-  - `"functional_weight": "negative"` means that the higher the functional values, the **lower** the ECoG values are expected to be (because the blood vessels suppress the ecog activity).
+  - `"morphology_weight": 1` means that the higher the morphology values, the **higher** the ECoG values are expected to be (because the vertices are closer to the electrode),
+  - `"functional_weight": -1` means that the higher the functional values, the **lower** the ECoG values are expected to be (because the blood vessels suppress the ecog activity).
+Morphology and functional values are normalized between 0 and 1 beforehand.
 
 The fitting procedure will run for a while.
 Here we specify a very sparse range value (the step value is 5) for quicker computation.
@@ -444,6 +447,7 @@ You should specify the step sizes in each direction, then it computes the value 
 
 
 You should specify the size of the simplex in each direction with `steps`:
+
 ```json
   "fit": {
     "method": "simplex",
@@ -463,3 +467,55 @@ gridgen --log debug parameters.json grid2d
 ```
 
 So that you see the steps and values computed at each node of the simplex.
+
+### fit (sum metric)
+You can also fit the electrode grid in such a way that the electrodes capture the highest functional activity.
+To compute this, we calculate the functional value at each electrode and we sum the values over all the electrodes.
+The grid location with the highest sum of values is the output of this procedure.
+In this case, we do not need to compute ECoG beforehand.
+
+Here is a minimum parameter file:
+
+```json
+{
+  "grid3d": {
+    "interelec_distance": 5,
+    "maximum_angle": 5
+    },
+  "mri": {
+    "T1_file": "analysis/data/brain.mgz",
+    "dura_file": "analysis/data/lh_smooth.pial",
+    "func_file": "analysis/generated/tmap.nii.gz"
+  },
+  "initial": {
+    "label": "chan4",
+    "RAS": [-27, 30, 13],
+    "rotation": 70
+  },
+  "functional": {
+    "threshold": null,
+    "metric": "sphere",
+    "kernel": 8
+  },
+  "fit": {
+    "metric": "sum",
+    "method": "simplex",
+    "steps": {
+      "x": 5,
+      "y": 5,
+      "rotation": 1
+      }
+  }
+}
+```
+
+In principle, you can also use the morphology values.
+The morphology and functional values are then merged based on `morphology_weight` and `functional_weight`.
+Values are not normalized between 0 and 1 in this case, so you can adjust the parameters to adjust for the differences in magnitude.
+
+```json
+    "morphology_weight": 1e5,
+    "functional_weight": 1,
+```
+
+In practice, it's tricky to find the right balance between the two weights.

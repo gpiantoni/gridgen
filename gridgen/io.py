@@ -5,7 +5,6 @@ from numpy import (
     array,
     c_,
     cross,
-    dtype,
     empty,
     genfromtxt,
     Inf,
@@ -33,19 +32,12 @@ from nibabel.affines import apply_affine
 from logging import getLogger
 
 from .grid2d import make_grid
+from .utils import DTYPE, DTYPE_ECOG, DTYPE_VOLUME, WIRE
 
 SLICER_HEADER = """# Markups fiducial file version = 4.10
 # CoordinateSystem = 0
 # columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID
 """
-
-DTYPE = [
-    ('name', 'U256'),
-    ('x', 'double'),
-    ('y', 'double'),
-    ('z', 'double'),
-    ]
-WIRE = 'wire'
 
 lg = getLogger(__name__)
 
@@ -119,12 +111,7 @@ def read_ecog2d(ecog_file, grid_file):
     """
     ecog = loadtxt(ecog_file, delimiter='\t')
 
-    d_ = dtype([
-        ('label', '<U256'),
-        ('value', 'f8'),
-        ('good', 'bool'),
-        ])
-    ecog_on_grid = zeros(ecog.shape, dtype=d_)
+    ecog_on_grid = zeros(ecog.shape, dtype=DTYPE_ECOG)
     ecog_on_grid['value'] = ecog
     ecog_on_grid['good'] = ~isnan(ecog)
     ecog_on_grid['label'] = read_grid2d(grid_file)['label']
@@ -152,12 +139,7 @@ def read_ecog2d_matlab(gamma_file, grid_file):
     grid2d = read_grid2d(grid_file)
     gamma_mean = read_matlab(gamma_file)
 
-    d_ = dtype([
-        ('label', '<U256'),
-        ('value', 'f8'),
-        ('good', 'bool'),
-        ])
-    ecog_on_grid = zeros(grid2d.shape, dtype=d_)
+    ecog_on_grid = zeros(grid2d.shape, dtype=DTYPE_ECOG)
     ecog_on_grid['label'] = grid2d['label']
     ecog_on_grid['value'] = gamma_mean.reshape(grid2d.shape, order='F')
     ecog_on_grid['good'] = ~isnan(ecog_on_grid['value'])
@@ -393,11 +375,7 @@ def read_volume(volume_file, threshold=-Inf):
     else:
         i = abs(data) > 0.001  # exclude small values
 
-    d_ = dtype([
-        ('pos', 'f4', (3, )),
-        ('value', 'f4'),
-        ])
-    output = zeros(i.sum(), dtype=d_)
+    output = zeros(i.sum(), dtype=DTYPE_VOLUME)
 
     output['pos'] = apply_affine(volume.affine, array(where(i)).T)
     if threshold is not None:
@@ -460,7 +438,7 @@ def read_mri(T1_file, dura_file, pial_file=None, func_file=None, func_threshold=
     else:
         lg.debug(f'Reading functional image from {func_file} and thresholding at {func_threshold}')
         func = read_volume(func_file, func_threshold)
-        if func_threshold is None:
+        if func_threshold is not None:
             func['value'] = 1  # set the value of each voxel above threshold to 1
 
     out = {

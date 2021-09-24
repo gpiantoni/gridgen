@@ -25,10 +25,10 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from logging import getLogger
-from numpy import mean, sign, nanmin, nanmax, log10
+from numpy import mean, sign, nanmin, nanmax
 import plotly.graph_objects as go
 
-from ..io import WIRE
+from ..utils import WIRE
 from .utils import COLORSCALE
 
 
@@ -82,6 +82,9 @@ def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
             showscale=True,
             cmin=nanmin(values),
             cmax=nanmax(values),
+            colorbar=dict(
+                title=&#39;electrode values&#39;,
+                ),
             )
         hovertext = [f&#39;{x0}&lt;br&gt;{x1:0.3f}&#39; for x0, x1 in zip(labels, values)]
 
@@ -121,9 +124,15 @@ def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
                 hoverinfo=&#39;skip&#39;,
                 marker=dict(
                     size=5,
-                    color=log10(functional[&#39;value&#39;]),
+                    color=functional[&#39;value&#39;],
                     symbol=&#39;diamond&#39;,
-                    colorscale=&#39;Hot&#39;,
+                    colorscale=&#39;RdBu&#39;,
+                    reversescale=True,
+                    cmid=0,
+                    colorbar=dict(
+                        x=1.2,
+                        title=&#39;functional values&#39;,
+                        ),
                     ),
                 opacity=1,
                 ))
@@ -241,6 +250,9 @@ def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
             showscale=True,
             cmin=nanmin(values),
             cmax=nanmax(values),
+            colorbar=dict(
+                title=&#39;electrode values&#39;,
+                ),
             )
         hovertext = [f&#39;{x0}&lt;br&gt;{x1:0.3f}&#39; for x0, x1 in zip(labels, values)]
 
@@ -280,9 +292,15 @@ def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
                 hoverinfo=&#39;skip&#39;,
                 marker=dict(
                     size=5,
-                    color=log10(functional[&#39;value&#39;]),
+                    color=functional[&#39;value&#39;],
                     symbol=&#39;diamond&#39;,
-                    colorscale=&#39;Hot&#39;,
+                    colorscale=&#39;RdBu&#39;,
+                    reversescale=True,
+                    cmid=0,
+                    colorbar=dict(
+                        x=1.2,
+                        title=&#39;functional values&#39;,
+                        ),
                     ),
                 opacity=1,
                 ))

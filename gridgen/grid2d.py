@@ -1,19 +1,11 @@
 """Function to build a grid from a starting point, in 2D
 """
-from numpy import NaN, dtype, zeros, array, fliplr, flipud, vstack
+from numpy import NaN, zeros, array, fliplr, flipud, vstack
 from logging import getLogger
-from .utils import WIRE
+from .utils import DTYPE_MESH, WIRE
 
 
 lg = getLogger(__name__)
-
-
-d_ = dtype([
-    ('label', '<U256'),   # labels cannot be longer than 256 char
-    ('pos', 'f4', (3, )),
-    ('norm', 'f4', (3, )),
-    ('done', 'bool'),
-    ])
 
 
 def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern='{}'):
@@ -61,7 +53,7 @@ def make_grid_with_labels(n_rows, n_columns, direction, chan_pattern='{}'):
         labels = flipud(labels)
     grid['label'] = labels
 
-    wires = zeros((1, n_columns), dtype=d_)
+    wires = zeros((1, n_columns), dtype=DTYPE_MESH)
     wires['label'] = WIRE
 
     return vstack([grid, wires])
@@ -85,7 +77,7 @@ def make_grid(n_rows, n_columns):
         - norm : 3 floats (specifying the normals)
         - done : bool (where the position has been computed or not)
     """
-    grid = zeros((n_rows, n_columns), dtype=d_)
+    grid = zeros((n_rows, n_columns), dtype=DTYPE_MESH)
     grid['pos'].fill(NaN)
     grid['norm'].fill(NaN)
     grid['done'] = False

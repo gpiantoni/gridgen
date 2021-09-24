@@ -1,8 +1,8 @@
 from logging import getLogger
-from numpy import mean, sign, nanmin, nanmax, log10
+from numpy import mean, sign, nanmin, nanmax
 import plotly.graph_objects as go
 
-from ..io import WIRE
+from ..utils import WIRE
 from .utils import COLORSCALE
 
 
@@ -56,6 +56,9 @@ def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
             showscale=True,
             cmin=nanmin(values),
             cmax=nanmax(values),
+            colorbar=dict(
+                title='electrode values',
+                ),
             )
         hovertext = [f'{x0}<br>{x1:0.3f}' for x0, x1 in zip(labels, values)]
 
@@ -95,9 +98,15 @@ def plot_electrodes(mris, grid, values=None, ref_label=None, functional=None):
                 hoverinfo='skip',
                 marker=dict(
                     size=5,
-                    color=log10(functional['value']),
+                    color=functional['value'],
                     symbol='diamond',
-                    colorscale='Hot',
+                    colorscale='RdBu',
+                    reversescale=True,
+                    cmid=0,
+                    colorbar=dict(
+                        x=1.2,
+                        title='functional values',
+                        ),
                     ),
                 opacity=1,
                 ))

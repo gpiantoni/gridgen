@@ -2,10 +2,34 @@
 """
 from json import JSONEncoder
 from os import nice
-from numpy import nanmax, nanmin, intersect1d, isnan, array, integer
+from numpy import nanmax, nanmin, intersect1d, isnan, array, integer, dtype
 from pathlib import Path
 
 WIRE = 'wire'
+
+# labels cannot be longer than 256 char
+DTYPE = dtype([
+    ('label', '<U256'),
+    ('value', 'f8'),
+    ])
+
+DTYPE_ECOG = dtype([
+    ('label', '<U256'),
+    ('value', 'f8'),
+    ('good', 'bool'),
+    ])
+
+DTYPE_MESH = dtype([
+    ('label', '<U256'),
+    ('pos', 'f4', (3, )),
+    ('norm', 'f4', (3, )),
+    ('done', 'bool'),
+    ])
+
+DTYPE_VOLUME = dtype([
+    ('pos', 'f4', (3, )),
+    ('value', 'f8'),
+    ])
 
 
 def be_nice():

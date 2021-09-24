@@ -96,11 +96,6 @@ def plot_correlation(model, xname, yname):
         )
         ]
 
-    if yname == 'merged':
-        ranges = (-0.05, 1.05)
-    else:
-        ranges = None
-
     layout = go.Layout(
         height=700,
         width=700,
@@ -110,7 +105,6 @@ def plot_correlation(model, xname, yname):
             ),
         yaxis=dict(
             title=yname,
-            range=ranges,
             ),
         )
 

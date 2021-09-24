@@ -224,9 +224,12 @@ def main(arguments=None):
         export_electrodes(output_dir, model, mris)
 
     if args.function == 'fit':
-        ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
+        if parameters['fit']['metric'] == 'sum':
+            ecog2d = read_grid2d(grid2d_tsv)
+        else:
+            ecog2d = read_ecog2d(ecog_tsv, grid2d_tsv)
 
-        folder_name = '_'.join(str(parameters['fit'][k]) for k in ('method', 'correlation'))
+        folder_name = '_'.join(str(parameters['fit'][k]) for k in ('metric', 'method'))
         output_dir = parameters['output_dir'] / ('fit_' + start_time.strftime('%Y%m%d_%H%M%S') + '_' + folder_name)
         output_dir.mkdir(parents=True)
         lg.info(f'Writing fitting results to {output_dir}')

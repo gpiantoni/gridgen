@@ -39,10 +39,10 @@ You can also use the command `gridgen parameters.json parameters` to generate a 
   - **kernel**: (float, optional) With method `sphere`, this is the size of the sphere. With method `gaussian`, this is the size of the sigma of the 3D weighting kernel. With method `inverse`, this is the exponent (1 -> linear, 2 -> quadratic).. Default: 2
 - **fit** (required by command `fit`)
   - **method**: (str) method to use (brute includes simplex as a second step). Values: [brute, simplex]. Default: brute
-  - **correlation**: (str, optional) 'parametric' (Pearson, default) or 'nonparametric' (rank). Values: [parametric, nonparametric]. Default: parametric
-  - **morphology_weight**: (str, optional) TODO. Values: [positive, negative]. Default: positive
-  - **functional_weight**: (str, optional) TODO. Values: [positive, negative]. Default: positive
-  - **functional_contribution**: (list, optional) If both present, it's possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution). Default: [10, 20, 30, 40, 50, 60, 70, 80, 90]
+  - **metric**: (str, optional) 'parametric' correlation (Pearson, default), 'nonparametric' correlation (rank) or 'sum' (grid position where the sum of the electrode values is highest). Values: [parametric, nonparametric, sum]. Default: parametric
+  - **morphology_weight**: (float, optional) whether morphology is positively (+1) or negatively (-1) correlated to ECoG (or whether morphology contributes positively or negatively to the highest sum). You can also adjust this value to adjust the scale of the morphology values.. Default: 1
+  - **functional_weight**: (float, optional) whether functional is positively (+1) or negatively (-1) correlated to ECoG (or whether functional contributes positively or negatively to the highest sum). You can also adjust this value to adjust the scale of the functional values.. Default: 1
+  - **functional_contribution**: (list, optional) If both present, it's possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution). Default: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   - **steps**
     - **x**: (float, optional) Step size in mm for x-direction, for method simplex
     - **y**: (float, optional) Step size in mm for y-direction, for method simplex

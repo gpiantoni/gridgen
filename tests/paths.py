@@ -1,5 +1,7 @@
 from pathlib import Path
-from .utils import simulate_data
+from gridgen import fitting
+from .utils import simulate_data, simulate_tmap
+
 
 TEST_PATH = Path(__file__).resolve().parent
 ANALYSIS_PATH = TEST_PATH / 'analysis'
@@ -14,8 +16,13 @@ FUNC_FILE = DATA_PATH / 'angiogram.nii.gz'
 GENERATED_PATH = ANALYSIS_PATH / 'generated'
 GENERATED_PATH.mkdir(parents=True, exist_ok=True)
 ECOG_FILE = GENERATED_PATH / 'ecog.eeg'
+TMAP_FILE = GENERATED_PATH / 'tmap.nii.gz'
 OUTPUT_PATH = ANALYSIS_PATH / 'output'
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
 data = simulate_data()
 data.export(ECOG_FILE, export_format='BrainVision')
+
+simulate_tmap(T1_FILE, TMAP_FILE)
+
+fitting.MAXITER = 5

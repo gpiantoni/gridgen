@@ -24,8 +24,8 @@
     "kernel": 8
   },
   "fit": {
-    "morphology_weight": "positive",
-    "functional_weight": "negative",
+    "morphology_weight": 1,
+    "functional_weight": -1,
     "method": "brute",
     "ranges": {
       "x": [-10, 5, 10],

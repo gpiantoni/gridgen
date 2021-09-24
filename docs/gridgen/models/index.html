@@ -34,13 +34,14 @@
 2) functional (a volume, such as fMRI data or angiogram)
 &#34;&#34;&#34;
 from .compute import compute_model, make_grid3d_model
-from .combine import merge_models, compare_model_with_ecog
+from .combine import merge_models, compare_model_with_ecog, sum_models
 
 __all__ = [
     &#39;compare_model_with_ecog&#39;,
     &#39;compute_model&#39;,
     &#39;make_grid3d_model&#39;,
     &#39;merge_models&#39;,
+    &#39;sum_models&#39;,
     ]</code></pre>
 </details>
 </section>
@@ -95,13 +96,8 @@ __all__ = [
         else:
             WEIGHTS = array(fit[&#39;functional_contribution&#39;])
 
-    E = normalize(e)
-    M = normalize(m)
-
-    if fit[&#39;morphology_weight&#39;] == &#39;negative&#39;:
-        E = 1 - E
-    if fit[&#39;functional_weight&#39;] == &#39;negative&#39;:
-        F = 1 - F
+    E = normalize(e) * fit[&#39;morphology_weight&#39;]
+    M = normalize(m) * fit[&#39;functional_weight&#39;]
 
     x = []
     preds = []
@@ -111,7 +107,7 @@ __all__ = [
         prediction = w * F + (1 - w) * M
         preds.append(prediction)
 
-        if fit[&#39;correlation&#39;] == &#39;parametric&#39;:
+        if fit[&#39;metric&#39;] == &#39;parametric&#39;:
             c = corrcoef(E, prediction)[0, 1]
         else:
             c = spearmanr(E, prediction).correlation
@@ -119,7 +115,7 @@ __all__ = [
         x.append(c)
 
     x = array(x)
-    i = argmin(x)
+    i = argmax(x)
 
     return WEIGHTS[i], x[i], chan, preds[i]</code></pre>
 </details>
@@ -191,12 +187,63 @@ __all__ = [
 </summary>
 <pre><code class="python">def merge_models(ecog, labels, vals):
 
-    merged = ecog.copy()
+    merged = empty(ecog.shape, dtype=DTYPE)
+    merged.fill(NaN)
     [i0, i1] = intersect1d(merged[&#39;label&#39;], labels, return_indices=True)[1:]
     i0r, i0c = unravel_index(i0, merged.shape)
     merged[&#39;value&#39;][i0r, i0c] = vals[i1]
 
     return merged</code></pre>
+</details>
+</dd>
+<dt id="gridgen.models.sum_models"><code class="name flex">
+<span>def <span class="ident">sum_models</span></span>(<span>model, fit)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sum_models(model, fit):
+
+    if model.get(&#39;morphology&#39;) is None:
+        func = model[&#39;functional&#39;]
+        cc = nansum(func[&#39;value&#39;])
+        i = ~isnan(func[&#39;value&#39;])
+
+        return 100, cc, func[i][&#39;label&#39;], func[i][&#39;value&#39;]
+
+    if model.get(&#39;functional&#39;) is None:
+        morph = model[&#39;morphology&#39;]
+        cc = nansum(morph[&#39;value&#39;])
+        i = ~isnan(morph[&#39;value&#39;])
+
+        return 0, cc, morph[i][&#39;label&#39;], morph[i][&#39;value&#39;]
+
+    chan, m, f = match_labels(model[&#39;morphology&#39;], model[&#39;functional&#39;])
+    M = m * fit[&#39;morphology_weight&#39;]
+    F = f * fit[&#39;functional_weight&#39;]
+
+    if fit[&#39;functional_contribution&#39;] is None:
+        WEIGHTS = arange(0, 110, 10)
+    else:
+        WEIGHTS = array(fit[&#39;functional_contribution&#39;])
+
+    x = []
+    preds = []
+    for weight in WEIGHTS:
+
+        w = weight / 100
+        prediction = w * F + (1 - w) * M
+        preds.append(prediction)
+        c = nansum(prediction)
+        x.append(c)
+
+    x = array(x)
+    i = argmax(x)
+
+    return WEIGHTS[i], x[i], chan, preds[i]</code></pre>
 </details>
 </dd>
 </dl>
@@ -229,6 +276,7 @@ __all__ = [
 <li><code><a title="gridgen.models.compute_model" href="#gridgen.models.compute_model">compute_model</a></code></li>
 <li><code><a title="gridgen.models.make_grid3d_model" href="#gridgen.models.make_grid3d_model">make_grid3d_model</a></code></li>
 <li><code><a title="gridgen.models.merge_models" href="#gridgen.models.merge_models">merge_models</a></code></li>
+<li><code><a title="gridgen.models.sum_models" href="#gridgen.models.sum_models">sum_models</a></code></li>
 </ul>
 </li>
 </ul>

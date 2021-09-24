@@ -1,9 +1,11 @@
 """Read ECoG data from the grid and convert them to 2D"""
+from numpy import zeros, NaN
 from wonambi import Dataset
-from numpy import zeros, NaN, dtype
 from wonambi.trans import math, filter_, montage, timefrequency, select
 from logging import getLogger
 from pathlib import Path
+
+from .utils import DTYPE_ECOG
 
 lg = getLogger(__name__)
 
@@ -78,12 +80,7 @@ def put_ecog_on_grid2d(ecog, grid2d):
         - ecog : value computed from 'ecog'
         - good : whether to include the channel or not
     """
-    d_ = dtype([
-        ('label', '<U256'),
-        ('value', 'f8'),
-        ('good', 'bool'),
-        ])
-    ecog_on_grid = zeros(grid2d.shape, dtype=d_)
+    ecog_on_grid = zeros(grid2d.shape, dtype=DTYPE_ECOG)
 
     ecog_on_grid['label'] = grid2d['label']
     ecog_on_grid['value'].fill(NaN)

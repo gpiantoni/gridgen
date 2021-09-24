@@ -204,32 +204,30 @@ TEMPLATE = {
             "help": "method to use (brute includes simplex as a second step)",
             "default": "brute",
             },
-        "correlation": {
+        "metric": {
             "type": "str",
             "necessary": False,
-            "values": ['parametric', 'nonparametric'],
-            "help": "'parametric' (Pearson, default) or 'nonparametric' (rank)",
+            "values": ['parametric', 'nonparametric', 'sum'],
+            "help": "'parametric' correlation (Pearson, default), 'nonparametric' correlation (rank) or 'sum' (grid position where the sum of the electrode values is highest)",
             "default": "parametric",
             },
         "morphology_weight": {
-            "type": "str",
+            "type": "float",
             "necessary": False,
-            "values": ['positive', 'negative'],
-            "help": "TODO",
-            "default": "positive",
+            "help": "whether morphology is positively (+1) or negatively (-1) correlated to ECoG (or whether morphology contributes positively or negatively to the highest sum). You can also adjust this value to adjust the scale of the morphology values.",
+            "default": 1,
             },
         "functional_weight": {
-            "type": "str",
+            "type": "float",
             "necessary": False,
-            "values": ['positive', 'negative'],
-            "help": "TODO",
-            "default": "positive",
+            "help": "whether functional is positively (+1) or negatively (-1) correlated to ECoG (or whether functional contributes positively or negatively to the highest sum). You can also adjust this value to adjust the scale of the functional values.",
+            "default": 1,
             },
         "functional_contribution": {
             "type": "list",
             "necessary": False,
             "help": "If both present, it's possible to combine morphology and functional models with varying weights. This parameter indicates which weights will be tested (10 = 10% of functional contribution and 90% of morphology contribution)",
-            "default": [10, 20, 30, 40, 50, 60, 70, 80, 90],
+            "default": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
             },
         "steps": {
             "x": {

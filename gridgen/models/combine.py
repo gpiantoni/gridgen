@@ -1,12 +1,13 @@
 from scipy.stats import spearmanr
-from numpy import array, argmin, corrcoef, arange, intersect1d, unravel_index
+from numpy import array, argmax, corrcoef, arange, intersect1d, unravel_index, nansum, isnan, NaN, empty
 
-from ..utils import normalize, match_labels
+from ..utils import normalize, match_labels, DTYPE
 
 
 def merge_models(ecog, labels, vals):
 
-    merged = ecog.copy()
+    merged = empty(ecog.shape, dtype=DTYPE)
+    merged.fill(NaN)
     [i0, i1] = intersect1d(merged['label'], labels, return_indices=True)[1:]
     i0r, i0c = unravel_index(i0, merged.shape)
     merged['value'][i0r, i0c] = vals[i1]
@@ -30,13 +31,8 @@ def compare_model_with_ecog(model, ecog2d, fit):
         else:
             WEIGHTS = array(fit['functional_contribution'])
 
-    E = normalize(e)
-    M = normalize(m)
-
-    if fit['morphology_weight'] == 'negative':
-        E = 1 - E
-    if fit['functional_weight'] == 'negative':
-        F = 1 - F
+    E = normalize(e) * fit['morphology_weight']
+    M = normalize(m) * fit['functional_weight']
 
     x = []
     preds = []
@@ -46,7 +42,7 @@ def compare_model_with_ecog(model, ecog2d, fit):
         prediction = w * F + (1 - w) * M
         preds.append(prediction)
 
-        if fit['correlation'] == 'parametric':
+        if fit['metric'] == 'parametric':
             c = corrcoef(E, prediction)[0, 1]
         else:
             c = spearmanr(E, prediction).correlation
@@ -54,6 +50,47 @@ def compare_model_with_ecog(model, ecog2d, fit):
         x.append(c)
 
     x = array(x)
-    i = argmin(x)
+    i = argmax(x)
+
+    return WEIGHTS[i], x[i], chan, preds[i]
+
+
+def sum_models(model, fit):
+
+    if model.get('morphology') is None:
+        func = model['functional']
+        cc = nansum(func['value'])
+        i = ~isnan(func['value'])
+
+        return 100, cc, func[i]['label'], func[i]['value']
+
+    if model.get('functional') is None:
+        morph = model['morphology']
+        cc = nansum(morph['value'])
+        i = ~isnan(morph['value'])
+
+        return 0, cc, morph[i]['label'], morph[i]['value']
+
+    chan, m, f = match_labels(model['morphology'], model['functional'])
+    M = m * fit['morphology_weight']
+    F = f * fit['functional_weight']
+
+    if fit['functional_contribution'] is None:
+        WEIGHTS = arange(0, 110, 10)
+    else:
+        WEIGHTS = array(fit['functional_contribution'])
+
+    x = []
+    preds = []
+    for weight in WEIGHTS:
+
+        w = weight / 100
+        prediction = w * F + (1 - w) * M
+        preds.append(prediction)
+        c = nansum(prediction)
+        x.append(c)
+
+    x = array(x)
+    i = argmax(x)
 
     return WEIGHTS[i], x[i], chan, preds[i]

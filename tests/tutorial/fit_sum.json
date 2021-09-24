@@ -11,8 +11,8 @@
   },
   "initial": {
     "label": "chan4",
-    "RAS": [-32, 25, 12],
-    "rotation": 90
+    "RAS": [-27, 30, 13],
+    "rotation": 70
   },
   "morphology": {
     "distance": "ray",
@@ -20,7 +20,18 @@
   },
   "functional": {
     "threshold": null,
-    "metric": "gaussian",
+    "metric": "sphere",
     "kernel": 8
+  },
+  "fit": {
+    "metric": "sum",
+    "morphology_weight": 1e5,
+    "functional_weight": 1,
+    "method": "simplex",
+    "steps": {
+      "x": 1,
+      "y": 1,
+      "rotation": 1
+      }
   }
 }

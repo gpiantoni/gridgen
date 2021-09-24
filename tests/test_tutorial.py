@@ -43,3 +43,12 @@ def test_fit():
         str(output),
         'fit'
         ])
+
+def test_fit_sum():
+    param_json = TUTORIAL_PATH / 'fit_sum.json'
+    main([
+        str(param_json),
+        '--output_dir',
+        str(output),
+        'fit'
+        ])

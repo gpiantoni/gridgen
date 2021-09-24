@@ -1,13 +1,8 @@
-from numpy import dot, arccos, pi, zeros, cross, dtype, nanmin, NaN, errstate, ones, einsum
+from numpy import dot, arccos, pi, zeros, cross, nanmin, NaN, errstate, ones, einsum
 from numpy.linalg import norm
 from scipy.stats import norm as normal_dist
 
-from ..io import WIRE
-
-d_ = dtype([
-    ('label', '<U256'),   # labels cannot be longer than 256 char
-    ('value', 'f4'),
-    ])
+from ..utils import DTYPE, WIRE
 
 EPSILON = 1e-5
 
@@ -41,7 +36,7 @@ def compute_morphology(grid, pial, distance='minimum', maximum_distance=None, pe
 
 
 def _distance_ray(grid, pial):
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=DTYPE)
     distance['value'].fill(NaN)
 
     for i_x in range(grid.shape[0]):
@@ -63,7 +58,7 @@ def _distance_ray(grid, pial):
 
 
 def _distance_minimum(grid, pial):
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=DTYPE)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
@@ -77,7 +72,7 @@ def _distance_minimum(grid, pial):
 
 def _distance_view(grid, pial, max_dist):
     max_angle = 15
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=DTYPE)
     distance['value'][:, :] = max_dist
 
     for i_x in range(grid.shape[0]):
@@ -100,7 +95,7 @@ def _distance_view(grid, pial, max_dist):
 def _distance_cylinder(grid, pial):
     max_dist_to_elec = 100
     max_dist_to_line = 5
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=DTYPE)
     distance['value'][:, :] = max_dist_to_elec
 
     for i_x in range(grid.shape[0]):
@@ -119,7 +114,7 @@ def _distance_cylinder(grid, pial):
 
 
 def _distance_pdf(grid, pial, scale):
-    distance = zeros((grid.shape[0], grid.shape[1]), dtype=d_)
+    distance = zeros((grid.shape[0], grid.shape[1]), dtype=DTYPE)
 
     for i_x in range(grid.shape[0]):
         for i_y in range(grid.shape[1]):
