@@ -2,7 +2,7 @@
 """
 from json import JSONEncoder
 from os import nice
-from numpy import nanmax, nanmin, intersect1d, isnan, array, integer, dtype
+from numpy import nanmax, nanmin, intersect1d, isnan, array, integer, dtype, floating
 from pathlib import Path
 
 WIRE = 'wire'
@@ -86,5 +86,7 @@ class _JSONEncoder_path(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, integer):
             return int(obj)
+        if isinstance(obj, floating):
+            return float(obj)
         if isinstance(obj, Path):
             return str(obj)
