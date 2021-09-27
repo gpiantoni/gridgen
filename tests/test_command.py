@@ -26,7 +26,12 @@ def test_cmd():
         with param_json.open('w') as f:
             dump(params, f, indent=2, cls=_JSONEncoder_path)
 
-        main([str(param_json), cmd])
+        main([
+            '--log',
+            'debug',
+            str(param_json),
+            cmd,
+            ])
 
 
 def test_help():
