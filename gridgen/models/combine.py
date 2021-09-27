@@ -17,22 +17,21 @@ def merge_models(ecog, labels, vals):
 
 def compare_model_with_ecog(model, ecog2d, fit):
 
-    if model['functional'] is None:
+    if model.get('functional') is None:
         chan, e, m = match_labels(ecog2d, model['morphology'])
         F = 0
         WEIGHTS = [0, ]
 
     else:
         chan, e, m, f = match_labels(ecog2d, model['morphology'], model['functional'])
-        F = normalize(f)
-
-        if fit['functional_contribution'] is None:
+        F = normalize(f) * fit.get('functional_weight', 1)
+        if fit.get('functional_contribution') is None:
             WEIGHTS = arange(0, 110, 10)
         else:
             WEIGHTS = array(fit['functional_contribution'])
 
-    E = normalize(e) * fit['morphology_weight']
-    M = normalize(m) * fit['functional_weight']
+    E = normalize(e)
+    M = normalize(m) * fit.get('morphology_weight', 1)
 
     x = []
     preds = []
@@ -75,7 +74,7 @@ def sum_models(model, fit):
     M = m * fit['morphology_weight']
     F = f * fit['functional_weight']
 
-    if fit['functional_contribution'] is None:
+    if fit.get('functional_contribution') is None:
         WEIGHTS = arange(0, 110, 10)
     else:
         WEIGHTS = array(fit['functional_contribution'])

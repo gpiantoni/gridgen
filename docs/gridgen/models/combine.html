@@ -43,22 +43,21 @@ def merge_models(ecog, labels, vals):
 
 def compare_model_with_ecog(model, ecog2d, fit):
 
-    if model[&#39;functional&#39;] is None:
+    if model.get(&#39;functional&#39;) is None:
         chan, e, m = match_labels(ecog2d, model[&#39;morphology&#39;])
         F = 0
         WEIGHTS = [0, ]
 
     else:
         chan, e, m, f = match_labels(ecog2d, model[&#39;morphology&#39;], model[&#39;functional&#39;])
-        F = normalize(f)
-
-        if fit[&#39;functional_contribution&#39;] is None:
+        F = normalize(f) * fit.get(&#39;functional_weight&#39;, 1)
+        if fit.get(&#39;functional_contribution&#39;) is None:
             WEIGHTS = arange(0, 110, 10)
         else:
             WEIGHTS = array(fit[&#39;functional_contribution&#39;])
 
-    E = normalize(e) * fit[&#39;morphology_weight&#39;]
-    M = normalize(m) * fit[&#39;functional_weight&#39;]
+    E = normalize(e)
+    M = normalize(m) * fit.get(&#39;morphology_weight&#39;, 1)
 
     x = []
     preds = []
@@ -101,7 +100,7 @@ def sum_models(model, fit):
     M = m * fit[&#39;morphology_weight&#39;]
     F = f * fit[&#39;functional_weight&#39;]
 
-    if fit[&#39;functional_contribution&#39;] is None:
+    if fit.get(&#39;functional_contribution&#39;) is None:
         WEIGHTS = arange(0, 110, 10)
     else:
         WEIGHTS = array(fit[&#39;functional_contribution&#39;])
@@ -140,22 +139,21 @@ def sum_models(model, fit):
 </summary>
 <pre><code class="python">def compare_model_with_ecog(model, ecog2d, fit):
 
-    if model[&#39;functional&#39;] is None:
+    if model.get(&#39;functional&#39;) is None:
         chan, e, m = match_labels(ecog2d, model[&#39;morphology&#39;])
         F = 0
         WEIGHTS = [0, ]
 
     else:
         chan, e, m, f = match_labels(ecog2d, model[&#39;morphology&#39;], model[&#39;functional&#39;])
-        F = normalize(f)
-
-        if fit[&#39;functional_contribution&#39;] is None:
+        F = normalize(f) * fit.get(&#39;functional_weight&#39;, 1)
+        if fit.get(&#39;functional_contribution&#39;) is None:
             WEIGHTS = arange(0, 110, 10)
         else:
             WEIGHTS = array(fit[&#39;functional_contribution&#39;])
 
-    E = normalize(e) * fit[&#39;morphology_weight&#39;]
-    M = normalize(m) * fit[&#39;functional_weight&#39;]
+    E = normalize(e)
+    M = normalize(m) * fit.get(&#39;morphology_weight&#39;, 1)
 
     x = []
     preds = []
@@ -227,7 +225,7 @@ def sum_models(model, fit):
     M = m * fit[&#39;morphology_weight&#39;]
     F = f * fit[&#39;functional_weight&#39;]
 
-    if fit[&#39;functional_contribution&#39;] is None:
+    if fit.get(&#39;functional_contribution&#39;) is None:
         WEIGHTS = arange(0, 110, 10)
     else:
         WEIGHTS = array(fit[&#39;functional_contribution&#39;])

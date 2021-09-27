@@ -37,7 +37,31 @@ lg = getLogger(__name__)
 
 
 def make_grid3d_model(mris, grid2d, grid3d, initial, morphology={}, functional={}):
+    &#34;&#34;&#34;Create a 3d grid from an initial position (in RAS) and MRI scans and
+    make the full morphology and functional models (if present).
 
+    Parameters
+    ----------
+    mris : dict
+        fields &#34;dura&#34; (necessary), &#34;pial&#34; (optional), &#34;func&#34; (optional)
+    grid2d : (n_rows, n_cols) array
+        array with the 2d labels
+    grid3d : dict
+        parameters to create 3d grid
+    initial : dict
+        parameters where to start creating the grid
+    morphology : dict
+        if present, parameters to compute morphology model
+    functional : dict
+        if present, parameters to compute functional model
+
+    Returns
+    -------
+    dict
+        - grid : 3d grid with positions and normals
+        - morphology : morphology model for each electrode
+        - functional : functional model for each electrode
+    &#34;&#34;&#34;
     vertex = find_vertex(mris[&#39;dura&#39;], initial[&#39;RAS&#39;])
 
     grid = construct_grid(
@@ -54,13 +78,33 @@ def make_grid3d_model(mris, grid2d, grid3d, initial, morphology={}, functional={
 
 
 def compute_model(mri, grid, morphology={}, functional={}):
+    &#34;&#34;&#34;Mmake the full morphology and functional models (if present).
 
-    if mri[&#39;pial&#39;] is None or morphology is None:
+    Parameters
+    ----------
+    mris : dict
+        fields &#34;dura&#34; (necessary), &#34;pial&#34; (optional), &#34;func&#34; (optional)
+    grid3d : (n_rows, n_cols) array
+        3d grid with positions and normals for each electrode
+    morphology : dict
+        if present, parameters to compute morphology model
+    functional : dict
+        if present, parameters to compute functional model
+
+    Returns
+    -------
+    dict
+        - grid : 3d grid with positions and normals (same as input)
+        - morphology : morphology model for each electrode
+        - functional : functional model for each electrode
+    &#34;&#34;&#34;
+
+    if mri[&#39;pial&#39;] is None or not morphology:
         morpho = None
     else:
         morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
 
-    if mri[&#39;func&#39;] is None or functional is None:
+    if mri[&#39;func&#39;] is None or not functional:
         func = None
     else:
         func = compute_functional(grid, mri[&#39;func&#39;], **functional)
@@ -85,19 +129,61 @@ def compute_model(mri, grid, morphology={}, functional={}):
 <span>def <span class="ident">compute_model</span></span>(<span>mri, grid, morphology={}, functional={})</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Mmake the full morphology and functional models (if present).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>mris</code></strong> :&ensp;<code>dict</code></dt>
+<dd>fields "dura" (necessary), "pial" (optional), "func" (optional)</dd>
+<dt><strong><code>grid3d</code></strong> :&ensp;<code>(n_rows, n_cols) array</code></dt>
+<dd>3d grid with positions and normals for each electrode</dd>
+<dt><strong><code>morphology</code></strong> :&ensp;<code>dict</code></dt>
+<dd>if present, parameters to compute morphology model</dd>
+<dt><strong><code>functional</code></strong> :&ensp;<code>dict</code></dt>
+<dd>if present, parameters to compute functional model</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>
+<ul>
+<li>grid : 3d grid with positions and normals (same as input)</li>
+<li>morphology : morphology model for each electrode</li>
+<li>functional : functional model for each electrode</li>
+</ul>
+</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compute_model(mri, grid, morphology={}, functional={}):
+    &#34;&#34;&#34;Mmake the full morphology and functional models (if present).
 
-    if mri[&#39;pial&#39;] is None or morphology is None:
+    Parameters
+    ----------
+    mris : dict
+        fields &#34;dura&#34; (necessary), &#34;pial&#34; (optional), &#34;func&#34; (optional)
+    grid3d : (n_rows, n_cols) array
+        3d grid with positions and normals for each electrode
+    morphology : dict
+        if present, parameters to compute morphology model
+    functional : dict
+        if present, parameters to compute functional model
+
+    Returns
+    -------
+    dict
+        - grid : 3d grid with positions and normals (same as input)
+        - morphology : morphology model for each electrode
+        - functional : functional model for each electrode
+    &#34;&#34;&#34;
+
+    if mri[&#39;pial&#39;] is None or not morphology:
         morpho = None
     else:
         morpho = compute_morphology(grid, mri[&#39;pial&#39;], **morphology)
 
-    if mri[&#39;func&#39;] is None or functional is None:
+    if mri[&#39;func&#39;] is None or not functional:
         func = None
     else:
         func = compute_functional(grid, mri[&#39;func&#39;], **functional)
@@ -115,13 +201,64 @@ def compute_model(mri, grid, morphology={}, functional={}):
 <span>def <span class="ident">make_grid3d_model</span></span>(<span>mris, grid2d, grid3d, initial, morphology={}, functional={})</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Create a 3d grid from an initial position (in RAS) and MRI scans and
+make the full morphology and functional models (if present).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>mris</code></strong> :&ensp;<code>dict</code></dt>
+<dd>fields "dura" (necessary), "pial" (optional), "func" (optional)</dd>
+<dt><strong><code>grid2d</code></strong> :&ensp;<code>(n_rows, n_cols) array</code></dt>
+<dd>array with the 2d labels</dd>
+<dt><strong><code>grid3d</code></strong> :&ensp;<code>dict</code></dt>
+<dd>parameters to create 3d grid</dd>
+<dt><strong><code>initial</code></strong> :&ensp;<code>dict</code></dt>
+<dd>parameters where to start creating the grid</dd>
+<dt><strong><code>morphology</code></strong> :&ensp;<code>dict</code></dt>
+<dd>if present, parameters to compute morphology model</dd>
+<dt><strong><code>functional</code></strong> :&ensp;<code>dict</code></dt>
+<dd>if present, parameters to compute functional model</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>
+<ul>
+<li>grid : 3d grid with positions and normals</li>
+<li>morphology : morphology model for each electrode</li>
+<li>functional : functional model for each electrode</li>
+</ul>
+</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def make_grid3d_model(mris, grid2d, grid3d, initial, morphology={}, functional={}):
+    &#34;&#34;&#34;Create a 3d grid from an initial position (in RAS) and MRI scans and
+    make the full morphology and functional models (if present).
 
+    Parameters
+    ----------
+    mris : dict
+        fields &#34;dura&#34; (necessary), &#34;pial&#34; (optional), &#34;func&#34; (optional)
+    grid2d : (n_rows, n_cols) array
+        array with the 2d labels
+    grid3d : dict
+        parameters to create 3d grid
+    initial : dict
+        parameters where to start creating the grid
+    morphology : dict
+        if present, parameters to compute morphology model
+    functional : dict
+        if present, parameters to compute functional model
+
+    Returns
+    -------
+    dict
+        - grid : 3d grid with positions and normals
+        - morphology : morphology model for each electrode
+        - functional : functional model for each electrode
+    &#34;&#34;&#34;
     vertex = find_vertex(mris[&#39;dura&#39;], initial[&#39;RAS&#39;])
 
     grid = construct_grid(

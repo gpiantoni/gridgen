@@ -1,2 +1,6 @@
 [run]
 omit = gridgen/matlab/*
+
+[report]
+exclude_lines = 
+    raise ValueError

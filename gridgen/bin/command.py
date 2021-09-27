@@ -120,7 +120,15 @@ def create_arguments():
         Fit the ecog values to the surface
 
         Output:
-            ???
+          parameters.json : summary of the parameters used for the fit
+          results.json : summary of the results to recompute the grid and fit
+          electrodes.tsv : electrode locations for the best fit in T1 space
+          electrodes.label : electrode locations for the best fit for freeview
+          electrodes.fcsv : electrode locations for the best fit for 3DSlicer
+          projected.html : interactive plot with electrode locations for the best fit (with ECoG values)
+          morphology.html : the values for each electrode based on morphology of the pial surface
+          functional.html : the values for each electrode based on functional MRI
+          merged.html : the combined values of functional and morphology values
 
         """))
     subfun3.set_defaults(function='fit')
@@ -129,9 +137,6 @@ def create_arguments():
         'matlab', help=dedent("""\
         Compute values based on a conversion of the matlab code and compare the
         values with those computed by matlab
-
-        Output:
-          ???
         """))
     subfun4.set_defaults(function='matlab')
 
